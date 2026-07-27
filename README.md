@@ -70,6 +70,8 @@ Le panneau est rangé en quatre sections, les mêmes que les menus du module Cha
 | `ÉPAISSEUR` | 1 – 24 | Épaisseur du cercle. |
 | `VITESSE` | 0 – 2 | Vitesse des balayages (sans notion de sens). |
 | `ARRÊTS` | 0 – 3 | Durée des arrêts sur cible. 0 = balaye sans s'arrêter. |
+| `TREMBLEMENT` | 0 – 3 | Amplitude du frémissement à l'arrêt. 0 = tête parfaitement immobile. |
+| `FRÉQUENCE` | 0 – 20 | Rapidité du frémissement, **indépendante de `VITESSE`**. |
 | `GLITCH` | 0 – 0.05 | Probabilité de glitch par image. **0 par défaut.** Indépendant de `CHAOS`. 0.005 ≈ un toutes les 3 s. |
 
 ### Sphère

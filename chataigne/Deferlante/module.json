@@ -319,6 +319,34 @@
         }
       }
     },
+    "Poursuite Tremblement": {
+      "menu": "Poursuite",
+      "callback": "poursuiteTremblement",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 3.0,
+          "default": 1.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Poursuite Frequence": {
+      "menu": "Poursuite",
+      "callback": "poursuiteFrequence",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 20.0,
+          "default": 6.0,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Poursuite Glitch": {
       "menu": "Poursuite",
       "callback": "poursuiteGlitch",

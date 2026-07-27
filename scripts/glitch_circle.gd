@@ -34,6 +34,11 @@ extends Line2D
 ## Une fois sur trois environ, la tête fait un petit recalage au lieu d'un grand
 ## balayage : elle croit avoir trouvé, et vérifie juste à côté.
 @export var refine_chance: float = 0.35
+## Le tremblement à l'arrêt a sa propre horloge, volontairement indépendante de
+## `seek_speed` : une tête peut balayer vite et scruter calmement, ou l'inverse.
+## Seule la vitesse globale les rattrape tous les deux, pour que 0 fige tout.
+@export var wobble_speed: float = 6.0
+@export var wobble_amount: float = 1.0
 
 var time_passed: float = 0.0
 var hue: float
@@ -57,6 +62,7 @@ var _pan_from: float = 0.0
 var _tilt_from: float = 0.0
 var _pan_to: float = 0.0
 var _tilt_to: float = 0.0
+var _wobble_time: float = 0.0
 
 
 func _ready():
@@ -107,6 +113,8 @@ func _process(delta: float):
 
 func default_behaviour(delta: float):
 	time_passed += delta * speed_scale
+	# Horloge du tremblement : elle ignore `seek_speed`, c'est tout l'intérêt.
+	_wobble_time += delta * speed_scale * wobble_speed
 	_update_head(delta * speed_scale * seek_speed)
 
 	# Projection du faisceau sur le mur. Le terme en 1/cos(pan) est ce qui courbe
@@ -144,10 +152,9 @@ func _update_head(delta: float):
 		# Arrêt sur cible : la tête n'est jamais parfaitement immobile, elle
 		# tremble légèrement. C'est ce micro-mouvement qui donne l'impression
 		# qu'elle scrute au lieu d'être simplement en pause.
-		var wobble = _state_time * 6.0
-		var amp = lerpf(1.0, 7.0, chaos)
-		_pan = _pan_to + sin(wobble) * 0.012 * amp
-		_tilt = _tilt_to + sin(wobble * 1.7) * 0.008 * amp
+		var amp = wobble_amount * lerpf(1.0, 7.0, chaos)
+		_pan = _pan_to + sin(_wobble_time) * 0.012 * amp
+		_tilt = _tilt_to + sin(_wobble_time * 1.7) * 0.008 * amp
 		if _state_time >= _hold_duration:
 			_pick_target()
 

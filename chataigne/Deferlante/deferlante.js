@@ -89,6 +89,14 @@ function poursuiteArrets(value) {
 	local.send("/deferlante/poursuite/arrets", value);
 }
 
+function poursuiteTremblement(value) {
+	local.send("/deferlante/poursuite/tremblement", value);
+}
+
+function poursuiteFrequence(value) {
+	local.send("/deferlante/poursuite/frequence", value);
+}
+
 function poursuiteGlitch(value) {
 	local.send("/deferlante/poursuite/glitch", value);
 }

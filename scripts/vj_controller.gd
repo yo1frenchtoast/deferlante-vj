@@ -97,6 +97,8 @@ func _build_params():
 	_fn("poursuite/epaisseur", "ÉPAISSEUR", 1, 24, 0.5, 3.0, func(v): circle.set_line_width(v))
 	_prop("poursuite/vitesse", "VITESSE", 0, 2, 0.05, 1.0, circle, "seek_speed")
 	_prop("poursuite/arrets", "ARRÊTS", 0, 3, 0.05, 0.9, circle, "hold_time")
+	_prop("poursuite/tremblement", "TREMBLEMENT", 0, 3, 0.05, 1.0, circle, "wobble_amount")
+	_prop("poursuite/frequence", "FRÉQUENCE", 0, 20, 0.5, 6.0, circle, "wobble_speed")
 	_prop("poursuite/glitch", "GLITCH", 0, 0.05, 0.001, 0.0, circle, "glitch_chance")
 
 	_section("SPHÈRE")
