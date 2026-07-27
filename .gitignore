@@ -7,3 +7,6 @@ __pycache__/
 
 # Reglages locaux Claude Code
 .claude/settings.local.json
+
+# Preset d'export : chemin de sortie propre a chaque machine
+export_presets.cfg
