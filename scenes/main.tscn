@@ -1,0 +1,62 @@
+[gd_scene format=3 uid="uid://c8o06a006nklu"]
+
+[ext_resource type="Script" uid="uid://d2qogwwj75x77" path="res://scripts/glitch_circle.gd" id="1_x16oa"]
+[ext_resource type="Script" uid="uid://d4kegm87j06ne" path="res://scripts/vj_controller.gd" id="2_wjtrd"]
+[ext_resource type="Script" path="res://scripts/sphere_circles.gd" id="3_sphere"]
+[ext_resource type="Script" path="res://scripts/osc_server.gd" id="4_osc"]
+[ext_resource type="Script" path="res://scripts/control_panel.gd" id="5_panel"]
+
+[sub_resource type="Environment" id="Environment_te0mf"]
+background_mode = 3
+glow_enabled = false
+glow_intensity = 0.0
+glow_strength = 1.0
+glow_bloom = 0.2
+glow_blend_mode = 0
+glow_hdr_threshold = 0.5
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_wjtrd"]
+blend_mode = 1
+
+[node name="Main" type="WorldEnvironment"]
+environment = SubResource("Environment_te0mf")
+
+[node name="VJController" type="Node2D" parent="."]
+script = ExtResource("2_wjtrd")
+
+[node name="GlitchCircle" type="Line2D" parent="VJController"]
+material = SubResource("CanvasItemMaterial_wjtrd")
+script = ExtResource("1_x16oa")
+
+[node name="SphereCircles" type="Node2D" parent="VJController"]
+script = ExtResource("3_sphere")
+
+[node name="OscServer" type="Node" parent="VJController"]
+script = ExtResource("4_osc")
+
+[node name="ControlPanel" type="CanvasLayer" parent="VJController"]
+script = ExtResource("5_panel")
+
+[node name="FpsLabel" type="Label" parent="VJController/ControlPanel"]
+visible = false
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -360.0
+offset_top = 16.0
+offset_right = -24.0
+offset_bottom = 42.0
+grow_horizontal = 0
+horizontal_alignment = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+
+[node name="Controls" type="VBoxContainer" parent="VJController/ControlPanel"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -880.0
+offset_right = 524.0
+offset_bottom = -24.0
+grow_vertical = 0
+alignment = 2
+theme_override_constants/separation = 2

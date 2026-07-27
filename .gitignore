@@ -1,0 +1,9 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Outils Python
+__pycache__/
+
+# Reglages locaux Claude Code
+.claude/settings.local.json

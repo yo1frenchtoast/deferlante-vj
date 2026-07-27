@@ -1,0 +1,417 @@
+{
+  "name": "Deferlante",
+  "type": "OSC",
+  "path": "Software",
+  "version": "4.0.0",
+  "description": "Controle les visuels VJ Deferlante (Godot) via OSC.",
+  "hasInput": true,
+  "hasOutput": true,
+  "hideDefaultCommands": true,
+  "defaults": {
+    "autoAdd": false,
+    "OSC Outputs": {
+      "OSC Output": {
+        "local": true,
+        "remoteHost": "127.0.0.1",
+        "remotePort": 9000
+      }
+    },
+    "OSC Input": {
+      "enabled": false,
+      "localPort": 9001
+    }
+  },
+  "scripts": [
+    "deferlante.js"
+  ],
+  "commands": {
+    "Global Vitesse": {
+      "menu": "Global",
+      "callback": "globalVitesse",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": -1.0,
+          "max": 1.0,
+          "default": 1.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Global Chaos": {
+      "menu": "Global",
+      "callback": "globalChaos",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Global Halo": {
+      "menu": "Global",
+      "callback": "globalHalo",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 2.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Couleur Mode": {
+      "menu": "Couleur",
+      "callback": "couleurMode",
+      "parameters": {
+        "Value": {
+          "type": "Integer",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Couleur Saturation": {
+      "menu": "Couleur",
+      "callback": "couleurSaturation",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.7,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Couleur Rouge": {
+      "menu": "Couleur",
+      "callback": "couleurRouge",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 1.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Couleur Vert": {
+      "menu": "Couleur",
+      "callback": "couleurVert",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.25,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Couleur Bleu": {
+      "menu": "Couleur",
+      "callback": "couleurBleu",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.1,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Lasers Nombre": {
+      "menu": "Lasers",
+      "callback": "lasersNombre",
+      "parameters": {
+        "Value": {
+          "type": "Integer",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 40.0,
+          "default": 5.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Lasers Epaisseur": {
+      "menu": "Lasers",
+      "callback": "lasersEpaisseur",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 1.0,
+          "max": 24.0,
+          "default": 5.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Lasers Longueur": {
+      "menu": "Lasers",
+      "callback": "lasersLongueur",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.1,
+          "max": 2.0,
+          "default": 1.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Lasers Rotation": {
+      "menu": "Lasers",
+      "callback": "lasersRotation",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": -1.0,
+          "max": 1.0,
+          "default": 1.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Poursuite Rayon": {
+      "menu": "Poursuite",
+      "callback": "poursuiteRayon",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 20.0,
+          "max": 600.0,
+          "default": 200.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Poursuite Pulsation": {
+      "menu": "Poursuite",
+      "callback": "poursuitePulsation",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 300.0,
+          "default": 50.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Poursuite Epaisseur": {
+      "menu": "Poursuite",
+      "callback": "poursuiteEpaisseur",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 1.0,
+          "max": 24.0,
+          "default": 3.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Poursuite Vitesse": {
+      "menu": "Poursuite",
+      "callback": "poursuiteVitesse",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 2.0,
+          "default": 1.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Poursuite Arrets": {
+      "menu": "Poursuite",
+      "callback": "poursuiteArrets",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 3.0,
+          "default": 0.9,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Poursuite Glitch": {
+      "menu": "Poursuite",
+      "callback": "poursuiteGlitch",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 0.05,
+          "default": 0.005,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Sphere Cercles": {
+      "menu": "Sphere",
+      "callback": "sphereCercles",
+      "parameters": {
+        "Value": {
+          "type": "Integer",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 80.0,
+          "default": 40.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Sphere Taille": {
+      "menu": "Sphere",
+      "callback": "sphereTaille",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.03,
+          "max": 0.8,
+          "default": 0.13,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Sphere Rayon": {
+      "menu": "Sphere",
+      "callback": "sphereRayon",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 100.0,
+          "max": 800.0,
+          "default": 400.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Sphere Rotation": {
+      "menu": "Sphere",
+      "callback": "sphereRotation",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": -1.0,
+          "max": 1.0,
+          "default": 0.6,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Sphere Profondeur": {
+      "menu": "Sphere",
+      "callback": "sphereProfondeur",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 1.2,
+          "max": 10.0,
+          "default": 2.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Sphere Epaisseur": {
+      "menu": "Sphere",
+      "callback": "sphereEpaisseur",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 1.0,
+          "max": 24.0,
+          "default": 3.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Sphere Verre": {
+      "menu": "Sphere",
+      "callback": "sphereVerre",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Couleur Choisie": {
+      "menu": "Couleur",
+      "callback": "couleurRgb",
+      "parameters": {
+        "Color": {
+          "type": "Color",
+          "default": [
+            1,
+            0.25,
+            0.1,
+            1
+          ],
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Trigger Glitch": {
+      "menu": "Actions",
+      "callback": "triggerGlitch",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Randomize Colors": {
+      "menu": "Actions",
+      "callback": "randomizeColors",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
+    }
+  }
+}

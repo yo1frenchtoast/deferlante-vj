@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://ystbhyo8t5c7"]
+
+[ext_resource type="Script" uid="uid://cykbl4nabjnon" path="res://scripts/laser_line.gd" id="1_u8fr8"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_wjtrd"]
+blend_mode = 1
+
+[node name="Laser" type="Line2D" unique_id=1389547717]
+material = SubResource("CanvasItemMaterial_wjtrd")
+script = ExtResource("1_u8fr8")
