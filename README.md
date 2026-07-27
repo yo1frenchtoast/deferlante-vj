@@ -4,7 +4,7 @@ VJ visuals in Godot 4: neon strokes on black, additively blended.
 Built for video projection with a haze machine.
 
 **Getting started** — [Run](#run) · [Drive it](#drive-it) · [Settings](#settings)
-**External control** — [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
+**External control** — [Web surface](#web-control-surface) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
 **The effects** — [Spotlight](#the-spotlight) · [Sphere](#the-sphere-effect) · [Kaleidoscope](#the-kaleidoscope) · [Chaos](#chaos) · [Auto-pilot](#the-auto-pilot) · [Colour](#the-two-colour-modes)
 **In the room** — [What starts off](#what-starts-switched-off) · [Glow](#the-glow) · [Projection notes](#projection-notes) · [Performance](#measuring-performance-f3)
 **The code** — [Structure](#structure) · [Renderer](#a-note-on-the-renderer)
@@ -98,6 +98,34 @@ Labels below are the English ones.
 Adding a setting takes one line in `_build_params()` of `vj_controller.gd`: the
 section, the UI row, the slider, the number formatting, the keyboard handling and
 the OSC address all follow. Its label goes in `scripts/lang.gd`.
+
+## Web control surface
+
+Godot serves a control page on port **8080**. Open `http://<machine-ip>:8080` from a
+phone or tablet on the same network — the address is printed at startup.
+
+It gives you, on top of every setting as a touch slider:
+
+- **Two XY pads** whose axes are assignable from dropdowns. Which pair is worth
+  playing with changes from one track to the next, so they are not hard-wired.
+  They default to chaos × speed and spotlight radius × pulse.
+- **GLITCH** and **COLORS** buttons.
+- **Live mirroring**: a value changed on the keyboard, over OSC or by the auto-pilot
+  moves on the phone too, and vice versa.
+
+The page **builds itself from a schema** Godot sends on connect. It holds no list of
+settings of its own, so adding one in `_build_params()` makes it appear on the phone
+with no change to the HTML. Switching the interface language relabels it as well.
+
+Two ports rather than one, deliberately: the page is served over HTTP on 8080 and
+the control channel is a WebSocket on **8081**. `WebSocketPeer.accept_stream()` does
+the handshake itself and needs the stream untouched, which rules out reading the
+request first to tell an upgrade from a page request.
+
+A sleeping phone drops the socket; the page reconnects on its own without a reload.
+
+⚠️ There is **no authentication**: anyone on the network can drive the visuals. That
+is fine on a private Wi-Fi and a bad idea on a public one.
 
 ## External control over OSC
 
@@ -365,6 +393,8 @@ scenes/
   laser.tscn     One stroke, instanced N times by the controller
 chataigne/
   Deferlante/    Chataigne module, ready to install
+web/
+  index.html     Touch control surface, built from the schema Godot sends
 shaders/
   kaleidoscope.gdshader   Polar fold into symmetrical wedges
 scripts/
@@ -377,6 +407,7 @@ scripts/
   glitch_circle.gd  The followspot circle (a head that searches) + random glitches
   laser_line.gd     A stroke that spins and bounces off the edges
   osc_server.gd     OSC receiver (UDP), messages and bundles
+  web_server.gd     Serves the page and the WebSocket control channel
   sphere_circles.gd Circles projected onto a virtual sphere
 ```
 

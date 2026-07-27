@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://d4kegm87j06ne" path="res://scripts/vj_controller.gd" id="2_wjtrd"]
 [ext_resource type="Script" path="res://scripts/sphere_circles.gd" id="3_sphere"]
 [ext_resource type="Script" path="res://scripts/osc_server.gd" id="4_osc"]
+[ext_resource type="Script" path="res://scripts/web_server.gd" id="8_web"]
 [ext_resource type="Script" path="res://scripts/control_panel.gd" id="5_panel"]
 [ext_resource type="Script" path="res://scripts/kaleidoscope.gd" id="6_kaleido"]
 [ext_resource type="Shader" path="res://shaders/kaleidoscope.gdshader" id="7_shader"]
@@ -41,6 +42,9 @@ script = ExtResource("3_sphere")
 
 [node name="OscServer" type="Node" parent="VJController"]
 script = ExtResource("4_osc")
+
+[node name="WebServer" type="Node" parent="VJController"]
+script = ExtResource("8_web")
 
 [node name="Kaleidoscope" type="CanvasLayer" parent="VJController"]
 script = ExtResource("6_kaleido")

@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0a0a0c">
+<title>Déferlante</title>
+<style>
+  /* Dark by definition: this gets used in a dark room, often one-handed. */
+  :root {
+    --bg: #0a0a0c; --panel: #16161a; --line: #26262c;
+    --text: #e8e8ec; --dim: #85858f; --accent: #ffb85c;
+    --red: #ff7366; --green: #73ff80; --blue: #80a6ff;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 0 0 3rem; background: var(--bg); color: var(--text);
+    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+    overscroll-behavior: none; touch-action: manipulation;
+  }
+  header {
+    position: sticky; top: 0; z-index: 10; background: var(--bg);
+    border-bottom: 1px solid var(--line); padding: .6rem .9rem;
+    display: flex; align-items: center; gap: .7rem;
+  }
+  h1 { font-size: 1rem; margin: 0; letter-spacing: .06em; font-weight: 600; }
+  #status { font-size: .78rem; color: var(--dim); margin-left: auto; }
+  #status.on { color: var(--green); }
+  #status.off { color: var(--red); }
+
+  .actions { display: flex; gap: .5rem; padding: .8rem .9rem 0; }
+  .actions button {
+    flex: 1; padding: .85rem; font-size: .85rem; letter-spacing: .06em;
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--line); border-radius: .5rem;
+  }
+  .actions button:active { background: var(--accent); color: #000; }
+
+  .pads { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; padding: .8rem .9rem 0; }
+  @media (max-width: 520px) { .pads { grid-template-columns: 1fr; } }
+  .pad { background: var(--panel); border: 1px solid var(--line); border-radius: .6rem; padding: .5rem; }
+  .pad select {
+    width: 100%; background: #0e0e12; color: var(--text);
+    border: 1px solid var(--line); border-radius: .35rem; padding: .35rem; font-size: .75rem;
+  }
+  .pad .axes { display: flex; gap: .4rem; margin-bottom: .45rem; }
+  .surface {
+    position: relative; width: 100%; aspect-ratio: 1 / 1;
+    background:
+      linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 100% 25%,
+      linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 25% 100%,
+      #0e0e12;
+    border-radius: .45rem; touch-action: none; overflow: hidden;
+  }
+  .dot {
+    position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px;
+    border-radius: 50%; background: var(--accent); opacity: .9;
+    box-shadow: 0 0 18px var(--accent); pointer-events: none;
+  }
+
+  h2 {
+    font-size: .72rem; letter-spacing: .14em; color: var(--accent);
+    margin: 1.4rem .9rem .4rem; font-weight: 600;
+  }
+  .row { padding: .3rem .9rem; }
+  .row .top { display: flex; justify-content: space-between; font-size: .8rem; }
+  .row .name { color: var(--dim); letter-spacing: .05em; }
+  .row .val { font-variant-numeric: tabular-nums; }
+  .row.red .name { color: var(--red); }
+  .row.green .name { color: var(--green); }
+  .row.blue .name { color: var(--blue); }
+
+  /* Tall thumbs: this is driven with a thumb, not a mouse pointer. */
+  input[type=range] { width: 100%; height: 34px; -webkit-appearance: none; background: transparent; }
+  input[type=range]::-webkit-slider-runnable-track { height: 5px; background: var(--line); border-radius: 3px; }
+  input[type=range]::-moz-range-track { height: 5px; background: var(--line); border-radius: 3px; }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 26px; height: 26px; margin-top: -11px;
+    border-radius: 50%; background: var(--text);
+  }
+  input[type=range]::-moz-range-thumb { width: 26px; height: 26px; border: 0; border-radius: 50%; background: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>DÉFERLANTE</h1>
+  <span id="status">connecting…</span>
+</header>
+
+<div class="actions">
+  <button data-action="glitch">GLITCH</button>
+  <button data-action="randomize">COLORS</button>
+</div>
+
+<div class="pads" id="pads"></div>
+<div id="sections"></div>
+
+<script>
+"use strict";
+
+// The page knows nothing in advance: Godot sends the list of settings on connect
+// and everything below is built from it. Adding a setting in Godot makes it appear
+// here with no change to this file.
+let params = new Map();
+let rows = new Map();
+let socket = null;
+const pads = [];
+
+const statusEl = document.getElementById("status");
+
+function connect() {
+  socket = new WebSocket(`ws://${location.hostname}:${Number(location.port || 80) + 1}`);
+  socket.onopen = () => { statusEl.textContent = "live"; statusEl.className = "on"; };
+  socket.onclose = () => {
+    statusEl.textContent = "reconnecting…"; statusEl.className = "off";
+    // A phone that sleeps drops the socket; coming back should not need a reload.
+    setTimeout(connect, 1200);
+  };
+  socket.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+    if (msg.type === "schema") build(msg);
+    else if (msg.type === "value") apply(msg.slug, msg.value);
+  };
+}
+
+function send(payload) {
+  if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(payload));
+}
+
+function format(p, value) {
+  if (p.choices && p.choices.length) return p.choices[Math.min(p.choices.length - 1, Math.round(value))];
+  if (p.bidirectional) {
+    if (value > 0.0005) return "→ " + value.toFixed(2);
+    if (value < -0.0005) return "← " + Math.abs(value).toFixed(2);
+    return "·  0.00";
+  }
+  if (p.step >= 1) return String(Math.round(value));
+  if (p.step < 0.01) return value.toFixed(3);
+  return value.toFixed(2);
+}
+
+const TINTS = { "color/red": "red", "color/green": "green", "color/blue": "blue" };
+
+function build(schema) {
+  params = new Map();
+  rows = new Map();
+  const holder = document.getElementById("sections");
+  holder.innerHTML = "";
+
+  let section = null;
+  for (const p of schema.params) {
+    params.set(p.slug, p);
+    if (p.section !== section) {
+      section = p.section;
+      const h = document.createElement("h2");
+      h.textContent = section;
+      holder.appendChild(h);
+    }
+
+    const row = document.createElement("div");
+    row.className = "row" + (TINTS[p.slug] ? " " + TINTS[p.slug] : "");
+    const top = document.createElement("div");
+    top.className = "top";
+    const name = document.createElement("span");
+    name.className = "name"; name.textContent = p.label;
+    const val = document.createElement("span");
+    val.className = "val"; val.textContent = format(p, p.value);
+    top.append(name, val);
+
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.min = p.min; slider.max = p.max; slider.step = p.step; slider.value = p.value;
+    slider.addEventListener("input", () => {
+      const v = parseFloat(slider.value);
+      val.textContent = format(p, v);
+      send({ type: "set", slug: p.slug, value: v });
+    });
+
+    row.append(top, slider);
+    holder.appendChild(row);
+    rows.set(p.slug, { slider, val, p });
+  }
+
+  buildPads(schema.params);
+  statusEl.textContent = "live"; statusEl.className = "on";
+}
+
+// A value changed somewhere else — the keyboard, OSC, the auto-pilot. We mirror it
+// without echoing back, otherwise two surfaces would fight over the same setting.
+function apply(slug, value) {
+  const row = rows.get(slug);
+  if (!row) return;
+  row.slider.value = value;
+  row.val.textContent = format(row.p, value);
+  for (const pad of pads) pad.refresh();
+}
+
+// Two XY pads. Each axis is assignable, because which pair is worth playing with
+// changes from one track to the next.
+const PAD_DEFAULTS = [["global/chaos", "global/speed"], ["spot/radius", "spot/pulse"]];
+
+function buildPads(list) {
+  const holder = document.getElementById("pads");
+  holder.innerHTML = "";
+  pads.length = 0;
+
+  PAD_DEFAULTS.forEach((defaults, index) => {
+    const pad = document.createElement("div");
+    pad.className = "pad";
+    const axes = document.createElement("div");
+    axes.className = "axes";
+
+    const pick = (axis) => {
+      const select = document.createElement("select");
+      for (const p of list) {
+        const option = document.createElement("option");
+        option.value = p.slug;
+        option.textContent = (axis === 0 ? "X · " : "Y · ") + p.label;
+        select.appendChild(option);
+      }
+      select.value = defaults[axis];
+      select.addEventListener("change", () => refresh());
+      return select;
+    };
+
+    const selectX = pick(0), selectY = pick(1);
+    axes.append(selectX, selectY);
+
+    const surface = document.createElement("div");
+    surface.className = "surface";
+    const dot = document.createElement("div");
+    dot.className = "dot";
+    surface.appendChild(dot);
+    pad.append(axes, surface);
+    holder.appendChild(pad);
+
+    function refresh() {
+      const px = params.get(selectX.value), py = params.get(selectY.value);
+      if (!px || !py) return;
+      const rx = rows.get(px.slug), ry = rows.get(py.slug);
+      const fx = (parseFloat(rx.slider.value) - px.min) / (px.max - px.min);
+      const fy = (parseFloat(ry.slider.value) - py.min) / (py.max - py.min);
+      dot.style.left = (fx * 100) + "%";
+      // Screen Y grows downwards; the pad reads bottom-up like a fader.
+      dot.style.top = ((1 - fy) * 100) + "%";
+    }
+
+    function drag(event) {
+      const rect = surface.getBoundingClientRect();
+      const touch = event.touches ? event.touches[0] : event;
+      const fx = Math.min(1, Math.max(0, (touch.clientX - rect.left) / rect.width));
+      const fy = 1 - Math.min(1, Math.max(0, (touch.clientY - rect.top) / rect.height));
+      for (const [select, fraction] of [[selectX, fx], [selectY, fy]]) {
+        const p = params.get(select.value);
+        if (!p) continue;
+        let v = p.min + fraction * (p.max - p.min);
+        if (p.step) v = Math.round(v / p.step) * p.step;
+        apply(p.slug, v);
+        send({ type: "set", slug: p.slug, value: v });
+      }
+      event.preventDefault();
+    }
+
+    let dragging = false;
+    const start = (e) => { dragging = true; drag(e); };
+    const move = (e) => { if (dragging) drag(e); };
+    const end = () => { dragging = false; };
+    surface.addEventListener("pointerdown", start);
+    surface.addEventListener("pointermove", move);
+    surface.addEventListener("pointerup", end);
+    surface.addEventListener("pointercancel", end);
+    surface.addEventListener("pointerleave", end);
+
+    pads.push({ refresh });
+    refresh();
+  });
+}
+
+for (const button of document.querySelectorAll("[data-action]")) {
+  button.addEventListener("click", () => send({ type: "action", name: button.dataset.action }));
+}
+
+connect();
+</script>
+</body>
+</html>

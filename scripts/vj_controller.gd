@@ -19,6 +19,7 @@ extends Node2D
 @onready var kaleido: CanvasLayer = $Kaleidoscope
 @onready var panel: CanvasLayer = $ControlPanel
 @onready var osc: Node = $OscServer
+@onready var web: Node = $WebServer
 
 var lang := Lang.new()
 ## Shared colour state, held by reference by every effect.
@@ -63,6 +64,15 @@ func _ready():
 	for p in params:
 		osc_routes["/deferlante/" + p.slug] = p
 	osc.message_received.connect(_on_osc_message)
+
+	web.client_connected.connect(_send_schema)
+	web.set_requested.connect(_on_web_set)
+	web.action_requested.connect(_on_web_action)
+	# A phone must see what the keyboard, OSC or the auto-pilot just did.
+	for p in params:
+		p.changed.connect(func(v): web.broadcast({"type": "value", "slug": p.slug, "value": v}))
+	# Switching language relabels the page too, so it is rebuilt from scratch.
+	lang.changed.connect(_send_schema)
 
 
 # --------------------------------------------------------------------------
@@ -357,6 +367,46 @@ func _randomize_all():
 	sphere.randomize_look()
 	for l in lasers:
 		l.randomize_look()
+
+
+# --------------------------------------------------------------------------
+# Web control surface
+# --------------------------------------------------------------------------
+
+## The page builds itself entirely from this, so it cannot drift from the settings
+## Godot actually has: a setting added in _build_params() simply shows up there.
+func _send_schema():
+	var described: Array = []
+	for p in params:
+		var choices: Array = []
+		for c in p.choices:
+			choices.append(lang.text(c) if p.translate_choices else c)
+		described.append({
+			"slug": p.slug,
+			"label": p.label(),
+			"section": lang.text(p.section),
+			"min": p.min_value,
+			"max": p.max_value,
+			"step": p.step,
+			"value": p.value,
+			"choices": choices,
+			"bidirectional": p.bidirectional,
+		})
+	web.broadcast({"type": "schema", "params": described})
+
+
+func _on_web_set(slug: String, value: float):
+	var p := param(slug)
+	if p:
+		p.set_value(value)
+
+
+func _on_web_action(name: String):
+	match name:
+		"glitch":
+			circle.apply_glitch()
+		"randomize":
+			_randomize_all()
 
 
 # --------------------------------------------------------------------------
