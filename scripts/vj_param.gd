@@ -31,6 +31,10 @@ var bidirectional: bool
 var choices: PackedStringArray = []
 ## Teinte du libellé à l'écran. Transparent = couleur par défaut du thème.
 var tint: Color = Color(0, 0, 0, 0)
+## Le pilote automatique a-t-il le droit de toucher à ce réglage ? On exclut ce
+## qui relève d'un choix de salle (halo, saturation) ou du tempo (vitesse) :
+## ce sont des décisions, pas des variations.
+var randomizable: bool = true
 
 var _apply: Callable
 

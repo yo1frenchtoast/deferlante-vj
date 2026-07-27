@@ -2,7 +2,7 @@
   "name": "Deferlante",
   "type": "OSC",
   "path": "Software",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "Controle les visuels VJ Deferlante (Godot) via OSC.",
   "hasInput": true,
   "hasOutput": true,
@@ -32,8 +32,8 @@
         "Value": {
           "type": "Float",
           "ui": "slider",
-          "min": -1.0,
-          "max": 1.0,
+          "min": -3.0,
+          "max": 3.0,
           "default": 1.0,
           "mappingIndex": 0
         }
@@ -42,6 +42,20 @@
     "Global Chaos": {
       "menu": "Global",
       "callback": "globalChaos",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Global Randomizer": {
+      "menu": "Global",
+      "callback": "globalRandomizer",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -133,6 +147,48 @@
           "min": 0.0,
           "max": 1.0,
           "default": 0.1,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Miroir Effet": {
+      "menu": "Miroir",
+      "callback": "miroirEffet",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Miroir Segments": {
+      "menu": "Miroir",
+      "callback": "miroirSegments",
+      "parameters": {
+        "Value": {
+          "type": "Integer",
+          "ui": "slider",
+          "min": 2.0,
+          "max": 16.0,
+          "default": 6.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Miroir Rotation": {
+      "menu": "Miroir",
+      "callback": "miroirRotation",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": -1.0,
+          "max": 1.0,
+          "default": 0.0,
           "mappingIndex": 0
         }
       }
@@ -272,7 +328,7 @@
           "ui": "slider",
           "min": 0.0,
           "max": 0.05,
-          "default": 0.005,
+          "default": 0.0,
           "mappingIndex": 0
         }
       }

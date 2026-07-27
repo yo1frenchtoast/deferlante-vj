@@ -15,8 +15,10 @@ extends Line2D
 ## Nombre de segments du cercle (128 suffit visuellement, 360 était du gâchis).
 @export var segments: int = 128
 @export var line_width: float = 3.0
-## Probabilité de déclencher un glitch à chaque image (0.005 ≈ un toutes les 3 s).
-@export var glitch_chance: float = 0.005
+## Probabilité de déclencher un glitch à chaque image. À 0 par défaut, comme le
+## halo : les effets qui marquent s'allument à la demande, ils ne s'imposent pas.
+## Pour repère, 0.005 ≈ un glitch toutes les 3 s, 0.05 ≈ en continu.
+@export var glitch_chance: float = 0.0
 
 @export_group("Poursuite")
 ## Vitesse des balayages. Monter = tête nerveuse, descendre = tête posée.

@@ -22,20 +22,17 @@ RACINE = Path(__file__).resolve().parent.parent
 CONTROLEUR = RACINE / "scripts" / "vj_controller.gd"
 SORTIE = RACINE / "chataigne" / "Deferlante"
 
-VERSION = "4.0.0"
+VERSION = "5.0.0"
 OSC_PORT = 9000
 
-# Les sections du panneau Godot deviennent les menus de Chataigne.
-MENUS = {
-    "global": "Global",
-    "couleur": "Couleur",
-    "lasers": "Lasers",
-    "poursuite": "Poursuite",
-    "sphere": "Sphere",
-}
+# Les sections du panneau Godot deviennent les menus de Chataigne. Le nom est
+# déduit du préfixe de l'adresse : ajouter une section côté Godot suffit, il n'y
+# a pas de liste à tenir à jour ici.
+def menu_de(slug: str) -> str:
+    return slug.split("/")[0].capitalize()
 
 # Réglages qui comptent des entiers plutôt que des flottants.
-ENTIERS = {"lasers/nombre", "sphere/cercles", "couleur/mode"}
+ENTIERS = {"lasers/nombre", "sphere/cercles", "couleur/mode", "miroir/segments"}
 
 DECLARATION = re.compile(
     r'_(?:fn|prop)\("([^"]+)", "([^"]+)", ([-\d.]+), ([-\d.]+), ([\d.]+), ([-\w.]+)'
@@ -84,7 +81,7 @@ def construire(reglages):
     commandes = collections.OrderedDict()
 
     for slug, libelle, mini, maxi, _pas, defaut in reglages:
-        menu = MENUS[slug.split("/")[0]]
+        menu = menu_de(slug)
         commandes[f"{menu} {sans_accent(libelle).title()}"] = collections.OrderedDict(
             [
                 ("menu", menu),

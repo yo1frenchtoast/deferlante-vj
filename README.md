@@ -35,8 +35,9 @@ Le panneau est rangé en quatre sections, les mêmes que les menus du module Cha
 ### Global
 | Réglage | Plage | Effet |
 | --- | --- | --- |
-| `VITESSE` | -1 – 1 | Vitesse globale. 0 = figé, négatif = tout repart à l'envers. |
+| `VITESSE` | -3 – 3 | Vitesse globale. 1 = normale, 0 = figé, négatif = tout repart à l'envers. |
 | `CHAOS` | 0 – 1 | Désordre du mouvement. N'affecte pas `GLITCH`. Voir plus bas. |
+| `RANDOMIZER` | 0 – 1 | Pilote automatique. 0 = éteint, 1 = un changement par seconde. |
 | `HALO` | 0 – 2 | Glow. **0 par défaut**, voir plus bas. |
 
 ### Couleur
@@ -45,6 +46,13 @@ Le panneau est rangé en quatre sections, les mêmes que les menus du module Cha
 | `MODE` | ALÉATOIRE / MANUEL | Chaque élément sa teinte, ou la couleur choisie pour tous. |
 | `SATURATION` | 0 – 1 | 0 = blanc pur, 1 = couleur franche. Agit dans les deux modes. |
 | `ROUGE` `VERT` `BLEU` | 0 – 1 | La couleur du mode manuel. Y toucher bascule en manuel. |
+
+### Miroir
+| Réglage | Plage | Effet |
+| --- | --- | --- |
+| `EFFET` | 0 – 1 | Repli kaléidoscope. 0 = éteint (la passe n'est pas payée). |
+| `SEGMENTS` | 2 – 16 | Nombre de parts. 6 donne l'étoile classique. |
+| `ROTATION` | -1 – 1 | Fait tourner les miroirs. ← gauche, → droite. |
 
 ### Lasers
 | Réglage | Plage | Effet |
@@ -62,7 +70,7 @@ Le panneau est rangé en quatre sections, les mêmes que les menus du module Cha
 | `ÉPAISSEUR` | 1 – 24 | Épaisseur du cercle. |
 | `VITESSE` | 0 – 2 | Vitesse des balayages (sans notion de sens). |
 | `ARRÊTS` | 0 – 3 | Durée des arrêts sur cible. 0 = balaye sans s'arrêter. |
-| `GLITCH` | 0 – 0.05 | Probabilité de glitch par image. Indépendant de `CHAOS`. |
+| `GLITCH` | 0 – 0.05 | Probabilité de glitch par image. **0 par défaut.** Indépendant de `CHAOS`. 0.005 ≈ un toutes les 3 s. |
 
 ### Sphère
 | Réglage | Plage | Effet |
@@ -134,6 +142,35 @@ Trois choses rendent l'aller-retour indolore :
 En projection avec fumée, un faisceau proche du blanc traverse mieux qu'une couleur
 saturée — descendre vers 0.4–0.5 si le rendu manque de tranchant.
 
+## Le pilote automatique
+
+`RANDOMIZER` fait évoluer les visuels tout seul : toutes les 1 à 12 secondes selon
+sa valeur, il pioche un ou deux réglages et les repose ailleurs. Une fois sur quatre
+il renouvelle aussi les couleurs, mais seulement si elles sont en mode aléatoire —
+sinon il écraserait un choix manuel.
+
+Trois précautions le rendent utilisable en vrai :
+
+- **Un ou deux réglages à la fois.** Au-delà, ça ne se lit plus comme un geste mais
+  comme une panne.
+- **Les valeurs se groupent vers le milieu** de chaque plage (moyenne de deux
+  tirages), ce qui évite les extrêmes qui vident l'écran ou le saturent.
+- **Quatre réglages lui échappent** : `VITESSE`, `HALO`, `SATURATION` et les
+  couleurs. Ce sont des décisions — le tempo du morceau, le contraste de la salle —
+  pas des variations à subir.
+
+## Le kaléidoscope
+
+`EFFET` replie l'image en parts symétriques autour du centre, comme les miroirs d'un
+kaléidoscope. Le repli se fait sur le **rendu déjà dessiné**, pas en dupliquant la
+géométrie : le coût est celui d'une passe plein écran, que tu aies 5 traits ou 40.
+
+Le calque est posé au-dessus des visuels mais **sous le panneau de réglages** —
+sinon les sliders se retrouveraient eux aussi démultipliés à l'écran.
+
+Comme le glow, à 0 la passe est réellement éteinte plutôt que laissée tourner en
+identité.
+
 ## Le chaos
 
 `CHAOS` est un macro-réglage qui **se superpose** aux autres sans les écraser : à 0 le
@@ -156,7 +193,9 @@ Ce qu'il fait, effet par effet :
 
 ## Vitesses à double sens
 
-`SPEED`, `SPIN` et `SPH SPIN` vont de **-1 à 1**, curseur au centre pour l'arrêt.
+`VITESSE` va de **-3 à 3**, les deux `ROTATION` de **-1 à 1**. Dans les trois cas le
+curseur au centre est l'arrêt, et 1 la vitesse normale — `VITESSE` garde donc de la
+marge au-delà pour les passages qui doivent décoller.
 Le signe donne le sens de rotation, l'amplitude la vitesse. L'écran affiche une
 flèche plutôt qu'un signe moins (`← 0.60`, `→ 0.60`, `·  0.00`) : dans le noir,
 une flèche se lit d'un coup d'œil.
@@ -220,7 +259,16 @@ l'arrière. Monter `SPH GLASS` donne une sphère de verre, plus chargée mais pl
 Coût mesuré : **+0,32 ms** à 40 cercles (le défaut), **+0,77 ms** à 80. Les cercles
 passés derrière l'horizon ne sont ni calculés ni rendus.
 
-## Glow : coupé par défaut
+## Ce qui est coupé par défaut
+
+`HALO` et `GLITCH` démarrent à 0, et l'un comme l'autre est réellement éteint plutôt
+que réglé à intensité nulle. Même principe pour `EFFET` du miroir et `RANDOMIZER`.
+
+C'est un parti pris : les effets qui marquent s'allument à la demande, au moment
+choisi, plutôt que de tourner en fond. Une scène qui démarre sobre laisse de la place
+pour monter ; une scène qui démarre saturée n'a nulle part où aller.
+
+## Le halo (glow)
 
 Avec une machine à fumée, la diffusion du faisceau se fait **physiquement** dans l'air.
 Le glow logiciel fait alors double emploi : il adoucit les bords et enlève au trait son
@@ -264,7 +312,10 @@ scenes/
   laser.tscn     Un trait, instancié N fois par le contrôleur
 chataigne/
   Deferlante/    Module Chataigne prêt à installer
+shaders/
+  kaleidoscope.gdshader   Repli polaire en parts symétriques
 scripts/
+  kaleidoscope.gd   Pilote la passe plein écran du miroir
   palette.gd        État de couleur, partagé par référence avec les trois effets
   vj_controller.gd  Déclaration des réglages, lasers, routage OSC
   vj_param.gd       Un réglage : bornes, pas, application, formatage

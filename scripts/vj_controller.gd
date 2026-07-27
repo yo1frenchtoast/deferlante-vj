@@ -16,6 +16,7 @@ extends Node2D
 @onready var world_env: WorldEnvironment = get_parent()
 @onready var circle: Line2D = $GlitchCircle
 @onready var sphere: Node2D = $SphereCircles
+@onready var kaleido: CanvasLayer = $Kaleidoscope
 @onready var panel: CanvasLayer = $ControlPanel
 @onready var osc: Node = $OscServer
 
@@ -35,6 +36,10 @@ var _mode_param: VJParam
 ## Vrai pendant l'application des valeurs de départ : sans ce garde-fou, poser la
 ## valeur initiale de ROUGE ferait basculer le projet en manuel dès le démarrage.
 var _initializing: bool = true
+
+# Pilote automatique : 0 = éteint, 1 = un changement par seconde environ.
+var _randomizer: float = 0.0
+var _next_roll: float = 0.0
 
 
 func _ready():
@@ -61,8 +66,9 @@ func _ready():
 ## qu'on peut reformuler sans rien casser côté console.
 func _build_params():
 	_section("GLOBAL")
-	_fn("global/vitesse", "VITESSE", -1, 1, 0.05, 1.0, _set_speed, true)
+	_fn("global/vitesse", "VITESSE", -3, 3, 0.05, 1.0, _set_speed, true)
 	_fn("global/chaos", "CHAOS", 0, 1, 0.02, 0.0, _set_chaos)
+	_fn("global/randomizer", "RANDOMIZER", 0, 1, 0.02, 0.0, _set_randomizer).randomizable = false
 	_fn("global/halo", "HALO", 0, 2, 0.05, default_glow, _set_glow)
 
 	_section("COULEUR")
@@ -72,6 +78,11 @@ func _build_params():
 	_fn("couleur/rouge", "ROUGE", 0, 1, 0.02, 1.0, _set_channel.bind(0)).tint = Color(1, 0.45, 0.4)
 	_fn("couleur/vert", "VERT", 0, 1, 0.02, 0.25, _set_channel.bind(1)).tint = Color(0.45, 1, 0.5)
 	_fn("couleur/bleu", "BLEU", 0, 1, 0.02, 0.1, _set_channel.bind(2)).tint = Color(0.5, 0.65, 1)
+
+	_section("MIROIR")
+	_fn("miroir/effet", "EFFET", 0, 1, 0.02, 0.0, kaleido.set_amount)
+	_fn("miroir/segments", "SEGMENTS", 2, 16, 1, 6.0, kaleido.set_segments)
+	_fn("miroir/rotation", "ROTATION", -1, 1, 0.02, 0.0, kaleido.set_spin, true)
 
 	_section("LASERS")
 	_fn("lasers/nombre", "NOMBRE", 0, 40, 1, laser_count, _set_laser_count)
@@ -86,7 +97,7 @@ func _build_params():
 	_fn("poursuite/epaisseur", "ÉPAISSEUR", 1, 24, 0.5, 3.0, func(v): circle.set_line_width(v))
 	_prop("poursuite/vitesse", "VITESSE", 0, 2, 0.05, 1.0, circle, "seek_speed")
 	_prop("poursuite/arrets", "ARRÊTS", 0, 3, 0.05, 0.9, circle, "hold_time")
-	_prop("poursuite/glitch", "GLITCH", 0, 0.05, 0.001, 0.005, circle, "glitch_chance")
+	_prop("poursuite/glitch", "GLITCH", 0, 0.05, 0.001, 0.0, circle, "glitch_chance")
 
 	_section("SPHÈRE")
 	_prop("sphere/cercles", "CERCLES", 0, 80, 1, 40.0, sphere, "circle_count")
@@ -96,6 +107,12 @@ func _build_params():
 	_prop("sphere/profondeur", "PROFONDEUR", 1.2, 10, 0.1, 2.0, sphere, "eye_distance")
 	_prop("sphere/epaisseur", "ÉPAISSEUR", 1, 24, 0.5, 3.0, sphere, "line_width")
 	_prop("sphere/verre", "VERRE", 0, 1, 0.02, 0.0, sphere, "back_dim")
+
+	# Hors de portée du pilote automatique : le tempo, le halo et les couleurs
+	# relèvent d'une décision (la salle, le morceau), pas d'une variation.
+	for slug in ["global/vitesse", "global/halo", "couleur/saturation",
+			"couleur/mode", "couleur/rouge", "couleur/vert", "couleur/bleu"]:
+		param(slug).randomizable = false
 
 
 var _current_section: String = ""
@@ -124,6 +141,14 @@ func _prop(slug: String, label: String, mn: float, mx: float, step: float,
 	return p
 
 
+## Retrouve un réglage par son adresse.
+func param(slug: String) -> VJParam:
+	for p in params:
+		if p.slug == slug:
+			return p
+	return null
+
+
 func _append(p: VJParam):
 	p.section = _current_section
 	params.append(p)
@@ -133,8 +158,53 @@ func _set_speed(value: float):
 	v_speed = value
 	circle.speed_scale = value
 	sphere.speed_scale = value
+	kaleido.speed_scale = value
 	for l in lasers:
 		l.speed_scale = value
+
+
+## Pilote automatique. Il ne remplace pas la main sur les sliders : il pioche un
+## ou deux réglages et les repose ailleurs, à un rythme qui dépend de sa valeur.
+func _set_randomizer(value: float):
+	_randomizer = value
+	_next_roll = _interval()
+
+
+func _interval() -> float:
+	return lerpf(12.0, 1.0, _randomizer)
+
+
+func _process(delta: float):
+	if _randomizer <= 0.0:
+		return
+	_next_roll -= delta
+	if _next_roll > 0.0:
+		return
+	_next_roll = _interval()
+	_roll()
+
+
+func _roll():
+	var candidats: Array[VJParam] = []
+	for p in params:
+		if p.randomizable:
+			candidats.append(p)
+	if candidats.is_empty():
+		return
+
+	# Un ou deux réglages à la fois : au-delà, ça ne se lit plus comme un geste
+	# mais comme une panne.
+	for i in range(randi_range(1, 2)):
+		var p: VJParam = candidats.pick_random()
+		# Moyenne de deux tirages : les valeurs se groupent vers le milieu de la
+		# plage, donc on évite les extrêmes qui vident l'écran ou le saturent.
+		var t := (randf() + randf()) * 0.5
+		p.set_value(lerpf(p.min_value, p.max_value, t))
+
+	# De temps en temps, un coup de neuf sur les couleurs — mais seulement si
+	# elles sont en aléatoire, sinon on écraserait un choix manuel.
+	if palette.mode == Palette.RANDOM and randf() < 0.25:
+		_randomize_all()
 
 
 func _set_chaos(value: float):

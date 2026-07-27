@@ -13,6 +13,10 @@ function globalChaos(value) {
 	local.send("/deferlante/global/chaos", value);
 }
 
+function globalRandomizer(value) {
+	local.send("/deferlante/global/randomizer", value);
+}
+
 function globalHalo(value) {
 	local.send("/deferlante/global/halo", value);
 }
@@ -35,6 +39,18 @@ function couleurVert(value) {
 
 function couleurBleu(value) {
 	local.send("/deferlante/couleur/bleu", value);
+}
+
+function miroirEffet(value) {
+	local.send("/deferlante/miroir/effet", value);
+}
+
+function miroirSegments(value) {
+	local.send("/deferlante/miroir/segments", value);
+}
+
+function miroirRotation(value) {
+	local.send("/deferlante/miroir/rotation", value);
 }
 
 function lasersNombre(value) {

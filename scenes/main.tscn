@@ -5,6 +5,8 @@
 [ext_resource type="Script" path="res://scripts/sphere_circles.gd" id="3_sphere"]
 [ext_resource type="Script" path="res://scripts/osc_server.gd" id="4_osc"]
 [ext_resource type="Script" path="res://scripts/control_panel.gd" id="5_panel"]
+[ext_resource type="Script" path="res://scripts/kaleidoscope.gd" id="6_kaleido"]
+[ext_resource type="Shader" path="res://shaders/kaleidoscope.gdshader" id="7_shader"]
 
 [sub_resource type="Environment" id="Environment_te0mf"]
 background_mode = 3
@@ -14,6 +16,12 @@ glow_strength = 1.0
 glow_bloom = 0.2
 glow_blend_mode = 0
 glow_hdr_threshold = 0.5
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_kaleido"]
+shader = ExtResource("7_shader")
+shader_parameter/amount = 0.0
+shader_parameter/segments = 6
+shader_parameter/rotation = 0.0
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_wjtrd"]
 blend_mode = 1
@@ -34,7 +42,19 @@ script = ExtResource("3_sphere")
 [node name="OscServer" type="Node" parent="VJController"]
 script = ExtResource("4_osc")
 
+[node name="Kaleidoscope" type="CanvasLayer" parent="VJController"]
+script = ExtResource("6_kaleido")
+
+[node name="Rect" type="ColorRect" parent="VJController/Kaleidoscope"]
+material = SubResource("ShaderMaterial_kaleido")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
 [node name="ControlPanel" type="CanvasLayer" parent="VJController"]
+layer = 2
 script = ExtResource("5_panel")
 
 [node name="FpsLabel" type="Label" parent="VJController/ControlPanel"]
@@ -54,7 +74,7 @@ theme_override_constants/outline_size = 5
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 24.0
-offset_top = -880.0
+offset_top = -980.0
 offset_right = 524.0
 offset_bottom = -24.0
 grow_vertical = 0
