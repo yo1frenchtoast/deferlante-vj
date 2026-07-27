@@ -43,7 +43,7 @@
     width: 100%; background: #0e0e12; color: var(--text);
     border: 1px solid var(--line); border-radius: .35rem; padding: .35rem; font-size: .75rem;
   }
-  .pad .axes { display: flex; gap: .4rem; margin-bottom: .45rem; }
+  .pad .axes { display: flex; flex-direction: column; gap: .35rem; margin-bottom: .45rem; }
   .surface {
     position: relative; width: 100%; aspect-ratio: 1 / 1;
     background:
@@ -216,7 +216,9 @@ function buildPads(list) {
       for (const p of list) {
         const option = document.createElement("option");
         option.value = p.slug;
-        option.textContent = (axis === 0 ? "X · " : "Y · ") + p.label;
+        // The section matters: three of them have a WIDTH, and on a pad you are
+        // picking blind from a list rather than reading a labelled row.
+        option.textContent = (axis === 0 ? "X · " : "Y · ") + p.section + " " + p.label;
         select.appendChild(option);
       }
       select.value = defaults[axis];

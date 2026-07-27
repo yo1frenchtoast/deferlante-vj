@@ -106,9 +106,11 @@ phone or tablet on the same network — the address is printed at startup.
 
 It gives you, on top of every setting as a touch slider:
 
-- **Two XY pads** whose axes are assignable from dropdowns. Which pair is worth
-  playing with changes from one track to the next, so they are not hard-wired.
-  They default to chaos × speed and spotlight radius × pulse.
+- **Two XY pads** whose axes are assignable from dropdowns, each entry naming its
+  section as well as the setting (`X · SPOTLIGHT WIDTH`) — three sections have a
+  `WIDTH`, and on a pad you pick blind from a list rather than reading a labelled
+  row. Which pair is worth playing with changes from one track to the next, so they
+  are not hard-wired; they default to chaos × speed and spotlight radius × pulse.
 - **GLITCH** and **COLORS** buttons.
 - **Live mirroring**: a value changed on the keyboard, over OSC or by the auto-pilot
   moves on the phone too, and vice versa.
