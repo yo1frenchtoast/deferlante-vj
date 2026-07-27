@@ -1,16 +1,16 @@
 class_name Palette
 extends RefCounted
 
-## L'état de couleur du spectacle, partagé par les lasers, la poursuite et la sphère.
+## The show's colour state, shared by the lasers, the spotlight and the sphere.
 ##
-## C'est un objet unique que tout le monde référence, pas une valeur recopiée dans
-## chaque effet : changer la saturation ici la change partout, et un laser créé en
-## cours de route est déjà à jour puisqu'il pointe sur le même objet.
+## It is a single object everyone references, not a value copied into each effect:
+## changing the saturation here changes it everywhere, and a laser spawned mid-set is
+## already up to date because it points at the same object.
 ##
-## Deux modes coexistent sans se marcher dessus : en aléatoire, chaque élément garde
-## la teinte qu'il s'est tirée et que la touche R renouvelle ; en manuel, tous
-## prennent la couleur choisie. Passer de l'un à l'autre ne détruit rien — les
-## teintes aléatoires sont conservées et réapparaissent au retour.
+## Two modes coexist without treading on each other: in random mode every element
+## keeps the hue it drew for itself, which the R key redraws; in manual mode they all
+## take the chosen colour. Switching between them destroys nothing — the random hues
+## are kept and reappear on the way back.
 
 signal changed
 
@@ -21,13 +21,13 @@ var mode: int = RANDOM
 var manual: Color = Color(1.0, 0.25, 0.1)
 
 
-## `hue` n'est lu qu'en mode aléatoire ; en manuel c'est `manual` qui décide.
-## Dans les deux cas la saturation ramène vers le blanc, ce qui garde le réglage
-## utile en projection : un faisceau proche du blanc traverse mieux la fumée.
+## `hue` is only read in random mode; in manual mode `manual` decides.
+## In both cases saturation pulls towards white, which keeps the setting useful when
+## projecting: a beam close to white cuts through haze better than a saturated one.
 func resolve(hue: float) -> Color:
 	if mode == MANUAL:
 		return manual.lerp(Color.WHITE, 1.0 - saturation)
-	# Valeur forcée à 1 : en blend additif, une couleur sombre ne se voit pas.
+	# Value forced to 1: under additive blending a dark colour simply does not show.
 	return Color.from_hsv(hue, saturation, 1.0)
 
 

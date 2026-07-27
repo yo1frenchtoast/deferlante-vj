@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""Génère le module Chataigne à partir de la liste des réglages de Godot.
+"""Generate the Chataigne module from Godot's list of settings.
 
     python3 tools/build_chataigne_module.py
 
-Le module est un miroir de `_build_params()` dans `scripts/vj_controller.gd` :
-mêmes réglages, mêmes bornes, mêmes défauts. Le générer plutôt que le maintenir à
-la main évite la seule panne qui ne se voit pas — un réglage ajouté côté Godot et
-oublié côté console, ou pire, des bornes qui divergent en silence.
+The module mirrors `_build_params()` in `scripts/vj_controller.gd`: same settings,
+same bounds, same defaults. Generating it rather than maintaining it by hand rules
+out the one failure that never shows — a setting added on the Godot side and
+forgotten on the console, or worse, bounds that quietly drift apart.
 
-Le script s'arrête net s'il n'arrive pas à lire tous les réglages : mieux vaut une
-erreur bruyante qu'un module amputé de deux commandes sans que personne ne le voie.
+Command names come from the English labels in `scripts/lang.gd`, so the console
+reads like the English UI.
+
+The script stops dead if it cannot read every setting: a loud error beats a module
+silently missing two commands.
 """
 
 import collections
@@ -18,84 +21,101 @@ import re
 import sys
 from pathlib import Path
 
-RACINE = Path(__file__).resolve().parent.parent
-CONTROLEUR = RACINE / "scripts" / "vj_controller.gd"
-SORTIE = RACINE / "chataigne" / "Deferlante"
+ROOT = Path(__file__).resolve().parent.parent
+CONTROLLER = ROOT / "scripts" / "vj_controller.gd"
+LANG = ROOT / "scripts" / "lang.gd"
+OUTPUT = ROOT / "chataigne" / "Deferlante"
 
-VERSION = "5.0.0"
+VERSION = "6.0.0"
 OSC_PORT = 9000
 
-# Les sections du panneau Godot deviennent les menus de Chataigne. Le nom est
-# déduit du préfixe de l'adresse : ajouter une section côté Godot suffit, il n'y
-# a pas de liste à tenir à jour ici.
-def menu_de(slug: str) -> str:
-    return slug.split("/")[0].capitalize()
-
-# Réglages qui comptent des entiers plutôt que des flottants.
-ENTIERS = {"lasers/nombre", "sphere/cercles", "couleur/mode", "miroir/segments"}
+# Settings that count in whole numbers rather than floats.
+INTEGERS = {
+    "lasers/count",
+    "sphere/count",
+    "color/mode",
+    "mirror/segments",
+    "global/language",
+}
 
 DECLARATION = re.compile(
-    r'_(?:fn|prop)\("([^"]+)", "([^"]+)", ([-\d.]+), ([-\d.]+), ([\d.]+), ([-\w.]+)'
+    r'_(?:fn|prop)\("([^"]+)", ([-\d.]+), ([-\d.]+), ([\d.]+), ([-\w.]+)'
 )
+# "spot/hold": ["ARRÊTS", "HOLD"],  ->  slug, english label
+LABEL = re.compile(r'"([\w/.]+)":\s*\["[^"]*",\s*"([^"]*)"\]')
 
 
-def lire_reglages(source: str):
-    """Extrait (slug, libellé, min, max, pas, défaut) de chaque réglage déclaré."""
-    # Un défaut peut être un littéral ou une variable exportée : on résout les deux.
-    constantes = {
-        nom: float(val)
-        for nom, val in re.findall(r"var (\w+):\s*\w+\s*=\s*([-\d.]+)", source)
+def read_labels() -> dict:
+    """English labels and section names, straight from the translation table."""
+    return dict(LABEL.findall(LANG.read_text(encoding="utf-8")))
+
+
+def read_settings(source: str):
+    """Pull (slug, min, max, step, default) out of every declared setting."""
+    # A default may be a literal or an exported variable: resolve both.
+    constants = {
+        name: float(value)
+        for name, value in re.findall(r"var (\w+):\s*\w+\s*=\s*([-\d.]+)", source)
     }
 
-    reglages = []
-    for slug, libelle, mini, maxi, pas, defaut in DECLARATION.findall(source):
+    settings = []
+    for slug, low, high, step, default in DECLARATION.findall(source):
         try:
-            valeur = float(defaut)
+            value = float(default)
         except ValueError:
-            if defaut not in constantes:
-                sys.exit(f"Défaut introuvable pour {slug} : {defaut}")
-            valeur = constantes[defaut]
-        reglages.append((slug, libelle, float(mini), float(maxi), float(pas), valeur))
+            if default not in constants:
+                sys.exit(f"No default found for {slug}: {default}")
+            value = constants[default]
+        settings.append((slug, float(low), float(high), float(step), value))
 
-    # Le garde-fou : autant de réglages lus que déclarés, sinon la regex a raté
-    # une forme qu'on n'avait pas prévue et le module sortirait incomplet.
-    attendus = len(re.findall(r'_(?:fn|prop)\("', source))
-    if len(reglages) != attendus:
-        sys.exit(f"Regex incomplète : {len(reglages)} réglages lus sur {attendus}")
-    return reglages
-
-
-def rappel(slug: str) -> str:
-    """"sphere/rotation" -> "sphereRotation" : le nom de la fonction JS."""
-    section, nom = slug.split("/")
-    return section + nom.capitalize()
+    # The guard: as many settings read as declared. Otherwise the regex missed a
+    # form we did not anticipate and the module would come out incomplete.
+    expected = len(re.findall(r'_(?:fn|prop)\("', source))
+    if len(settings) != expected:
+        sys.exit(f"Regex incomplete: read {len(settings)} settings out of {expected}")
+    return settings
 
 
-def sans_accent(texte: str) -> str:
-    for accentue, plat in (("É", "E"), ("Ê", "E"), ("À", "A"), ("Ô", "O")):
-        texte = texte.replace(accentue, plat)
-    return texte
+def callback(slug: str) -> str:
+    """"sphere/spin" -> "sphereSpin": the name of the JS function."""
+    section, name = slug.split("/")
+    return section + name.capitalize()
 
 
-def construire(reglages):
-    commandes = collections.OrderedDict()
+def ascii_only(text: str) -> str:
+    for accented, plain in (("É", "E"), ("Ê", "E"), ("À", "A"), ("Ô", "O"), ("Ç", "C")):
+        text = text.replace(accented, plain)
+    return text
 
-    for slug, libelle, mini, maxi, _pas, defaut in reglages:
-        menu = menu_de(slug)
-        commandes[f"{menu} {sans_accent(libelle).title()}"] = collections.OrderedDict(
+
+def menu_of(slug: str, labels: dict) -> str:
+    section = slug.split("/")[0]
+    return labels.get(f"section.{section}", section).title()
+
+
+def command_name(slug: str, labels: dict) -> str:
+    """Menu plus label, in English: "spot/hold" -> "Spotlight Hold"."""
+    return f"{menu_of(slug, labels)} {ascii_only(labels.get(slug, slug)).title()}"
+
+
+def build(settings, labels):
+    commands = collections.OrderedDict()
+
+    for slug, low, high, _step, default in settings:
+        commands[command_name(slug, labels)] = collections.OrderedDict(
             [
-                ("menu", menu),
-                ("callback", rappel(slug)),
+                ("menu", menu_of(slug, labels)),
+                ("callback", callback(slug)),
                 (
                     "parameters",
                     {
                         "Value": collections.OrderedDict(
                             [
-                                ("type", "Integer" if slug in ENTIERS else "Float"),
+                                ("type", "Integer" if slug in INTEGERS else "Float"),
                                 ("ui", "slider"),
-                                ("min", mini),
-                                ("max", maxi),
-                                ("default", defaut),
+                                ("min", low),
+                                ("max", high),
+                                ("default", default),
                                 ("mappingIndex", 0),
                             ]
                         )
@@ -104,11 +124,11 @@ def construire(reglages):
             ]
         )
 
-    # Un vrai sélecteur de couleur, qui envoie ses composantes d'un bloc.
-    commandes["Couleur Choisie"] = collections.OrderedDict(
+    # A real colour picker, sending its components in one go.
+    commands["Color Picker"] = collections.OrderedDict(
         [
-            ("menu", "Couleur"),
-            ("callback", "couleurRgb"),
+            ("menu", "Color"),
+            ("callback", "colorRgb"),
             (
                 "parameters",
                 {
@@ -120,13 +140,13 @@ def construire(reglages):
         ]
     )
 
-    for nom, fonction in (("Trigger Glitch", "triggerGlitch"), ("Randomize Colors", "randomizeColors")):
-        commandes[nom] = collections.OrderedDict(
+    for name, function in (("Trigger Glitch", "triggerGlitch"), ("Randomize Colors", "randomizeColors")):
+        commands[name] = collections.OrderedDict(
             [
                 ("menu", "Actions"),
-                ("callback", fonction),
-                # Toute commande doit avoir un bloc `parameters` non vide : une
-                # commande sans paramètre a déjà fait planter Chataigne au scan.
+                ("callback", function),
+                # Every command needs a non-empty `parameters` block: a command
+                # without parameters has already crashed Chataigne on scan.
                 (
                     "parameters",
                     {
@@ -144,7 +164,7 @@ def construire(reglages):
             ("type", "OSC"),
             ("path", "Software"),
             ("version", VERSION),
-            ("description", "Controle les visuels VJ Deferlante (Godot) via OSC."),
+            ("description", "Control the Deferlante VJ visuals (Godot) over OSC."),
             ("hasInput", True),
             ("hasOutput", True),
             ("hideDefaultCommands", True),
@@ -163,37 +183,37 @@ def construire(reglages):
                                 }
                             },
                         ),
-                        # Entrée déclarée mais désactivée : un module OSC sans
-                        # section `OSC Input` s'écarte de tous ceux qui marchent.
+                        # Input declared but disabled: an OSC module without an
+                        # `OSC Input` section departs from every one that works.
                         ("OSC Input", {"enabled": False, "localPort": OSC_PORT + 1}),
                     ]
                 ),
             ),
             ("scripts", ["deferlante.js"]),
-            ("commands", commandes),
+            ("commands", commands),
         ]
     )
 
-    lignes = [
-        "// Module Chataigne -> visuels Deferlante (Godot).",
-        "// Genere par tools/build_chataigne_module.py, ne pas editer a la main.",
+    lines = [
+        "// Chataigne module -> Deferlante visuals (Godot).",
+        "// Generated by tools/build_chataigne_module.py, do not edit by hand.",
         "",
         "function init() {",
-        '\tscript.log("Module Deferlante pret");',
+        '\tscript.log("Deferlante module ready");',
         "}",
         "",
     ]
-    for slug, *_ in reglages:
-        lignes += [
-            f"function {rappel(slug)}(value) {{",
+    for slug, *_ in settings:
+        lines += [
+            f"function {callback(slug)}(value) {{",
             f'\tlocal.send("/deferlante/{slug}", value);',
             "}",
             "",
         ]
-    lignes += [
-        "// Le selecteur de couleur arrive en tableau [r, v, b, a].",
-        "function couleurRgb(color) {",
-        '\tlocal.send("/deferlante/couleur/rgb", color[0], color[1], color[2]);',
+    lines += [
+        "// The colour picker arrives as an array [r, g, b, a].",
+        "function colorRgb(color) {",
+        '\tlocal.send("/deferlante/color/rgb", color[0], color[1], color[2]);',
         "}",
         "",
         "function triggerGlitch(value) {",
@@ -205,33 +225,34 @@ def construire(reglages):
         "}",
         "",
     ]
-    return module, "\n".join(lignes)
+    return module, "\n".join(lines)
 
 
 def main():
-    reglages = lire_reglages(CONTROLEUR.read_text(encoding="utf-8"))
+    labels = read_labels()
+    settings = read_settings(CONTROLLER.read_text(encoding="utf-8"))
 
-    adresses = [slug for slug, *_ in reglages]
-    if len(adresses) != len(set(adresses)):
-        doublons = [a for a in adresses if adresses.count(a) > 1]
-        sys.exit(f"Adresses OSC en collision : {sorted(set(doublons))}")
+    addresses = [slug for slug, *_ in settings]
+    if len(addresses) != len(set(addresses)):
+        duplicates = [a for a in addresses if addresses.count(a) > 1]
+        sys.exit(f"Colliding OSC addresses: {sorted(set(duplicates))}")
 
-    module, javascript = construire(reglages)
+    module, javascript = build(settings, labels)
 
-    SORTIE.mkdir(parents=True, exist_ok=True)
-    (SORTIE / "module.json").write_text(
+    OUTPUT.mkdir(parents=True, exist_ok=True)
+    (OUTPUT / "module.json").write_text(
         json.dumps(module, indent=2, ensure_ascii=True) + "\n", encoding="utf-8"
     )
-    (SORTIE / "deferlante.js").write_text(javascript, encoding="utf-8")
+    (OUTPUT / "deferlante.js").write_text(javascript, encoding="utf-8")
 
-    # Dernier filet : chaque callback déclaré doit avoir sa fonction JS.
-    fonctions = set(re.findall(r"function (\w+)\(", javascript))
-    orphelins = [c["callback"] for c in module["commands"].values() if c["callback"] not in fonctions]
-    if orphelins:
-        sys.exit(f"Callbacks sans fonction JS : {orphelins}")
+    # Last safety net: every declared callback must have its JS function.
+    functions = set(re.findall(r"function (\w+)\(", javascript))
+    orphans = [c["callback"] for c in module["commands"].values() if c["callback"] not in functions]
+    if orphans:
+        sys.exit(f"Callbacks with no JS function: {orphans}")
 
-    print(f"{len(reglages)} réglages -> {len(module['commands'])} commandes")
-    print(f"écrit dans {SORTIE.relative_to(RACINE)}/")
+    print(f"{len(settings)} settings -> {len(module['commands'])} commands")
+    print(f"written to {OUTPUT.relative_to(ROOT)}/")
 
 
 if __name__ == "__main__":

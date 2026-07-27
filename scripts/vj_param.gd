@@ -1,49 +1,48 @@
 class_name VJParam
 extends RefCounted
 
-## Un réglage pilotable : ses bornes, son pas, et quoi faire de sa valeur.
+## One controllable setting: its bounds, its step, and what to do with its value.
 ##
-## `slug` (l'adresse OSC) et `label` (ce qui s'affiche) sont séparés à dessein :
-## on peut reformuler un libellé à l'écran sans casser les mappings d'une console
-## déjà câblée sur l'ancienne adresse.
+## The `slug` is the stable identity — it becomes the OSC address. What the
+## operator reads comes from `Lang`, keyed by that same slug, so rewording a label
+## (or switching language) can never break a console already wired to an address.
 ##
-## Le paramètre ne connaît pas son affichage. Le panneau s'abonne à `changed`, ce
-## qui permet au slider, au clavier et à l'OSC de passer tous par le même point
-## d'entrée sans que l'un ait à savoir que les autres existent.
+## The setting knows nothing about its widgets. The panel subscribes to `changed`,
+## which lets the slider, the keyboard and OSC all funnel through one entry point
+## without any of them needing to know the others exist.
 
 signal changed(value: float)
 
-## Identifiant stable, utilisé pour l'adresse OSC : "sph_r" -> /deferlante/sph_r
+## Stable identifier, used as the OSC address: "sphere/spin" -> /deferlante/sphere/spin
 var slug: String
-## Ce que lit l'utilisateur à l'écran.
-var label: String
-## Section du panneau où ranger le réglage.
+## Panel section this setting belongs to, as a Lang key.
 var section: String
 
 var min_value: float
 var max_value: float
 var step: float
 var value: float
-## Réglage à double sens : le signe est un sens de rotation, affiché par une flèche
-## plutôt que par un signe moins — dans le noir, une flèche se lit d'un coup d'œil.
+## Two-way setting: the sign is a direction of rotation, shown as an arrow rather
+## than a minus sign — in the dark an arrow reads at a glance.
 var bidirectional: bool
-## Affichage énuméré : "ALÉATOIRE" / "MANUEL" au lieu de 0 / 1.
+## Enumerated display: shows names instead of 0 / 1. Holds Lang keys, or raw
+## strings when the choices are language names that stay in their own tongue.
 var choices: PackedStringArray = []
-## Teinte du libellé à l'écran. Transparent = couleur par défaut du thème.
+## Whether the choices above are Lang keys needing translation.
+var translate_choices: bool = true
+## Label tint on screen. Transparent means the theme's default colour.
 var tint: Color = Color(0, 0, 0, 0)
-## Le pilote automatique a-t-il le droit de toucher à ce réglage ? On exclut ce
-## qui relève d'un choix de salle (halo, saturation) ou du tempo (vitesse) :
-## ce sont des décisions, pas des variations.
+## May the auto-pilot touch this setting? We exclude anything that is a decision
+## about the room or the track (glow, saturation, tempo) rather than a variation.
 var randomizable: bool = true
 
+var _lang: Lang
 var _apply: Callable
 
 
-func _init(p_slug: String, p_label: String, p_min: float, p_max: float,
-		p_step: float, p_value: float, p_apply: Callable,
-		p_bidirectional: bool = false):
+func _init(p_slug: String, p_min: float, p_max: float, p_step: float,
+		p_value: float, p_apply: Callable, p_bidirectional: bool = false):
 	slug = p_slug
-	label = p_label
 	min_value = p_min
 	max_value = p_max
 	step = p_step
@@ -52,7 +51,15 @@ func _init(p_slug: String, p_label: String, p_min: float, p_max: float,
 	bidirectional = p_bidirectional
 
 
-## Seul point d'entrée : slider, clavier et OSC y aboutissent tous.
+func use_language(lang: Lang):
+	_lang = lang
+
+
+func label() -> String:
+	return _lang.label(slug) if _lang else slug
+
+
+## The single entry point: slider, keyboard and OSC all end up here.
 func set_value(new_value: float):
 	value = clampf(snappedf(new_value, step), min_value, max_value)
 	_apply.call(value)
@@ -63,17 +70,18 @@ func apply_current():
 	_apply.call(value)
 
 
-## Décalage d'un cran : fin = un pas, sinon 1/40e de la plage pour traverser
-## le réglage en quelques appuis.
+## Nudge by one notch: fine is a single step, otherwise a fortieth of the range so
+## the setting can be crossed in a few presses.
 func nudge(direction: int, fine: bool):
 	var amount = step if fine else maxf(step, (max_value - min_value) / 40.0)
 	set_value(value + direction * amount)
 
 
-## Nombre de décimales déduit du pas : un pas de 1 n'a pas à afficher ".00".
+## Decimal count follows the step: a step of 1 has no business showing ".00".
 func format_value() -> String:
 	if not choices.is_empty():
-		return choices[clampi(int(value), 0, choices.size() - 1)]
+		var choice := choices[clampi(int(value), 0, choices.size() - 1)]
+		return _lang.text(choice) if translate_choices and _lang else choice
 	if bidirectional:
 		if value > 0.0005:
 			return "→ %.2f" % value

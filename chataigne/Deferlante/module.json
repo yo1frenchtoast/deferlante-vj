@@ -2,8 +2,8 @@
   "name": "Deferlante",
   "type": "OSC",
   "path": "Software",
-  "version": "5.0.0",
-  "description": "Controle les visuels VJ Deferlante (Godot) via OSC.",
+  "version": "6.0.0",
+  "description": "Control the Deferlante VJ visuals (Godot) over OSC.",
   "hasInput": true,
   "hasOutput": true,
   "hideDefaultCommands": true,
@@ -25,9 +25,9 @@
     "deferlante.js"
   ],
   "commands": {
-    "Global Vitesse": {
+    "Global Speed": {
       "menu": "Global",
-      "callback": "globalVitesse",
+      "callback": "globalSpeed",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -67,9 +67,9 @@
         }
       }
     },
-    "Global Halo": {
+    "Global Glow": {
       "menu": "Global",
-      "callback": "globalHalo",
+      "callback": "globalGlow",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -81,9 +81,9 @@
         }
       }
     },
-    "Couleur Mode": {
-      "menu": "Couleur",
-      "callback": "couleurMode",
+    "Global Language": {
+      "menu": "Global",
+      "callback": "globalLanguage",
       "parameters": {
         "Value": {
           "type": "Integer",
@@ -95,9 +95,23 @@
         }
       }
     },
-    "Couleur Saturation": {
-      "menu": "Couleur",
-      "callback": "couleurSaturation",
+    "Color Mode": {
+      "menu": "Color",
+      "callback": "colorMode",
+      "parameters": {
+        "Value": {
+          "type": "Integer",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Color Saturation": {
+      "menu": "Color",
+      "callback": "colorSaturation",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -109,9 +123,9 @@
         }
       }
     },
-    "Couleur Rouge": {
-      "menu": "Couleur",
-      "callback": "couleurRouge",
+    "Color Red": {
+      "menu": "Color",
+      "callback": "colorRed",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -123,9 +137,9 @@
         }
       }
     },
-    "Couleur Vert": {
-      "menu": "Couleur",
-      "callback": "couleurVert",
+    "Color Green": {
+      "menu": "Color",
+      "callback": "colorGreen",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -137,9 +151,9 @@
         }
       }
     },
-    "Couleur Bleu": {
-      "menu": "Couleur",
-      "callback": "couleurBleu",
+    "Color Blue": {
+      "menu": "Color",
+      "callback": "colorBlue",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -151,9 +165,9 @@
         }
       }
     },
-    "Miroir Effet": {
-      "menu": "Miroir",
-      "callback": "miroirEffet",
+    "Mirror Effect": {
+      "menu": "Mirror",
+      "callback": "mirrorEffect",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -165,9 +179,9 @@
         }
       }
     },
-    "Miroir Segments": {
-      "menu": "Miroir",
-      "callback": "miroirSegments",
+    "Mirror Segments": {
+      "menu": "Mirror",
+      "callback": "mirrorSegments",
       "parameters": {
         "Value": {
           "type": "Integer",
@@ -179,9 +193,9 @@
         }
       }
     },
-    "Miroir Rotation": {
-      "menu": "Miroir",
-      "callback": "miroirRotation",
+    "Mirror Rotation": {
+      "menu": "Mirror",
+      "callback": "mirrorRotation",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -193,9 +207,9 @@
         }
       }
     },
-    "Lasers Nombre": {
+    "Lasers Count": {
       "menu": "Lasers",
-      "callback": "lasersNombre",
+      "callback": "lasersCount",
       "parameters": {
         "Value": {
           "type": "Integer",
@@ -207,9 +221,9 @@
         }
       }
     },
-    "Lasers Epaisseur": {
+    "Lasers Width": {
       "menu": "Lasers",
-      "callback": "lasersEpaisseur",
+      "callback": "lasersWidth",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -221,9 +235,9 @@
         }
       }
     },
-    "Lasers Longueur": {
+    "Lasers Length": {
       "menu": "Lasers",
-      "callback": "lasersLongueur",
+      "callback": "lasersLength",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -235,9 +249,9 @@
         }
       }
     },
-    "Lasers Rotation": {
+    "Lasers Spin": {
       "menu": "Lasers",
-      "callback": "lasersRotation",
+      "callback": "lasersSpin",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -249,9 +263,9 @@
         }
       }
     },
-    "Poursuite Rayon": {
-      "menu": "Poursuite",
-      "callback": "poursuiteRayon",
+    "Spotlight Radius": {
+      "menu": "Spotlight",
+      "callback": "spotRadius",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -263,9 +277,9 @@
         }
       }
     },
-    "Poursuite Pulsation": {
-      "menu": "Poursuite",
-      "callback": "poursuitePulsation",
+    "Spotlight Pulse": {
+      "menu": "Spotlight",
+      "callback": "spotPulse",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -277,9 +291,9 @@
         }
       }
     },
-    "Poursuite Epaisseur": {
-      "menu": "Poursuite",
-      "callback": "poursuiteEpaisseur",
+    "Spotlight Width": {
+      "menu": "Spotlight",
+      "callback": "spotWidth",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -291,9 +305,9 @@
         }
       }
     },
-    "Poursuite Vitesse": {
-      "menu": "Poursuite",
-      "callback": "poursuiteVitesse",
+    "Spotlight Speed": {
+      "menu": "Spotlight",
+      "callback": "spotSpeed",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -305,9 +319,9 @@
         }
       }
     },
-    "Poursuite Arrets": {
-      "menu": "Poursuite",
-      "callback": "poursuiteArrets",
+    "Spotlight Hold": {
+      "menu": "Spotlight",
+      "callback": "spotHold",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -319,9 +333,9 @@
         }
       }
     },
-    "Poursuite Tremblement": {
-      "menu": "Poursuite",
-      "callback": "poursuiteTremblement",
+    "Spotlight Shake": {
+      "menu": "Spotlight",
+      "callback": "spotShake",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -333,9 +347,9 @@
         }
       }
     },
-    "Poursuite Frequence": {
-      "menu": "Poursuite",
-      "callback": "poursuiteFrequence",
+    "Spotlight Frequency": {
+      "menu": "Spotlight",
+      "callback": "spotFrequency",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -347,9 +361,9 @@
         }
       }
     },
-    "Poursuite Glitch": {
-      "menu": "Poursuite",
-      "callback": "poursuiteGlitch",
+    "Spotlight Glitch": {
+      "menu": "Spotlight",
+      "callback": "spotGlitch",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -361,9 +375,9 @@
         }
       }
     },
-    "Sphere Cercles": {
+    "Sphere Circles": {
       "menu": "Sphere",
-      "callback": "sphereCercles",
+      "callback": "sphereCount",
       "parameters": {
         "Value": {
           "type": "Integer",
@@ -375,9 +389,9 @@
         }
       }
     },
-    "Sphere Taille": {
+    "Sphere Size": {
       "menu": "Sphere",
-      "callback": "sphereTaille",
+      "callback": "sphereSize",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -389,9 +403,9 @@
         }
       }
     },
-    "Sphere Rayon": {
+    "Sphere Radius": {
       "menu": "Sphere",
-      "callback": "sphereRayon",
+      "callback": "sphereRadius",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -403,9 +417,9 @@
         }
       }
     },
-    "Sphere Rotation": {
+    "Sphere Spin": {
       "menu": "Sphere",
-      "callback": "sphereRotation",
+      "callback": "sphereSpin",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -417,9 +431,9 @@
         }
       }
     },
-    "Sphere Profondeur": {
+    "Sphere Depth": {
       "menu": "Sphere",
-      "callback": "sphereProfondeur",
+      "callback": "sphereDepth",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -431,9 +445,9 @@
         }
       }
     },
-    "Sphere Epaisseur": {
+    "Sphere Width": {
       "menu": "Sphere",
-      "callback": "sphereEpaisseur",
+      "callback": "sphereWidth",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -445,9 +459,9 @@
         }
       }
     },
-    "Sphere Verre": {
+    "Sphere Glass": {
       "menu": "Sphere",
-      "callback": "sphereVerre",
+      "callback": "sphereGlass",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -459,9 +473,9 @@
         }
       }
     },
-    "Couleur Choisie": {
-      "menu": "Couleur",
-      "callback": "couleurRgb",
+    "Color Picker": {
+      "menu": "Color",
+      "callback": "colorRgb",
       "parameters": {
         "Color": {
           "type": "Color",

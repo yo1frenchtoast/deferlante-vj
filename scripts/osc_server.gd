@@ -1,11 +1,10 @@
 extends Node
 
-## Récepteur OSC minimal (OSC 1.0 sur UDP).
+## Minimal OSC receiver (OSC 1.0 over UDP).
 ##
-## Godot n'a pas d'OSC intégré, mais le format est simple : une adresse, une
-## chaîne de types, puis les arguments, le tout aligné sur 4 octets. On gère les
-## messages seuls et les bundles (Chataigne en envoie quand plusieurs valeurs
-## partent dans la même image).
+## Godot has no built-in OSC, but the format is simple: an address, a type tag
+## string, then the arguments, all padded to 4 bytes. We handle plain messages and
+## bundles (Chataigne sends those when several values leave in the same frame).
 
 signal message_received(address: String, args: Array)
 
@@ -23,12 +22,12 @@ func _ready():
 
 	var err := _udp.bind(port)
 	if err != OK:
-		push_warning("OSC : impossible d'écouter sur le port %d (erreur %d)" % [port, err])
+		push_warning("OSC: cannot listen on port %d (error %d)" % [port, err])
 		set_process(false)
 		return
 
 	_listening = true
-	print("OSC : à l'écoute sur le port %d" % port)
+	print("OSC: listening on port %d" % port)
 
 
 func is_listening() -> bool:
@@ -44,9 +43,9 @@ func _read_packet(data: PackedByteArray):
 	if data.size() < 4:
 		return
 
-	# Un bundle : "#bundle\0", un timetag de 8 octets, puis une suite de blocs
-	# préfixés par leur taille. On les traite à plat, sans gérer le timetag :
-	# en VJ on veut la valeur tout de suite, pas à une date programmée.
+	# A bundle: "#bundle\0", an 8-byte timetag, then size-prefixed elements. We
+	# handle them flat and ignore the timetag: when VJing you want the value now,
+	# not at a scheduled time.
 	if data.size() >= 16 and data.slice(0, 7).get_string_from_ascii() == "#bundle":
 		var pos := 16
 		while pos + 4 <= data.size():
@@ -106,11 +105,11 @@ func _read_args(data: PackedByteArray, pos: int) -> Array:
 			"N":
 				args.append(null)
 			"I":
-				# Impulsion : pas de donnée, c'est un simple déclencheur.
+				# Impulse: carries no data, it is simply a trigger.
 				args.append(true)
 			_:
-				# Type inconnu : on ne sait pas de combien avancer, on s'arrête là
-				# plutôt que de renvoyer des valeurs décalées.
+				# Unknown type: we cannot tell how far to advance, so we stop here
+				# rather than return values shifted out of place.
 				return args
 
 	return args
@@ -125,7 +124,7 @@ func _null_at(data: PackedByteArray, from: int) -> int:
 	return -1
 
 
-## Position juste après une chaîne OSC, alignée sur le prochain multiple de 4.
+## Position just past an OSC string, aligned to the next multiple of 4.
 func _string_end(data: PackedByteArray, from: int) -> int:
 	var end := _null_at(data, from)
 	if end < 0:
@@ -136,7 +135,7 @@ func _string_end(data: PackedByteArray, from: int) -> int:
 
 func _read_int(data: PackedByteArray, pos: int) -> int:
 	var value := (data[pos] << 24) | (data[pos + 1] << 16) | (data[pos + 2] << 8) | data[pos + 3]
-	# Repasser en signé sur 32 bits.
+	# Back to a signed 32-bit value.
 	return value - 0x100000000 if value >= 0x80000000 else value
 
 

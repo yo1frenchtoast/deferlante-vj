@@ -1,54 +1,54 @@
 extends Line2D
 
-## Cercle pulsant qui se déplace comme une poursuite (lyre) cherchant quelqu'un,
-## avec des glitchs aléatoires.
+## A pulsing circle that moves like a followspot hunting for someone, with random
+## glitches.
 ##
-## Une poursuite ne dérive pas : elle balaye vite vers un point, s'y arrête, hésite
-## en tremblant un peu, puis repart ailleurs. Et comme la tête pivote sur deux axes
-## (pan / tilt), le faisceau décrit des *arcs* sur un mur plat, jamais des droites.
-## C'est cette courbure, plus les arrêts, qui font lire « projecteur qui cherche »
-## là où un mouvement continu ne donne qu'une dérive décorative.
+## A followspot does not drift: it sweeps fast to a point, stops there, hesitates
+## with a slight tremor, then leaves for somewhere else. And because the head pivots
+## on two axes (pan / tilt), the beam traces *arcs* on a flat wall, never straight
+## lines. It is that curvature, plus the pauses, that make it read as "a light
+## searching" where continuous motion only gives decorative drift.
 
 @export var base_radius: float = 200.0
-## Amplitude de la pulsation du rayon autour de base_radius.
+## How far the radius swells and shrinks around base_radius.
 @export var fluctuation_range: float = 50.0
-## Nombre de segments du cercle (128 suffit visuellement, 360 était du gâchis).
+## Segment count for the circle (128 is visually enough; 360 was waste).
 @export var segments: int = 128
 @export var line_width: float = 3.0
-## Probabilité de déclencher un glitch à chaque image. À 0 par défaut, comme le
-## halo : les effets qui marquent s'allument à la demande, ils ne s'imposent pas.
-## Pour repère, 0.005 ≈ un glitch toutes les 3 s, 0.05 ≈ en continu.
+## Chance of firing a glitch on any given frame. Zero by default, like the glow:
+## effects that make a statement are switched on when wanted, they do not impose
+## themselves. For scale, 0.005 is roughly one glitch every 3 s, 0.05 is continuous.
 @export var glitch_chance: float = 0.0
 
-@export_group("Poursuite")
-## Vitesse des balayages. Monter = tête nerveuse, descendre = tête posée.
+@export_group("Followspot")
+## Sweep speed. Higher makes a jumpy head, lower a composed one.
 @export var seek_speed: float = 1.0
-## Durée de base des arrêts sur cible, en secondes.
+## Base duration of the pauses on target, in seconds.
 @export var hold_time: float = 0.9
-## Distance de la tête au mur, en pixels. Petit = arcs très courbés et gros
-## écarts de taille entre le centre et les bords ; grand = balayage presque plat.
+## Distance from head to wall, in pixels. Small gives strongly curved arcs and a
+## large size difference between centre and edges; large gives an almost flat sweep.
 @export var throw_distance: float = 750.0
-## Débattements maximum de la tête, en radians.
+## Maximum travel of the head, in radians.
 @export var pan_range: float = 0.9
 @export var tilt_range: float = 0.42
-## Une fois sur trois environ, la tête fait un petit recalage au lieu d'un grand
-## balayage : elle croit avoir trouvé, et vérifie juste à côté.
+## Roughly one time in three the head makes a small correction instead of a wide
+## sweep: it thinks it has found something and checks just beside it.
 @export var refine_chance: float = 0.35
-## Le tremblement à l'arrêt a sa propre horloge, volontairement indépendante de
-## `seek_speed` : une tête peut balayer vite et scruter calmement, ou l'inverse.
-## Seule la vitesse globale les rattrape tous les deux, pour que 0 fige tout.
+## The tremor at rest runs on its own clock, deliberately independent of
+## `seek_speed`: a head can sweep fast and peer calmly, or the other way round.
+## Only the global speed catches both, so that 0 truly freezes everything.
 @export var wobble_speed: float = 6.0
 @export var wobble_amount: float = 1.0
 
 var time_passed: float = 0.0
 var hue: float
-## Référence partagée vers l'état de couleur : on ne recopie rien.
+## Shared reference to the colour state: nothing is copied.
 var palette: Palette
 var is_glitching: bool = false
 
-## Multiplicateur global de vitesse, piloté par le contrôleur.
+## Global speed multiplier, driven by the controller.
 var speed_scale: float = 1.0
-## 0 = poursuite posée ; 1 = tête paniquée qui n'arrive plus à se fixer.
+## 0 is a composed followspot; 1 is a panicked head that can no longer settle.
 var chaos: float = 0.0
 
 enum { SEEK_MOVE, SEEK_HOLD }
@@ -83,8 +83,8 @@ func use_palette(p: Palette):
 
 
 func refresh_color():
-	# Pendant un glitch le trait est blanc : on ne l'écrase pas, la couleur
-	# sera reprise à la sortie du glitch.
+	# During a glitch the stroke is white: we leave it be, the colour is picked up
+	# again on the way out.
 	if palette and not is_glitching:
 		default_color = _target_color()
 
@@ -96,46 +96,45 @@ func set_line_width(value: float):
 
 
 func _process(delta: float):
-	# Pendant un glitch, on gèle la forme pour ne pas l'écraser image par image.
+	# While glitching we freeze the shape so it is not overwritten frame by frame.
 	if is_glitching:
 		return
 
-	# 1. Mouvement constant (toujours fluide)
+	# 1. Constant motion, always smooth.
 	default_behaviour(delta)
 
-	# 2. Déclenchement aléatoire du glitch (probabilité très faible par frame).
-	#    Volontairement indépendant du chaos : le chaos dérègle le *mouvement* de
-	#    la tête, le glitch garde son propre réglage. On les combine à la main
-	#    plutôt que de laisser l'un entraîner l'autre.
+	# 2. Random glitch trigger (a very small chance each frame). Deliberately
+	#    independent of chaos: chaos unsettles the head's *motion*, the glitch keeps
+	#    its own setting. We combine them by hand rather than let one drag the other.
 	if randf() < glitch_chance:
 		apply_glitch()
 
 
 func default_behaviour(delta: float):
 	time_passed += delta * speed_scale
-	# Horloge du tremblement : elle ignore `seek_speed`, c'est tout l'intérêt.
+	# The tremor's clock: it ignores `seek_speed`, which is the whole point.
 	_wobble_time += delta * speed_scale * wobble_speed
 	_update_head(delta * speed_scale * seek_speed)
 
-	# Projection du faisceau sur le mur. Le terme en 1/cos(pan) est ce qui courbe
-	# la trajectoire : à tilt constant, un balayage horizontal décrit un arc.
+	# Projecting the beam onto the wall. The 1/cos(pan) term is what curves the
+	# path: at constant tilt, a horizontal sweep traces an arc.
 	var center = get_viewport_rect().size / 2
 	position = center + Vector2(
 		throw_distance * tan(_pan),
 		throw_distance * tan(_tilt) / cos(_pan)
 	)
 
-	# Plus la tête vise loin sur les côtés, plus le trajet du faisceau est long
-	# et plus la tache s'élargit — comme une vraie poursuite.
+	# The further out to the sides the head aims, the longer the beam travels and
+	# the wider the pool grows — just like a real followspot.
 	var spread = 1.0 / (cos(_pan) * cos(_tilt))
 	var radius = (base_radius + sin(time_passed * 2.0) * fluctuation_range) * spread
 	generate_circle_points(radius, segments)
 
 
 func _update_head(delta: float):
-	# Valeur absolue : une vitesse globale négative fait rejouer les lasers et la
-	# sphère à l'envers, mais une poursuite ne « dé-cherche » pas. Elle continue
-	# de balayer vers l'avant, sinon sa machine à états resterait bloquée.
+	# Absolute value: a negative global speed plays the lasers and the sphere
+	# backwards, but a followspot does not "un-search". It keeps sweeping forwards,
+	# otherwise its state machine would sit stuck.
 	_state_time += absf(delta)
 
 	if _state == SEEK_MOVE:
@@ -146,12 +145,12 @@ func _update_head(delta: float):
 		if t >= 1.0:
 			_state = SEEK_HOLD
 			_state_time = 0.0
-			# Plus il y a de chaos, moins la tête tient en place.
+			# The more chaos, the less the head stays put.
 			_hold_duration = hold_time * randf_range(0.3, 1.6) * lerpf(1.0, 0.12, chaos)
 	else:
-		# Arrêt sur cible : la tête n'est jamais parfaitement immobile, elle
-		# tremble légèrement. C'est ce micro-mouvement qui donne l'impression
-		# qu'elle scrute au lieu d'être simplement en pause.
+		# Paused on target: the head is never perfectly still, it trembles
+		# slightly. That micro-movement is what makes it look like it is peering
+		# rather than merely paused.
 		var amp = wobble_amount * lerpf(1.0, 7.0, chaos)
 		_pan = _pan_to + sin(_wobble_time) * 0.012 * amp
 		_tilt = _tilt_to + sin(_wobble_time * 1.7) * 0.008 * amp
@@ -164,24 +163,24 @@ func _pick_target():
 	_tilt_from = _tilt
 
 	if randf() < refine_chance:
-		# Petit recalage : elle croit avoir trouvé et vérifie juste à côté.
+		# Small correction: it thinks it has found something and checks beside it.
 		_pan_to = clampf(_pan + randf_range(-0.18, 0.18), -pan_range, pan_range)
 		_tilt_to = clampf(_tilt + randf_range(-0.12, 0.12), -tilt_range, tilt_range)
 	else:
-		# Grand balayage vers un point quelconque de la salle.
+		# Wide sweep towards some other point in the room.
 		_pan_to = randf_range(-pan_range, pan_range)
 		_tilt_to = randf_range(-tilt_range, tilt_range)
 
-	# Un grand débattement prend plus de temps, mais pas proportionnellement :
-	# les moteurs tournent à vitesse quasi constante, seule la course change.
+	# A wider travel takes longer, but not proportionally: the motors run at close
+	# to constant speed, only the distance changes.
 	var travel = Vector2(_pan_to - _pan_from, _tilt_to - _tilt_from).length()
 	_move_duration = (0.22 + travel * 0.55) * lerpf(1.0, 0.3, chaos)
 	_state = SEEK_MOVE
 	_state_time = 0.0
 
 
-## Profil d'un moteur pas-à-pas : départ franc, freinage long, et un léger
-## dépassement amorti en fin de course quand la tête se cale sur sa cible.
+## A stepper motor's profile: brisk start, long braking, and a slight damped
+## overshoot at the end as the head settles onto its target.
 func _motor_ease(t: float) -> float:
 	var overshoot = 0.6
 	var c = overshoot + 1.0
@@ -194,21 +193,21 @@ func apply_glitch():
 		return
 	is_glitching = true
 
-	# 1. Téléportation violente sur tout l'écran
+	# 1. Violent teleport anywhere on screen.
 	var screen_size = get_viewport_rect().size
 	position = Vector2(randf_range(0, screen_size.x), randf_range(0, screen_size.y))
 
-	# 2. Distorsion de forme : peu de segments, le cercle devient un polygone bizarre
+	# 2. Shape distortion: few segments, so the circle becomes an odd polygon.
 	generate_circle_points(base_radius * randf_range(0.5, 1.5), randi_range(3, 12))
 
-	# 3. Flash de couleur (blanc pur) et épaisseur énorme
+	# 3. Colour flash (pure white) and a huge stroke width.
 	default_color = Color.WHITE
 	width = line_width * 6.0
 
-	# Temps de glitch très court (plus c'est court, plus c'est violent)
+	# Very short glitch (the shorter it is, the more violent it reads).
 	await get_tree().create_timer(0.08).timeout
 
-	# 4. Retour à la normale : _process reprend la main à l'image suivante
+	# 4. Back to normal: _process takes over again on the next frame.
 	default_color = _target_color()
 	width = line_width
 	is_glitching = false

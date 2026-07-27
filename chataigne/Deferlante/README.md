@@ -1,66 +1,70 @@
-# Module Chataigne — Déferlante
+# Chataigne module — Deferlante
 
-Pilote les visuels [Déferlante](../../README.md) depuis
-[Chataigne](https://github.com/benkuper/Chataigne) en OSC.
+Drives the [Deferlante](../../README.md) visuals from
+[Chataigne](https://github.com/benkuper/Chataigne) over OSC.
 
-## Installation
+## Install
 
-Copier le dossier `Deferlante/` (celui qui contient `module.json`) dans le dossier
-des modules de Chataigne :
+Copy the `Deferlante/` folder (the one holding `module.json`) into Chataigne's
+modules folder:
 
-| Système | Chemin |
+| System | Path |
 | --- | --- |
 | Linux | `~/Documents/Chataigne/modules/` |
-| Windows | `C:\Users\<nom>\Documents\Chataigne\modules\` |
+| Windows | `C:\\Users\\<name>\\Documents\\Chataigne\\modules\\` |
 | macOS | `~/Documents/Chataigne/modules/` |
 
-Vérifier en regardant où sont déjà les modules installés : c'est ce dossier-là, et
-pas un autre.
+Check where your existing modules already live: that is the folder, not another one.
 
-Redémarrer Chataigne, puis **Add Module → Software → Deferlante**.
+Restart Chataigne, then **Add Module → Software → Deferlante**.
 
-> **Si Chataigne fige à la création d'un nouveau projet**, supprimer le dossier
-> `Deferlante/` et relancer. Le crash observé sur cette machine venait en réalité
-> d'un autre module dont un thread refusait de s'arrêter, mais autant écarter
-> celui-ci en premier pour trancher.
+> **If Chataigne freezes when creating a new project**, delete the `Deferlante/`
+> folder and restart. The crash seen on one machine actually came from a different
+> module whose thread refused to stop, but it is worth ruling this one out first.
 
-## Configuration
+## Configure
 
-Le module part sur `127.0.0.1:9000`, ce qui marche tel quel si Chataigne et Godot
-tournent sur la même machine. Sinon, régler `remoteHost` sur l'IP de la machine qui
-affiche les visuels, et vérifier que le port 9000 UDP n'est pas bloqué.
+The module defaults to `127.0.0.1:9000`, which works as-is when Chataigne and Godot
+run on the same machine. Otherwise set `remoteHost` to the IP of the machine showing
+the visuals, and check that UDP port 9000 is not blocked.
 
-Côté Godot, le port se change sur le nœud `OscServer` de `scenes/main.tscn`.
+On the Godot side the port lives on the `OscServer` node in `scenes/main.tscn`.
 
-## Utilisation
+## Use
 
-Chaque réglage est une commande, rangée par menu (Global, Lasers, Poursuite,
-Sphere), avec les **mêmes bornes que les sliders à l'écran** : un mapping Chataigne
-balaye exactement la même plage, sans conversion.
+Every setting is a command, filed by menu (Global, Color, Mirror, Lasers, Spotlight,
+Sphere), with the **same bounds as the on-screen sliders**: a Chataigne mapping
+sweeps exactly the same range, with no conversion.
 
-Toutes les commandes ont un `mappingIndex: 0`, donc utilisables directement comme
-cible d'un Mapping, d'un LFO, d'un fader MIDI ou d'un suivi audio.
+Every command carries `mappingIndex: 0`, so they can be used directly as the target
+of a Mapping, an LFO, a MIDI fader or an audio follower.
 
-Deux commandes dans le menu **Actions** : `Trigger Glitch` et `Randomize Colors`.
+Two commands sit in the **Actions** menu: `Trigger Glitch` and `Randomize Colors`.
+`Color Picker`, in the Color menu, is a real colour picker that sends its three
+components in one message.
 
-Le réglage le plus intéressant à automatiser est **Chaos** : un seul fader qui fait
-passer l'ensemble de la scène du rangé au débordement.
+Two settings are worth automating: **Global Chaos**, a single fader that takes the
+scene from tidy to overflowing, and **Mirror Effect**, which opens and closes the
+kaleidoscope.
 
-## Sans ce module
+For audio reactivity, Chataigne's **Audio** module does the spectral analysis and its
+bands map straight onto any of these commands — nothing to add on the Godot side.
 
-Le module n'est qu'un confort. Godot écoute de l'OSC brut, donc n'importe quel
-émetteur fait l'affaire — le module OSC générique de Chataigne, TouchOSC, un script.
-Les adresses sont documentées dans le README principal.
+## Without this module
 
-## Ce module est généré
+The module is a convenience. Godot listens for plain OSC, so any sender will do —
+Chataigne's generic OSC module, TouchOSC, a script. The addresses are documented in
+the main README.
 
-Ne pas l'éditer à la main : il est produit par `tools/build_chataigne_module.py` à
-partir de la liste des réglages de Godot. Après avoir ajouté un réglage :
+## This module is generated
+
+Do not edit it by hand: it is produced by `tools/build_chataigne_module.py` from
+Godot's list of settings. After adding a setting:
 
 ```
 python3 tools/build_chataigne_module.py
 ```
 
-Deux règles de format y sont encodées, apprises en cassant des choses : toute commande
-doit avoir un bloc `parameters` **non vide**, et un module OSC déclare `hasInput: true`
-avec une section `OSC Input` même désactivée. Aucun module qui fonctionne ne s'en écarte.
+Two format rules are encoded in it, learned by breaking things: every command needs
+a **non-empty** `parameters` block, and an OSC module declares `hasInput: true` with
+an `OSC Input` section even when disabled. No module that works departs from either.

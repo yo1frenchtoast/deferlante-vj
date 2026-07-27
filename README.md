@@ -1,342 +1,395 @@
 # Déferlante
 
-Visuels VJ en Godot 4 : traits néon animés sur fond noir, en blend additif.
-Pensé pour une projection vidéo avec machine à fumée.
+VJ visuals in Godot 4: neon strokes on black, additively blended.
+Built for video projection with a haze machine.
 
-## Lancer
+**Getting started** — [Run](#run) · [Drive it](#drive-it) · [Settings](#settings)
+**External control** — [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
+**The effects** — [Spotlight](#the-spotlight) · [Sphere](#the-sphere-effect) · [Kaleidoscope](#the-kaleidoscope) · [Chaos](#chaos) · [Auto-pilot](#the-auto-pilot) · [Colour](#the-two-colour-modes)
+**In the room** — [What starts off](#what-starts-switched-off) · [Glow](#the-glow) · [Projection notes](#projection-notes) · [Performance](#measuring-performance-f3)
+**The code** — [Structure](#structure) · [Renderer](#a-note-on-the-renderer)
 
-Ouvrir le projet dans Godot 4.6+ et lancer (F5). La scène principale est `scenes/main.tscn`.
+The on-screen interface speaks French or English — see `LANGUAGE` in the Global
+section. Everything else (code, OSC addresses, this document) stays in English.
 
-## Piloter
+## Run
 
-Les sliders **s'effacent tout seuls après 4 s d'inactivité** (fondu de 0,7 s) et
-reviennent au moindre appui clavier ou geste de souris. `H` les fige à l'écran
-pendant les réglages.
+Open the project in Godot 4.7+ and press F5. The main scene is `scenes/main.tscn`.
 
-| Touche | Action |
+## Drive it
+
+The sliders **fade out on their own after 4 s of inactivity** (over 0.7 s) and come
+back on any key press or mouse move. `H` pins them on screen while you dial things in.
+
+| Key | Action |
 | --- | --- |
-| `↑` `↓` | Changer de paramètre (le sélectionné est en surbrillance) |
-| `←` `→` | Régler le paramètre — 1/40e de la plage par appui |
-| `Maj` + `←` `→` | Réglage précis, un cran à la fois |
-| `Espace` | Déclencher un glitch immédiatement |
-| `R` | Retirer au sort toutes les couleurs et trajectoires |
-| `H` | Figer / libérer l'UI (l'empêche de s'effacer) |
-| `F3` | Compteur de FPS |
-| `F11` | Plein écran |
-| `Échap` | Quitter |
+| `↑` `↓` | Move between settings (the selected one is highlighted) |
+| `←` `→` | Adjust — a fortieth of the range per press |
+| `Shift` + `←` `→` | Fine adjust, one step at a time |
+| `Space` | Fire a glitch immediately |
+| `R` | Redraw every colour and trajectory |
+| `H` | Pin / unpin the panel (stops it fading) |
+| `F3` | FPS readout |
+| `F11` | Fullscreen |
+| `Esc` | Quit |
 
-La souris fonctionne aussi sur les sliders, mais le clavier est plus sûr en live :
-pas besoin de viser dans le noir.
+The mouse works on the sliders too, but the keyboard is safer live: no aiming in
+the dark.
 
-## Paramètres
+## Settings
 
-Le panneau est rangé en quatre sections, les mêmes que les menus du module Chataigne.
+The panel is arranged in six sections, the same as the Chataigne module's menus.
+Labels below are the English ones.
 
 ### Global
-| Réglage | Plage | Effet |
+| Setting | Range | Effect |
 | --- | --- | --- |
-| `VITESSE` | -3 – 3 | Vitesse globale. 1 = normale, 0 = figé, négatif = tout repart à l'envers. |
-| `CHAOS` | 0 – 1 | Désordre du mouvement. N'affecte pas `GLITCH`. Voir plus bas. |
-| `RANDOMIZER` | 0 – 1 | Pilote automatique. 0 = éteint, 1 = un changement par seconde. |
-| `HALO` | 0 – 2 | Glow. **0 par défaut**, voir plus bas. |
+| `SPEED` | -3 – 3 | Global speed. 1 is normal, 0 freezes, negative runs everything backwards. |
+| `CHAOS` | 0 – 1 | Motion disorder. Does not touch `GLITCH`. See below. |
+| `RANDOMIZER` | 0 – 1 | Auto-pilot. 0 is off, 1 is about one change per second. |
+| `GLOW` | 0 – 2 | Halo. **0 by default**, see below. |
+| `LANGUAGE` | FRANÇAIS / ENGLISH | On-screen language. Affects nothing else. |
 
-### Couleur
-| Réglage | Plage | Effet |
+### Colour
+| Setting | Range | Effect |
 | --- | --- | --- |
-| `MODE` | ALÉATOIRE / MANUEL | Chaque élément sa teinte, ou la couleur choisie pour tous. |
-| `SATURATION` | 0 – 1 | 0 = blanc pur, 1 = couleur franche. Agit dans les deux modes. |
-| `ROUGE` `VERT` `BLEU` | 0 – 1 | La couleur du mode manuel. Y toucher bascule en manuel. |
+| `MODE` | RANDOM / MANUAL | Each element its own hue, or the chosen colour for all. |
+| `SATURATION` | 0 – 1 | 0 is pure white, 1 a full colour. Works in both modes. |
+| `RED` `GREEN` `BLUE` | 0 – 1 | The manual colour. Touching one switches to manual. |
 
-### Miroir
-| Réglage | Plage | Effet |
+### Mirror
+| Setting | Range | Effect |
 | --- | --- | --- |
-| `EFFET` | 0 – 1 | Repli kaléidoscope. 0 = éteint (la passe n'est pas payée). |
-| `SEGMENTS` | 2 – 16 | Nombre de parts. 6 donne l'étoile classique. |
-| `ROTATION` | -1 – 1 | Fait tourner les miroirs. ← gauche, → droite. |
+| `EFFECT` | 0 – 1 | Kaleidoscope fold. 0 is off, and the pass is not paid for. |
+| `SEGMENTS` | 2 – 16 | Number of wedges. 6 gives the classic star. |
+| `ROTATION` | -1 – 1 | Turns the mirrors. ← left, → right. |
 
 ### Lasers
-| Réglage | Plage | Effet |
+| Setting | Range | Effect |
 | --- | --- | --- |
-| `NOMBRE` | 0 – 40 | Nombre de traits. Ajout et retrait à chaud. |
-| `ÉPAISSEUR` | 1 – 24 | Épaisseur des traits. |
-| `LONGUEUR` | 0.1 – 2 | Multiplie la longueur (chaque trait garde la sienne). |
-| `ROTATION` | -1 – 1 | ← vers la gauche, → vers la droite. |
+| `COUNT` | 0 – 40 | Number of strokes. Added and removed live. |
+| `WIDTH` | 1 – 24 | Stroke width. |
+| `LENGTH` | 0.1 – 2 | Scales the length (each stroke keeps its own). |
+| `SPIN` | -1 – 1 | ← leftwards, → rightwards. |
 
-### Poursuite
-| Réglage | Plage | Effet |
+### Spotlight
+| Setting | Range | Effect |
 | --- | --- | --- |
-| `RAYON` | 20 – 600 | Rayon de la tache. |
-| `PULSATION` | 0 – 300 | Amplitude de la pulsation du rayon. 0 = fixe. |
-| `ÉPAISSEUR` | 1 – 24 | Épaisseur du cercle. |
-| `VITESSE` | 0 – 2 | Vitesse des balayages (sans notion de sens). |
-| `ARRÊTS` | 0 – 3 | Durée des arrêts sur cible. 0 = balaye sans s'arrêter. |
-| `TREMBLEMENT` | 0 – 3 | Amplitude du frémissement à l'arrêt. 0 = tête parfaitement immobile. |
-| `FRÉQUENCE` | 0 – 20 | Rapidité du frémissement, **indépendante de `VITESSE`**. |
-| `GLITCH` | 0 – 0.05 | Probabilité de glitch par image. **0 par défaut.** Indépendant de `CHAOS`. 0.005 ≈ un toutes les 3 s. |
+| `RADIUS` | 20 – 600 | Radius of the pool. |
+| `PULSE` | 0 – 300 | How far the radius swells. 0 holds it steady. |
+| `WIDTH` | 1 – 24 | Circle stroke width. |
+| `SPEED` | 0 – 2 | Sweep speed (no direction to it). |
+| `HOLD` | 0 – 3 | How long it rests on target. 0 sweeps without stopping. |
+| `SHAKE` | 0 – 3 | Tremor amplitude at rest. 0 holds perfectly still. |
+| `FREQUENCY` | 0 – 20 | Tremor rate, **independent of `SPEED`**. |
+| `GLITCH` | 0 – 0.05 | Glitch chance per frame. **0 by default.** Independent of `CHAOS`. 0.005 ≈ one every 3 s. |
 
-### Sphère
-| Réglage | Plage | Effet |
+### Sphere
+| Setting | Range | Effect |
 | --- | --- | --- |
-| `CERCLES` | 0 – 80 | Nombre de cercles. 0 = effet éteint. |
-| `TAILLE` | 0.03 – 0.8 | Taille d'un cercle, en radians sur la sphère. |
-| `RAYON` | 100 – 800 | Rayon de la sphère à l'écran. |
-| `ROTATION` | -1 – 1 | ← vers la gauche, → vers la droite. |
-| `PROFONDEUR` | 1.2 – 10 | Distance de l'œil. Petit = perspective marquée. |
-| `ÉPAISSEUR` | 1 – 24 | Épaisseur du trait des cercles. |
-| `VERRE` | 0 – 1 | 0 = sphère opaque, 1 = face arrière visible. |
+| `CIRCLES` | 0 – 80 | Number of circles. 0 switches the effect off. |
+| `SIZE` | 0.03 – 0.8 | Size of one circle, in radians on the sphere. |
+| `RADIUS` | 100 – 800 | Sphere radius on screen. |
+| `SPIN` | -1 – 1 | ← leftwards, → rightwards. |
+| `DEPTH` | 1.2 – 10 | Eye distance. Small means strong perspective. |
+| `WIDTH` | 1 – 24 | Circle stroke width. |
+| `GLASS` | 0 – 1 | 0 an opaque sphere, 1 shows the far side through it. |
 
-Pour ajouter un réglage, une ligne suffit dans `_build_params()` de
-`vj_controller.gd` : la section, la ligne d'UI, le slider, le formatage du nombre,
-le pilotage clavier et l'adresse OSC en découlent automatiquement.
+Adding a setting takes one line in `_build_params()` of `vj_controller.gd`: the
+section, the UI row, the slider, the number formatting, the keyboard handling and
+the OSC address all follow. Its label goes in `scripts/lang.gd`.
 
-## Contrôle externe en OSC
+## External control over OSC
 
-Godot écoute l'OSC sur le port **9000** (UDP). Tous les réglages sont pilotables
-à distance, depuis Chataigne, TouchOSC, un séquenceur, ou n'importe quel script.
+Godot listens for OSC on port **9000** (UDP). Every setting can be driven remotely
+from Chataigne, TouchOSC, a sequencer, or any script at all.
 
-| Adresse | Argument |
+| Address | Argument |
 | --- | --- |
-| `/deferlante/<section>/<réglage>` | la valeur, dans les bornes du slider (écrêtée si elle déborde) |
-| `/deferlante/norm/<section>/<réglage>` | 0 → 1, étalé sur la plage du réglage |
-| `/deferlante/couleur/rgb` | trois flottants 0 → 1 : la couleur complète d'un bloc |
-| `/deferlante/glitch_now` | déclenche un glitch (sans argument) |
-| `/deferlante/randomize` | retire au sort couleurs et trajectoires |
+| `/deferlante/<section>/<setting>` | the value, within the slider's bounds (clamped if it overshoots) |
+| `/deferlante/norm/<section>/<setting>` | 0 → 1, spread over the setting's range |
+| `/deferlante/color/rgb` | three floats 0 → 1: the whole colour in one go |
+| `/deferlante/glitch_now` | fires a glitch (no argument) |
+| `/deferlante/randomize` | redraws colours and trajectories |
 
-Les adresses sont hiérarchiques et suivent les sections du panneau :
-`/deferlante/sphere/rotation`, `/deferlante/poursuite/arrets`,
-`/deferlante/global/chaos`. La section fait partie du chemin parce que trois
-sections ont un réglage `ÉPAISSEUR` — sans elle, les adresses entreraient en
-collision.
+Addresses are hierarchical and follow the panel's sections:
+`/deferlante/sphere/spin`, `/deferlante/spot/hold`, `/deferlante/global/chaos`. The
+section is part of the path because three sections have a `WIDTH` setting — without
+it the addresses would collide.
 
-L'adresse et le libellé sont **découplés** dans le code : `slug` porte l'adresse,
-`label` ce qui s'affiche. On peut donc reformuler un libellé à l'écran sans casser
-les mappings d'une console déjà câblée.
+The address and the label are **decoupled** in the code: `slug` carries the address,
+`Lang` carries what is displayed. Rewording a label, or switching the interface to
+French, can never break a console already wired to an address.
 
-La forme `norm` sert aux surfaces qui n'envoient que du 0 → 1 (faders MIDI,
-TouchOSC) et qui n'ont pas à connaître les bornes de chaque réglage.
+The `norm` form is for surfaces that can only send 0 → 1 (MIDI faders, TouchOSC) and
+have no business knowing each setting's bounds.
 
-Une valeur reçue en OSC **ne réveille pas l'UI**. C'est délibéré : une automation
-qui envoie en continu ferait sinon rester les sliders affichés — donc projetés sur
-le mur — pendant tout le set.
+A value arriving over OSC **does not wake the UI**. That is deliberate: an
+automation sending continuously would otherwise leave the sliders on screen — and
+therefore projected on the wall — for the whole set.
 
-Un module Chataigne prêt à l'emploi est fourni dans `chataigne/Vjing/`, avec ses
-instructions d'installation. Il n'est qu'un confort : le module OSC générique de
-Chataigne suffit pour piloter les mêmes adresses.
+A ready-made Chataigne module ships in `chataigne/Deferlante/`, with its own install
+notes. It is a convenience only: Chataigne's generic OSC module drives the same
+addresses.
 
-## Les deux modes de couleur
+## Audio reactivity
 
-**ALÉATOIRE** (par défaut) — chaque laser, chaque cercle de la sphère et la poursuite
-tirent leur propre teinte. C'est le comportement d'origine, et `R` en renouvelle le
-tirage.
+Nothing is implemented on the Godot side yet. This section records what has been
+checked, so it does not have to be rediscovered.
 
-**MANUEL** — tout le monde prend la couleur définie par `ROUGE` / `VERT` / `BLEU`.
+### The path that already works: Chataigne
 
-Trois choses rendent l'aller-retour indolore :
+Chataigne has an **Audio** module that does the spectral analysis, and any band can
+be mapped onto any Deferlante command. **No code is needed**: it is the shortest way
+to try reactions out and see which ones hold up.
 
-- **Toucher une couleur bascule en manuel** automatiquement. Sans ça, bouger `ROUGE`
-  ne produirait rien tant qu'on est en aléatoire, et le slider aurait l'air cassé.
-- **Les teintes aléatoires survivent au passage en manuel.** Revenir à `ALÉATOIRE`
-  les retrouve à l'identique — le mode manuel les masque, il ne les détruit pas.
-- **`R` ramène à l'aléatoire** *et* retire de nouvelles teintes. C'est la sortie de
-  secours qu'on trouve sans réfléchir en plein set.
+### If the analysis were to happen inside Godot
 
-`SATURATION` reste utile dans les deux modes : elle ramène la couleur vers le blanc.
-En projection avec fumée, un faisceau proche du blanc traverse mieux qu'une couleur
-saturée — descendre vers 0.4–0.5 si le rendu manque de tranchant.
+The building blocks exist (`AudioStreamMicrophone` + `AudioEffectSpectrumAnalyzer`
+on a bus, both confirmed present in 4.7), but three obstacles come first:
 
-## Le pilote automatique
+1. **`audio/driver/enable_input` is `false`** in `project.godot`. That is the first
+   switch; without it there is no capture at all.
+2. **Godot captures an input, and music is an output.** If the sound comes from an
+   interface (a Focusrite, a mixing desk), you capture its input and all is well. If
+   the music plays out of the computer, you need to capture the output's *monitor* —
+   PipeWire routing (`pw-link`, qpwgraph) and `AudioServer.input_device` pointed at
+   the right source. That is the real trap, and it decides the ergonomics: in that
+   case a `DEVICE` setting becomes necessary in the interface.
+3. **Levels vary too much between tracks** for a fixed gain: it would need adaptive
+   normalisation, with a fast attack and a slow release.
 
-`RANDOMIZER` fait évoluer les visuels tout seul : toutes les 1 à 12 secondes selon
-sa valeur, il pioche un ou deux réglages et les repose ailleurs. Une fois sur quatre
-il renouvelle aussi les couleurs, mais seulement si elles sont en mode aléatoire —
-sinon il écraserait un choix manuel.
+### The shape it should take
 
-Trois précautions le rendent utilisable en vrai :
+Whatever the source, the modulation should **add to** the settings rather than
+overwrite them — the way `CHAOS` already does. Your values stay where you put them,
+and the sound adds a pulse on top.
 
-- **Un ou deux réglages à la fois.** Au-delà, ça ne se lit plus comme un geste mais
-  comme une panne.
-- **Les valeurs se groupent vers le milieu** de chaque plage (moyenne de deux
-  tirages), ce qui évite les extrêmes qui vident l'écran ou le saturent.
-- **Quatre réglages lui échappent** : `VITESSE`, `HALO`, `SATURATION` et les
-  couleurs. Ce sont des décisions — le tempo du morceau, le contraste de la salle —
-  pas des variations à subir.
+Band levels would also be worth exposing over OSC (`/deferlante/audio/bass`…), so
+Chataigne can feed the *same* modulation system instead of driving each setting
+separately. One mechanism, two possible sources.
 
-## Le kaléidoscope
+## The two colour modes
 
-`EFFET` replie l'image en parts symétriques autour du centre, comme les miroirs d'un
-kaléidoscope. Le repli se fait sur le **rendu déjà dessiné**, pas en dupliquant la
-géométrie : le coût est celui d'une passe plein écran, que tu aies 5 traits ou 40.
+**RANDOM** (the default) — every laser, every sphere circle and the spotlight draw
+their own hue. `R` redraws them.
 
-Le calque est posé au-dessus des visuels mais **sous le panneau de réglages** —
-sinon les sliders se retrouveraient eux aussi démultipliés à l'écran.
+**MANUAL** — everyone takes the colour set by `RED` / `GREEN` / `BLUE`.
 
-Comme le glow, à 0 la passe est réellement éteinte plutôt que laissée tourner en
-identité.
+Three things make going back and forth painless:
 
-## Le chaos
+- **Touching a colour switches to manual** automatically. Without it, moving `RED`
+  in random mode would do nothing and the slider would look broken.
+- **The random hues survive the trip into manual.** Going back to `RANDOM` finds
+  them exactly as they were — manual mode hides them, it does not destroy them.
+- **`R` returns to random** *and* draws fresh hues. It is the escape hatch you find
+  without thinking mid-set.
 
-`CHAOS` est un macro-réglage qui **se superpose** aux autres sans les écraser : à 0 le
-rendu est exactement celui que tu as réglé à la main, à 1 tout se dérègle. Sa
-progression est volontairement inégale — discret au début, emballé sur la fin.
+`SATURATION` stays useful in both modes: it pulls the colour towards white. When
+projecting into haze a near-white beam cuts through better than a saturated one —
+drop it to 0.4–0.5 if the picture lacks bite.
 
-Ce qu'il fait, effet par effet :
+## The auto-pilot
 
-- **Lasers** — chaque trait retrouve peu à peu son cap propre. C'est le désordre que
-  le réglage de sens `SPIN` avait supprimé, rendu ici par la porte de derrière : à 1,
-  les traits se croisent à contresens comme avant. S'y ajoutent des coups de barre
-  aléatoires qui font zigzaguer les trajectoires.
-- **Poursuite** — la tête ne tient plus en place (arrêts huit fois plus courts),
-  balaye trois fois plus vite et tremble sept fois plus fort. En revanche il ne
-  touche **pas** aux glitchs : le chaos dérègle le *mouvement*, `GLITCH` garde son
-  propre réglage. Les deux se combinent à la main — une tête paniquée sans glitch,
-  ou une tête posée qui explose par intermittence, sont deux images différentes.
-- **Sphère** — chaque cercle glisse sur sa longitude à son propre rythme et sa taille
-  se met à palpiter. La sphère reste lisible, mais sa surface n'est plus solidaire.
+`RANDOMIZER` makes the visuals evolve by themselves: every 1 to 12 seconds depending
+on its value, it picks one or two settings and puts them down somewhere else. One
+time in four it also redraws the colours, but only if they are in random mode —
+otherwise it would trample a manual choice.
 
-## Vitesses à double sens
+Three precautions make it usable for real:
 
-`VITESSE` va de **-3 à 3**, les deux `ROTATION` de **-1 à 1**. Dans les trois cas le
-curseur au centre est l'arrêt, et 1 la vitesse normale — `VITESSE` garde donc de la
-marge au-delà pour les passages qui doivent décoller.
-Le signe donne le sens de rotation, l'amplitude la vitesse. L'écran affiche une
-flèche plutôt qu'un signe moins (`← 0.60`, `→ 0.60`, `·  0.00`) : dans le noir,
-une flèche se lit d'un coup d'œil.
+- **One or two settings at a time.** Beyond that it stops reading as a gesture and
+  starts reading as a malfunction.
+- **Values cluster towards the middle** of each range (the average of two draws),
+  which avoids the extremes that either empty or saturate the screen.
+- **Seven settings are out of its reach**: `SPEED`, `GLOW`, `SATURATION`, the three
+  colours and `LANGUAGE`. Those are decisions — the tempo of the track, the contrast
+  of the room — not variations to be subjected to.
 
-Pour que « vers la gauche / vers la droite » veuille dire quelque chose, chaque
-laser tire désormais au sort **l'amplitude** de sa rotation, mais plus son sens :
-celui-ci vient du réglage global. Avant, la moitié des traits tournait à contresens
-et aucun réglage d'ensemble n'aurait pu les faire converger.
+## The kaleidoscope
 
-Les signes se combinent : `SPEED` à -1 avec `SPIN` à +1 fait tourner les traits vers
-la gauche — inverser le temps global inverse aussi les rotations. En revanche
-`SEEK SPD` reste une cadence positive : une poursuite ne « dé-cherche » pas, elle
-continue de balayer vers l'avant même quand le reste tourne à l'envers.
+`EFFECT` folds the image into symmetrical wedges around the centre, like the mirrors
+of a kaleidoscope. The fold works on the **already-drawn frame**, not by duplicating
+geometry: the cost is one full-screen pass whether you have 5 strokes or 40.
 
-## La poursuite (cercle principal)
+The layer sits above the visuals but **below the settings panel** — otherwise the
+sliders would end up multiplied across the screen too.
 
-Le cercle principal ne dérive plus : il se déplace comme une lyre qui cherche
-quelqu'un dans la salle. Trois éléments produisent cette lecture :
+Like the glow, at 0 the pass is genuinely switched off rather than left running as
+an identity transform.
 
-1. **Il alterne balayages et arrêts** — environ 40 % du temps en mouvement, 60 % à
-   l'arrêt sur une cible. C'est le rapport qui compte : un mouvement continu, même
-   irrégulier, ne donne jamais l'impression de *chercher*.
-2. **Il trace des arcs, pas des droites** — la tête pivote sur deux axes, donc son
-   faisceau décrit une courbe sur un mur plat. C'est la signature la plus
-   reconnaissable d'un projecteur motorisé, et elle est gratuite : elle tombe toute
-   seule de la projection `tan(pan)`, `tan(tilt) / cos(pan)`.
-3. **Il hésite** — à l'arrêt la tête tremble légèrement, et une fois sur trois elle
-   fait un petit recalage juste à côté au lieu d'un grand balayage, comme si elle
-   croyait avoir trouvé.
+## Chaos
 
-S'y ajoutent le profil de moteur (départ franc, freinage long, léger dépassement en
-fin de course) et l'élargissement de la tache quand la tête vise loin sur les côtés :
-le trajet du faisceau est plus long, donc la tache est plus large.
+`CHAOS` is a macro setting that **layers on top of** the others without overwriting
+them: at 0 the picture is exactly what you dialled in, at 1 everything comes loose.
+Its progression is deliberately uneven — discreet at first, then runaway.
 
-`SEEK SPD` et `SEEK HOLD` pilotent tout ça en live. `SEEK HOLD` à 0 donne un balayage
-continu sans arrêt ; monté à 3, une tête qui s'attarde longuement sur chaque cible.
-Le débattement, la distance au mur (donc la courbure des arcs) et la fréquence des
-recalages sont réglables en `@export` dans l'inspecteur.
+What it does, effect by effect:
 
-## L'effet sphère
+- **Lasers** — each stroke gradually recovers its own heading. This is the disorder
+  that the `SPIN` direction setting removed, brought back through the side door: at
+  1 the strokes cross in opposite directions again. Random swerves are added on top,
+  making the paths zigzag.
+- **Spotlight** — the head can no longer stay put (pauses eight times shorter),
+  sweeps three times faster and trembles seven times harder. It does **not** touch
+  the glitches: chaos unsettles *motion*, `GLITCH` keeps its own setting. A panicked
+  head with no glitch, and a composed head that erupts now and then, are two
+  different pictures.
+- **Sphere** — each circle slides along its longitude at its own pace and its size
+  starts to throb. The sphere stays legible, but its surface is no longer of a piece.
 
-Des cercles sont posés sur une sphère virtuelle (répartition de Fibonacci, pas de
-paquets aux pôles) et projetés à l'écran. Le centre de l'écran est le point le plus
-proche de l'œil. Deux effets se cumulent quand un cercle s'en éloigne :
+## Two-way speeds
 
-1. **Il rétrécit** — c'est la perspective, pilotée par `SPH DEPTH`. À 1.2 l'écart de
-   taille entre le cercle du centre et ceux du bord est spectaculaire ; à 10 la
-   projection devient quasi orthographique et ils font tous la même taille.
-2. **Il s'aplatit en ellipse** — on voit la surface de biais. Le petit axe pointe vers
-   le centre et s'écrase progressivement, jusqu'au trait sur le bord.
+`SPEED` runs from **-3 to 3**, both `SPIN` settings and the mirror's `ROTATION` from
+**-1 to 1**. In every case the middle of the slider is a standstill and 1 is normal
+speed — `SPEED` therefore keeps headroom above for passages that need to take off.
 
-C'est le **point 2 qui fait lire « sphère »** plutôt que « cercles de tailles
-différentes ». Sans l'aplatissement, l'œil voit un tas de ronds ; avec, il reconstruit
-le volume immédiatement.
+The sign gives the direction of rotation, the magnitude the speed. The screen shows
+an arrow rather than a minus sign (`← 0.60`, `→ 0.60`, `·  0.00`): in the dark an
+arrow reads at a glance.
 
-Par défaut la face arrière est masquée (`SPH GLASS` = 0) : on ne voit que la calotte
-tournée vers l'œil. C'est volontaire — quand les deux faces sont visibles, les cercles
-du fond se projettent eux aussi près du centre et on ne distingue plus l'avant de
-l'arrière. Monter `SPH GLASS` donne une sphère de verre, plus chargée mais plus étrange.
+For "leftwards / rightwards" to mean anything, each laser now draws the **magnitude**
+of its spin at random, but no longer its direction: that comes from the global
+setting. Before, half the strokes turned the other way and no single control could
+have made them agree.
 
-Coût mesuré : **+0,32 ms** à 40 cercles (le défaut), **+0,77 ms** à 80. Les cercles
-passés derrière l'horizon ne sont ni calculés ni rendus.
+Signs combine: `SPEED` at -1 with `SPIN` at +1 turns the strokes leftwards —
+reversing global time reverses rotation too. The spotlight's `SPEED` on the other
+hand stays a positive rate: a followspot does not "un-search", it keeps sweeping
+forwards even when everything else runs backwards.
 
-## Ce qui est coupé par défaut
+## The spotlight
 
-`HALO` et `GLITCH` démarrent à 0, et l'un comme l'autre est réellement éteint plutôt
-que réglé à intensité nulle. Même principe pour `EFFET` du miroir et `RANDOMIZER`.
+The main circle does not drift: it moves like a moving head hunting for someone in
+the room. Three things produce that reading:
 
-C'est un parti pris : les effets qui marquent s'allument à la demande, au moment
-choisi, plutôt que de tourner en fond. Une scène qui démarre sobre laisse de la place
-pour monter ; une scène qui démarre saturée n'a nulle part où aller.
+1. **It alternates sweeps and stops** — roughly 40 % of the time moving, 60 % parked
+   on a target. That ratio is what matters: continuous motion, however irregular,
+   never looks like *searching*.
+2. **It traces arcs, not straight lines** — the head pivots on two axes, so its beam
+   describes a curve on a flat wall. It is the most recognisable signature of a
+   motorised light, and it comes for free: it falls straight out of the `tan(pan)`,
+   `tan(tilt) / cos(pan)` projection.
+3. **It hesitates** — at rest the head trembles slightly, and one time in three it
+   makes a small correction just beside instead of a wide sweep, as though it thought
+   it had found something.
 
-## Le halo (glow)
+The tremor runs on **its own clock**, separate from the sweep speed: `SHAKE` sets its
+amplitude, `FREQUENCY` its rate. A head can sweep fast while peering calmly, or cross
+slowly while shivering hard. Only the global `SPEED` catches both, so that 0 truly
+freezes everything.
 
-Avec une machine à fumée, la diffusion du faisceau se fait **physiquement** dans l'air.
-Le glow logiciel fait alors double emploi : il adoucit les bords et enlève au trait son
-côté incisif. Il est donc à 0 par défaut, et à 0 la passe post-process est réellement
-éteinte (`glow_enabled = false`) — pas juste réglée à intensité nulle.
+On top of that sit the motor profile (brisk start, long braking, slight damped
+overshoot at the end of travel) and the widening of the pool when the head aims far
+out to the sides: the beam travels further, so the pool is wider.
 
-Coût mesuré (RTX 3060, vsync off) : **~0,30 ms par image en 1080p**, ~0,68 ms en 4K.
-En FPS bruts ça paraît énorme (1884 → 1203 fps) mais ça ne représente que 1,8 % du budget
-d'une image à 60 Hz. Ce n'est pas un problème de performance, c'est un choix esthétique.
+The spotlight's `SPEED` and `HOLD` drive all this live. `HOLD` at 0 gives a
+continuous sweep with no stops; pushed to 3, a head that lingers on each target.
+Travel range, throw distance (and therefore the curvature of the arcs) and the
+frequency of small corrections are `@export`s in the inspector.
 
-## Note projection
+## The sphere effect
 
-Un vidéoprojecteur a un contraste bien plus faible qu'un écran. Si les faisceaux manquent
-de tranchant dans la fumée, baisser `SATURATION` vers 0.4–0.5 : un faisceau proche du blanc
-traverse mieux la fumée qu'une couleur très saturée.
+Circles are laid on a virtual sphere (Fibonacci distribution, so no clustering at
+the poles) and projected onto the screen. The centre of the screen is the point
+nearest the eye. Two effects compound as a circle moves away from it:
 
-Penser à `H` puis à laisser l'UI s'effacer avant que le public arrive — les sliders sont
-dans un `CanvasLayer`, donc ils sont projetés sur le mur avec le reste.
+1. **It shrinks** — perspective, driven by `DEPTH`. At 1.2 the size difference
+   between the centre circle and the edge ones is dramatic; at 10 the projection is
+   near-orthographic and they are all the same size.
+2. **It flattens into an ellipse** — the surface is seen at an angle. The minor axis
+   points at the centre and is progressively crushed, down to a line at the edge.
 
-## Mesurer les perfs (F3)
+It is **point 2 that makes it read as a sphere** rather than as circles of assorted
+sizes. Without the flattening the eye sees a scattering of rings; with it, the volume
+reconstructs itself immediately.
 
-Le compteur affiche `FPS`, le **temps par image en ms**, et le taux de rafraîchissement
-de l'écran détecté. C'est le temps en ms qu'il faut regarder, pas les FPS : à 1200 fps,
-0,3 ms de plus fait perdre 400 fps au compteur sans que ça pèse quoi que ce soit.
-La seule question qui compte en projection est : *est-ce que je reste sous le budget
-d'une image de mon vidéoprojecteur ?* (16,7 ms à 60 Hz, 13,3 ms à 75 Hz).
+The far side is hidden by default (`GLASS` = 0): only the cap facing the eye shows.
+That is deliberate — when both faces are visible the back circles project near the
+centre too and front can no longer be told from back. Raising `GLASS` gives a glass
+sphere, busier but stranger.
 
-⚠️ Ne jamais juger le comportement du projet depuis un enregistrement `--write-movie` :
-ce mode écrit un PNG par image sur le disque et bloque le rendu pendant l'encodage
-(jusqu'à 110 ms par image quand le glow est actif, car les dégradés compressent très mal).
-La fenêtre semble alors ramer, et les animations pilotées par `Tween` — comme l'effacement
-de l'UI — paraissent saccader, alors que tout est parfaitement régulier en lancement normal.
+Measured cost: **+0.32 ms** at 40 circles (the default), **+0.77 ms** at 80. Circles
+past the horizon are neither computed nor drawn.
+
+## What starts switched off
+
+`GLOW` and `GLITCH` start at 0, and both are genuinely off rather than set to zero
+intensity. Same for the mirror's `EFFECT` and for `RANDOMIZER`.
+
+It is a stance: effects that make a statement are switched on when wanted, at the
+chosen moment, rather than running in the background. A scene that starts sober
+leaves room to build; a scene that starts saturated has nowhere to go.
+
+## The glow
+
+With a haze machine the beam is diffused **physically** in the air. Software glow
+then does the same job twice: it softens the edges and takes the bite out of the
+stroke. So it is 0 by default, and at 0 the post-process pass is genuinely off
+(`glow_enabled = false`) rather than merely set to zero intensity.
+
+Measured cost (RTX 3060, vsync off): **~0.30 ms per frame at 1080p**, ~0.68 ms at 4K.
+In raw FPS that looks enormous (1884 → 1203 fps) but it is only 1.8 % of a frame's
+budget at 60 Hz. It is not a performance problem, it is an aesthetic choice.
+
+## Projection notes
+
+A projector has far lower contrast than a monitor. If the beams lack bite in the
+haze, bring `SATURATION` down towards 0.4–0.5: a near-white beam cuts through haze
+better than a heavily saturated colour.
+
+Remember `H`, then let the panel fade, before the audience arrives — the sliders live
+in a `CanvasLayer`, so they are projected on the wall along with everything else.
+
+## Measuring performance (F3)
+
+The readout shows `FPS`, the **milliseconds per frame**, and the detected screen
+refresh rate. It is the millisecond figure that matters, not the FPS: at 1200 fps,
+0.3 ms more costs 400 fps on the counter without weighing anything at all. The only
+question that counts in projection is: *am I staying under one frame's budget on my
+projector?* (16.7 ms at 60 Hz, 13.3 ms at 75 Hz.)
+
+⚠️ Never judge the project's behaviour from a `--write-movie` recording: that mode
+writes one PNG per frame to disk and blocks rendering during the encode (up to 110 ms
+per frame with the glow on, because gradients compress badly). The window then looks
+like it is struggling, and `Tween`-driven animations — the UI fade, for instance —
+appear to stutter, when everything is perfectly steady in a normal run.
 
 ## Structure
 
 ```
 tools/
-  build_chataigne_module.py   Régénère le module Chataigne depuis les réglages
+  build_chataigne_module.py   Regenerates the Chataigne module from the settings
 scenes/
-  main.tscn      Scène principale : WorldEnvironment + contrôleur + UI
-  laser.tscn     Un trait, instancié N fois par le contrôleur
+  main.tscn      Main scene: WorldEnvironment + controller + UI
+  laser.tscn     One stroke, instanced N times by the controller
 chataigne/
-  Deferlante/    Module Chataigne prêt à installer
+  Deferlante/    Chataigne module, ready to install
 shaders/
-  kaleidoscope.gdshader   Repli polaire en parts symétriques
+  kaleidoscope.gdshader   Polar fold into symmetrical wedges
 scripts/
-  kaleidoscope.gd   Pilote la passe plein écran du miroir
-  palette.gd        État de couleur, partagé par référence avec les trois effets
-  vj_controller.gd  Déclaration des réglages, lasers, routage OSC
-  vj_param.gd       Un réglage : bornes, pas, application, formatage
-  control_panel.gd  Panneau : lignes, clavier, effacement auto, compteur FPS
-  glitch_circle.gd  Cercle de poursuite (lyre qui cherche) + glitchs aléatoires
-  laser_line.gd     Trait qui tourne et rebondit sur les bords
-  osc_server.gd     Récepteur OSC (UDP), messages et bundles
-  sphere_circles.gd Cercles projetés sur une sphère virtuelle
+  lang.gd           On-screen translations, keyed by OSC address
+  kaleidoscope.gd   Drives the mirror's full-screen pass
+  palette.gd        Colour state, shared by reference with the three effects
+  vj_controller.gd  Settings declaration, lasers, OSC routing
+  vj_param.gd       One setting: bounds, step, application, formatting
+  control_panel.gd  Panel: rows, keyboard, auto-hide, FPS readout
+  glitch_circle.gd  The followspot circle (a head that searches) + random glitches
+  laser_line.gd     A stroke that spins and bounces off the edges
+  osc_server.gd     OSC receiver (UDP), messages and bundles
+  sphere_circles.gd Circles projected onto a virtual sphere
 ```
 
-L'UI est construite à l'exécution depuis la liste des paramètres : la scène ne contient
-qu'un `VBoxContainer` vide, pas 22 paires de nœuds à maintenir à la main.
+The UI is built at runtime from the list of settings: the scene holds nothing but an
+empty `VBoxContainer`, not 32 pairs of nodes to maintain by hand.
 
-Un réglage qui ne fait qu'écrire une propriété se déclare en une ligne
-(`_prop("PULSE", 0, 300, 5, 50.0, circle, "fluctuation_range")`) ; seuls ceux qui
-demandent de la logique ont leur fonction. `VJParam` est le point de passage unique du
-slider, du clavier et de l'OSC, ce qui évite d'avoir à savoir d'où vient un changement.
+A setting that only writes a property is declared in one line
+(`_prop("spot/pulse", 0, 300, 5, 50.0, circle, "fluctuation_range")`); only those
+needing logic get their own function. `VJParam` is the single point every change goes
+through — slider, keyboard and OSC alike — which spares the rest of the code from
+having to know where a change came from.
 
-## Note sur le renderer
+## A note on the renderer
 
-Le projet utilise **Forward+**. Le glow 2D n'est pas rendu par le renderer Compatibility :
-en y rebasculant, le slider `GLOW` n'aurait plus aucun effet.
+The project uses **Forward+**. 2D glow is not rendered by the Compatibility renderer:
+switching back to it would leave `GLOW` with no effect at all.

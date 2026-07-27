@@ -1,17 +1,17 @@
 extends CanvasLayer
 
-## Passe plein écran qui replie l'image en parts symétriques.
+## Full-screen pass that folds the image into symmetrical wedges.
 ##
-## Elle est posée sur un calque au-dessus des visuels et en dessous du panneau de
-## réglages : les traits sont repliés, l'interface non — sinon les sliders se
-## retrouveraient eux aussi démultipliés à l'écran.
+## It sits on a layer above the visuals and below the settings panel: the strokes
+## are folded, the interface is not — otherwise the sliders would end up multiplied
+## across the screen as well.
 
 @onready var rect: ColorRect = $Rect
 
 var amount: float = 0.0
 var segments: int = 6
 var spin: float = 0.0
-## Multiplicateur global de vitesse, piloté par le contrôleur.
+## Global speed multiplier, driven by the controller.
 var speed_scale: float = 1.0
 
 var _rotation: float = 0.0
@@ -36,8 +36,8 @@ func set_spin(value: float):
 
 
 func _apply():
-	# À 0 on éteint vraiment la passe plutôt que de la laisser tourner en
-	# identité : c'est un plein écran, autant ne pas le payer pour rien.
+	# At 0 the pass is genuinely switched off rather than left running as an
+	# identity transform: it covers the whole screen, no reason to pay for nothing.
 	rect.visible = amount > 0.0
 	if not rect.visible:
 		return

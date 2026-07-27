@@ -1,15 +1,15 @@
 extends Node2D
 
-## Cercles répartis sur une sphère virtuelle, projetés à l'écran.
+## Circles spread over a virtual sphere, projected onto the screen.
 ##
-## Le centre de l'écran est le point de la sphère le plus proche de l'œil : le
-## cercle qui s'y trouve est vu de face, rond et large. Plus un cercle s'en
-## éloigne, plus deux choses se cumulent :
-##   1. il rétrécit, parce qu'il part en profondeur (perspective) ;
-##   2. il s'aplatit en ellipse, parce qu'on le voit de biais — jusqu'à devenir
-##      un simple trait quand il atteint le bord de la sphère.
-## C'est surtout l'aplatissement qui donne la lecture « sphère » plutôt que
-## « cercles de tailles différentes ».
+## The centre of the screen is the point of the sphere nearest the eye: the circle
+## sitting there is seen head-on, round and wide. The further a circle moves from it,
+## the more two effects compound:
+##   1. it shrinks, because it recedes in depth (perspective);
+##   2. it flattens into an ellipse, because it is seen at an angle — until it is a
+##      mere line by the time it reaches the sphere's edge.
+## It is chiefly the flattening that makes this read as a sphere rather than as
+## circles of assorted sizes.
 
 @export var circle_count: int = 40:
 	set(value):
@@ -17,11 +17,11 @@ extends Node2D
 		if is_inside_tree():
 			_rebuild()
 @export var sphere_radius: float = 400.0
-## Rayon angulaire d'un cercle sur la sphère, en radians.
+## Angular radius of a circle on the sphere, in radians.
 @export var circle_size: float = 0.13
 @export var spin: float = 0.6
-## Distance de l'œil, en rayons de sphère. Petit = perspective marquée,
-## grand = projection quasi orthographique (les cercles ne rétrécissent plus).
+## Eye distance, in sphere radii. Small means strong perspective, large means a
+## near-orthographic projection where circles no longer shrink.
 @export var eye_distance: float = 2.0
 @export var segments: int = 48
 @export var line_width: float = 3.0:
@@ -29,15 +29,15 @@ extends Node2D
 		line_width = value
 		for c in _circles:
 			c.width = value
-## Luminosité des cercles passés derrière l'horizon de la sphère.
-## 0 = sphère opaque, on ne voit que la calotte tournée vers l'œil (le plus lisible).
-## Monter la valeur donne une sphère de verre : on voit aussi la face arrière.
+## Brightness of circles that have passed behind the sphere's horizon.
+## 0 gives an opaque sphere, showing only the cap facing the eye (the most legible).
+## Raising it gives a glass sphere where the far side shows through as well.
 @export var back_dim: float = 0.0
 
 var speed_scale: float = 1.0
-## Référence partagée vers l'état de couleur : on ne recopie rien.
+## Shared reference to the colour state: nothing is copied.
 var palette: Palette
-## 0 = sphère rigide ; 1 = les cercles vibrent et se décalent sur sa surface.
+## 0 keeps the sphere rigid; 1 makes the circles shiver and drift across it.
 var chaos: float = 0.0
 
 var _time: float = 0.0
@@ -70,8 +70,8 @@ func _rebuild():
 		_hues.append(randf())
 
 
-## Répartition de Fibonacci : des points régulièrement espacés sur la sphère,
-## sans les paquets aux pôles qu'on obtient avec une grille latitude/longitude.
+## Fibonacci distribution: evenly spaced points over the sphere, without the
+## clustering at the poles a latitude/longitude grid would give.
 func _fibonacci_point(index: int, total: int) -> Vector3:
 	var y := 1.0 - 2.0 * (index + 0.5) / float(total)
 	var ring := sqrt(maxf(0.0, 1.0 - y * y))
@@ -91,8 +91,8 @@ func _process(delta: float):
 
 	_time += delta * speed_scale * spin
 
-	# Rotation de la sphère : lacet continu, sur un axe légèrement basculé pour
-	# qu'on ne voie pas toujours la même bande passer.
+	# Sphere rotation: continuous yaw on a slightly tilted axis, so the same band
+	# does not keep sweeping past.
 	var rot := Basis(Vector3(1, 0, 0), 0.4) * Basis(Vector3(0, 1, 0), _time)
 	var center := get_viewport_rect().size / 2.0
 	var tangential := sphere_radius * sin(circle_size)
@@ -100,39 +100,39 @@ func _process(delta: float):
 	for i in range(_circles.size()):
 		var dir := _dirs[i]
 		if chaos > 0.0:
-			# Chaque cercle glisse sur sa longitude à son propre rythme : la
-			# sphère reste lisible, mais sa surface n'est plus solidaire.
+			# Each circle slides along its longitude at its own pace: the sphere
+			# stays legible, but its surface is no longer of one piece.
 			var jitter := sin(_time * 5.0 + i * 2.399) * chaos * 0.3
 			dir = Basis(Vector3(0, 1, 0), jitter) * dir
 		_project(_circles[i], rot * dir, center, tangential, _hues[i])
 
 
 func _project(line: Line2D, v: Vector3, center: Vector2, tangential: float, hue: float):
-	# Horizon : au-delà, la surface bascule derrière la silhouette. Avec un œil à
-	# distance d, la tangente se fait à z = 1/d, pas à z = 0 comme en orthographique.
+	# Horizon: past it the surface tips behind the silhouette. With the eye at
+	# distance d the tangent falls at z = 1/d, not at z = 0 as in orthographic.
 	var horizon := 1.0 / eye_distance
 	var facing := clampf((v.z - horizon) / maxf(0.001, 1.0 - horizon), 0.0, 1.0)
 	var alpha := lerpf(back_dim, 1.0, facing)
 
-	# Un cercle de la face cachée ne coûte rien : ni points, ni rendu.
+	# A circle on the hidden face costs nothing: no points, no draw.
 	line.visible = alpha > 0.004
 	if not line.visible:
 		return
 
-	# Perspective : un point proche de l'œil (v.z = 1) est grossi, un point au
-	# fond (v.z = -1) est réduit. eye_distance élevé = effet quasi nul.
+	# Perspective: a point near the eye (v.z = 1) is magnified, one at the back
+	# (v.z = -1) is shrunk. A large eye_distance all but cancels the effect.
 	var persp := eye_distance / (eye_distance - v.z)
 	var origin := center + Vector2(v.x, -v.y) * sphere_radius * persp
 
-	# Demi-axe dans le sens tangent : la largeur vraie du cercle.
+	# Semi-axis along the tangent: the circle's true width.
 	var semi_major := tangential * persp
 	if chaos > 0.0:
 		semi_major *= 1.0 + sin(_time * 9.0 + hue * TAU) * chaos * 0.35
-	# Demi-axe dans le sens radial : écrasé par l'inclinaison de la surface.
-	# À v.z = 0 (le bord de la sphère) il tombe à 0 : le cercle devient un trait.
+	# Semi-axis along the radius: squashed by the tilt of the surface. At v.z = 0
+	# (the sphere's edge) it drops to 0 and the circle becomes a line.
 	var semi_minor := semi_major * absf(v.z)
 
-	# Le petit axe pointe vers le centre de la sphère, le grand lui est perpendiculaire.
+	# The minor axis points at the sphere's centre, the major one is perpendicular.
 	var radial := origin - center
 	radial = radial.normalized() if radial.length() > 0.001 else Vector2.RIGHT
 	var tangent := Vector2(-radial.y, radial.x)
@@ -144,8 +144,8 @@ func _project(line: Line2D, v: Vector3, center: Vector2, tangential: float, hue:
 			origin + tangent * (semi_major * cos(angle)) + radial * (semi_minor * sin(angle))
 		)
 
-	# Fondu vers le bord : un cercle qui atteint la silhouette s'éteint au lieu de
-	# disparaître d'un coup, ce qui ferait clignoter la sphère.
+	# Fade towards the edge: a circle reaching the silhouette dims out instead of
+	# vanishing at once, which would make the sphere flicker.
 	var tint := palette.resolve(hue)
 	tint.a = alpha
 	line.default_color = tint

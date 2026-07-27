@@ -1,16 +1,16 @@
 extends Node2D
 
-## Chef d'orchestre : déclare les réglages, instancie les lasers, route l'OSC.
+## Conductor: declares the settings, spawns the lasers, routes OSC.
 ##
-## L'affichage est au panneau (`control_panel.gd`), le protocole au serveur OSC
-## (`osc_server.gd`). Ici on ne trouve que la liste des réglages et ce qu'ils
-## pilotent — ajouter une ligne à `_build_params()` crée du même coup le slider,
-## la navigation clavier et l'adresse OSC.
+## Display belongs to the panel (`control_panel.gd`), the protocol to the OSC
+## server (`osc_server.gd`). All that lives here is the list of settings and what
+## they drive — adding a line to `_build_params()` creates the slider, the keyboard
+## navigation and the OSC address in one go.
 
 @export var laser_scene: PackedScene = preload("res://scenes/laser.tscn")
 @export var laser_count: int = 5
-## Glow coupé par défaut : avec une machine à fumée, la diffusion se fait
-## physiquement, et le glow logiciel casse le côté incisif du trait.
+## Glow off by default: with a haze machine the beam is diffused physically, and
+## the software glow only softens the edges.
 @export_range(0.0, 2.0, 0.01) var default_glow: float = 0.0
 
 @onready var world_env: WorldEnvironment = get_parent()
@@ -20,31 +20,38 @@ extends Node2D
 @onready var panel: CanvasLayer = $ControlPanel
 @onready var osc: Node = $OscServer
 
+var lang := Lang.new()
+## Shared colour state, held by reference by every effect.
+var palette := Palette.new()
+
 var lasers: Array[Line2D] = []
 var params: Array[VJParam] = []
 var osc_routes: Dictionary = {}
 
-# Réglages globaux courants, réappliqués aux lasers créés par la suite.
+# Current global settings, re-applied to lasers spawned later on.
 var v_speed: float = 1.0
 var v_chaos: float = 0.0
 var v_laser_width: float = 5.0
 var v_length: float = 1.0
 var v_spin: float = 1.0
-## L'état de couleur, partagé par référence avec tous les effets.
-var palette := Palette.new()
+
 var _mode_param: VJParam
-## Vrai pendant l'application des valeurs de départ : sans ce garde-fou, poser la
-## valeur initiale de ROUGE ferait basculer le projet en manuel dès le démarrage.
+## True while start-up values are being applied: without this guard, setting the
+## initial RED would flip the project into manual colour mode on launch.
 var _initializing: bool = true
 
-# Pilote automatique : 0 = éteint, 1 = un changement par seconde environ.
+# Auto-pilot: 0 is off, 1 is roughly one change per second.
 var _randomizer: float = 0.0
 var _next_roll: float = 0.0
+
+var _current_section: String = ""
 
 
 func _ready():
 	_build_params()
-	panel.build(params)
+	for p in params:
+		p.use_language(lang)
+	panel.build(params, lang)
 
 	circle.use_palette(palette)
 	sphere.use_palette(palette)
@@ -59,91 +66,93 @@ func _ready():
 
 
 # --------------------------------------------------------------------------
-# Réglages
+# Settings
 # --------------------------------------------------------------------------
 
-## Premier argument : l'adresse OSC, stable. Deuxième : le libellé à l'écran,
-## qu'on peut reformuler sans rien casser côté console.
+## First argument is the OSC address, which never changes. What appears on screen
+## comes from `Lang`, keyed by that same address.
 func _build_params():
-	_section("GLOBAL")
-	_fn("global/vitesse", "VITESSE", -3, 3, 0.05, 1.0, _set_speed, true)
-	_fn("global/chaos", "CHAOS", 0, 1, 0.02, 0.0, _set_chaos)
-	_fn("global/randomizer", "RANDOMIZER", 0, 1, 0.02, 0.0, _set_randomizer).randomizable = false
-	_fn("global/halo", "HALO", 0, 2, 0.05, default_glow, _set_glow)
+	_section("section.global")
+	_fn("global/speed", -3, 3, 0.05, 1.0, _set_speed, true)
+	_fn("global/chaos", 0, 1, 0.02, 0.0, _set_chaos)
+	_fn("global/randomizer", 0, 1, 0.02, 0.0, _set_randomizer).randomizable = false
+	_fn("global/glow", 0, 2, 0.05, default_glow, _set_glow)
+	var language := _fn("global/language", 0, 1, 1, 0.0, _set_language)
+	language.choices = PackedStringArray(Lang.LANGUAGES)
+	# Language names stay in their own tongue, so they are not Lang keys.
+	language.translate_choices = false
+	language.randomizable = false
 
-	_section("COULEUR")
-	_mode_param = _fn("couleur/mode", "MODE", 0, 1, 1, 0.0, _set_color_mode)
-	_mode_param.choices = PackedStringArray(["ALÉATOIRE", "MANUEL"])
-	_fn("couleur/saturation", "SATURATION", 0, 1, 0.02, 0.7, _set_saturation)
-	_fn("couleur/rouge", "ROUGE", 0, 1, 0.02, 1.0, _set_channel.bind(0)).tint = Color(1, 0.45, 0.4)
-	_fn("couleur/vert", "VERT", 0, 1, 0.02, 0.25, _set_channel.bind(1)).tint = Color(0.45, 1, 0.5)
-	_fn("couleur/bleu", "BLEU", 0, 1, 0.02, 0.1, _set_channel.bind(2)).tint = Color(0.5, 0.65, 1)
+	_section("section.color")
+	_mode_param = _fn("color/mode", 0, 1, 1, 0.0, _set_color_mode)
+	_mode_param.choices = PackedStringArray(["mode.random", "mode.manual"])
+	_fn("color/saturation", 0, 1, 0.02, 0.7, _set_saturation)
+	_fn("color/red", 0, 1, 0.02, 1.0, _set_channel.bind(0)).tint = Color(1, 0.45, 0.4)
+	_fn("color/green", 0, 1, 0.02, 0.25, _set_channel.bind(1)).tint = Color(0.45, 1, 0.5)
+	_fn("color/blue", 0, 1, 0.02, 0.1, _set_channel.bind(2)).tint = Color(0.5, 0.65, 1)
 
-	_section("MIROIR")
-	_fn("miroir/effet", "EFFET", 0, 1, 0.02, 0.0, kaleido.set_amount)
-	_fn("miroir/segments", "SEGMENTS", 2, 16, 1, 6.0, kaleido.set_segments)
-	_fn("miroir/rotation", "ROTATION", -1, 1, 0.02, 0.0, kaleido.set_spin, true)
+	_section("section.mirror")
+	_fn("mirror/effect", 0, 1, 0.02, 0.0, kaleido.set_amount)
+	_fn("mirror/segments", 2, 16, 1, 6.0, kaleido.set_segments)
+	_fn("mirror/rotation", -1, 1, 0.02, 0.0, kaleido.set_spin, true)
 
-	_section("LASERS")
-	_fn("lasers/nombre", "NOMBRE", 0, 40, 1, laser_count, _set_laser_count)
-	_fn("lasers/epaisseur", "ÉPAISSEUR", 1, 24, 0.5, 5.0, _set_laser_width)
-	_fn("lasers/longueur", "LONGUEUR", 0.1, 2, 0.05, 1.0, _set_length)
-	_fn("lasers/rotation", "ROTATION", -1, 1, 0.05, 1.0, _set_spin, true)
+	_section("section.lasers")
+	_fn("lasers/count", 0, 40, 1, laser_count, _set_laser_count)
+	_fn("lasers/width", 1, 24, 0.5, 5.0, _set_laser_width)
+	_fn("lasers/length", 0.1, 2, 0.05, 1.0, _set_length)
+	_fn("lasers/spin", -1, 1, 0.05, 1.0, _set_spin, true)
 
-	_section("POURSUITE")
-	# Réglages qui ne font qu'écrire une propriété : déclarés, pas codés.
-	_prop("poursuite/rayon", "RAYON", 20, 600, 5, 200.0, circle, "base_radius")
-	_prop("poursuite/pulsation", "PULSATION", 0, 300, 5, 50.0, circle, "fluctuation_range")
-	_fn("poursuite/epaisseur", "ÉPAISSEUR", 1, 24, 0.5, 3.0, func(v): circle.set_line_width(v))
-	_prop("poursuite/vitesse", "VITESSE", 0, 2, 0.05, 1.0, circle, "seek_speed")
-	_prop("poursuite/arrets", "ARRÊTS", 0, 3, 0.05, 0.9, circle, "hold_time")
-	_prop("poursuite/tremblement", "TREMBLEMENT", 0, 3, 0.05, 1.0, circle, "wobble_amount")
-	_prop("poursuite/frequence", "FRÉQUENCE", 0, 20, 0.5, 6.0, circle, "wobble_speed")
-	_prop("poursuite/glitch", "GLITCH", 0, 0.05, 0.001, 0.0, circle, "glitch_chance")
+	_section("section.spot")
+	# Settings that only write a property are declared, not coded.
+	_prop("spot/radius", 20, 600, 5, 200.0, circle, "base_radius")
+	_prop("spot/pulse", 0, 300, 5, 50.0, circle, "fluctuation_range")
+	_fn("spot/width", 1, 24, 0.5, 3.0, func(v): circle.set_line_width(v))
+	_prop("spot/speed", 0, 2, 0.05, 1.0, circle, "seek_speed")
+	_prop("spot/hold", 0, 3, 0.05, 0.9, circle, "hold_time")
+	_prop("spot/shake", 0, 3, 0.05, 1.0, circle, "wobble_amount")
+	_prop("spot/frequency", 0, 20, 0.5, 6.0, circle, "wobble_speed")
+	_prop("spot/glitch", 0, 0.05, 0.001, 0.0, circle, "glitch_chance")
 
-	_section("SPHÈRE")
-	_prop("sphere/cercles", "CERCLES", 0, 80, 1, 40.0, sphere, "circle_count")
-	_prop("sphere/taille", "TAILLE", 0.03, 0.8, 0.01, 0.13, sphere, "circle_size")
-	_prop("sphere/rayon", "RAYON", 100, 800, 10, 400.0, sphere, "sphere_radius")
-	_prop("sphere/rotation", "ROTATION", -1, 1, 0.05, 0.6, sphere, "spin", true)
-	_prop("sphere/profondeur", "PROFONDEUR", 1.2, 10, 0.1, 2.0, sphere, "eye_distance")
-	_prop("sphere/epaisseur", "ÉPAISSEUR", 1, 24, 0.5, 3.0, sphere, "line_width")
-	_prop("sphere/verre", "VERRE", 0, 1, 0.02, 0.0, sphere, "back_dim")
+	_section("section.sphere")
+	_prop("sphere/count", 0, 80, 1, 40.0, sphere, "circle_count")
+	_prop("sphere/size", 0.03, 0.8, 0.01, 0.13, sphere, "circle_size")
+	_prop("sphere/radius", 100, 800, 10, 400.0, sphere, "sphere_radius")
+	_prop("sphere/spin", -1, 1, 0.05, 0.6, sphere, "spin", true)
+	_prop("sphere/depth", 1.2, 10, 0.1, 2.0, sphere, "eye_distance")
+	_prop("sphere/width", 1, 24, 0.5, 3.0, sphere, "line_width")
+	_prop("sphere/glass", 0, 1, 0.02, 0.0, sphere, "back_dim")
 
-	# Hors de portée du pilote automatique : le tempo, le halo et les couleurs
-	# relèvent d'une décision (la salle, le morceau), pas d'une variation.
-	for slug in ["global/vitesse", "global/halo", "couleur/saturation",
-			"couleur/mode", "couleur/rouge", "couleur/vert", "couleur/bleu"]:
+	# Out of the auto-pilot's reach: tempo, glow and colour are decisions — the
+	# room, the track — rather than variations to be subjected to.
+	for slug in ["global/speed", "global/glow", "color/saturation",
+			"color/mode", "color/red", "color/green", "color/blue"]:
 		param(slug).randomizable = false
 
 
-var _current_section: String = ""
+func _section(key: String):
+	_current_section = key
 
 
-func _section(name: String):
-	_current_section = name
-
-
-## Réglage qui demande de la logique. Renvoie le paramètre pour pouvoir
-## l'affiner sur place (teinte du libellé, libellés énumérés).
-func _fn(slug: String, label: String, mn: float, mx: float, step: float,
-		value: float, apply: Callable, signed: bool = false) -> VJParam:
-	var p := VJParam.new(slug, label, mn, mx, step, value, apply, signed)
+## A setting that needs logic. Returns the parameter so it can be refined on the
+## spot (label tint, enumerated choices).
+func _fn(slug: String, mn: float, mx: float, step: float, value: float,
+		apply: Callable, signed: bool = false) -> VJParam:
+	var p := VJParam.new(slug, mn, mx, step, value, apply, signed)
 	_append(p)
 	return p
 
 
-## Réglage qui écrit simplement une propriété sur un nœud : la moitié de la
-## liste tient en une ligne au lieu d'une fonction de trois.
-func _prop(slug: String, label: String, mn: float, mx: float, step: float,
-		value: float, target: Object, property: String, signed: bool = false) -> VJParam:
-	var p := VJParam.new(slug, label, mn, mx, step, value,
+## A setting that only writes a property on a node: half the list fits on one
+## line instead of a three-line function.
+func _prop(slug: String, mn: float, mx: float, step: float, value: float,
+		target: Object, property: String, signed: bool = false) -> VJParam:
+	var p := VJParam.new(slug, mn, mx, step, value,
 		func(v): target.set(property, v), signed)
 	_append(p)
 	return p
 
 
-## Retrouve un réglage par son adresse.
+## Finds a setting by its address.
 func param(slug: String) -> VJParam:
 	for p in params:
 		if p.slug == slug:
@@ -156,6 +165,10 @@ func _append(p: VJParam):
 	params.append(p)
 
 
+func _set_language(value: float):
+	lang.set_language(int(value))
+
+
 func _set_speed(value: float):
 	v_speed = value
 	circle.speed_scale = value
@@ -163,50 +176,6 @@ func _set_speed(value: float):
 	kaleido.speed_scale = value
 	for l in lasers:
 		l.speed_scale = value
-
-
-## Pilote automatique. Il ne remplace pas la main sur les sliders : il pioche un
-## ou deux réglages et les repose ailleurs, à un rythme qui dépend de sa valeur.
-func _set_randomizer(value: float):
-	_randomizer = value
-	_next_roll = _interval()
-
-
-func _interval() -> float:
-	return lerpf(12.0, 1.0, _randomizer)
-
-
-func _process(delta: float):
-	if _randomizer <= 0.0:
-		return
-	_next_roll -= delta
-	if _next_roll > 0.0:
-		return
-	_next_roll = _interval()
-	_roll()
-
-
-func _roll():
-	var candidats: Array[VJParam] = []
-	for p in params:
-		if p.randomizable:
-			candidats.append(p)
-	if candidats.is_empty():
-		return
-
-	# Un ou deux réglages à la fois : au-delà, ça ne se lit plus comme un geste
-	# mais comme une panne.
-	for i in range(randi_range(1, 2)):
-		var p: VJParam = candidats.pick_random()
-		# Moyenne de deux tirages : les valeurs se groupent vers le milieu de la
-		# plage, donc on évite les extrêmes qui vident l'écran ou le saturent.
-		var t := (randf() + randf()) * 0.5
-		p.set_value(lerpf(p.min_value, p.max_value, t))
-
-	# De temps en temps, un coup de neuf sur les couleurs — mais seulement si
-	# elles sont en aléatoire, sinon on écraserait un choix manuel.
-	if palette.mode == Palette.RANDOM and randf() < 0.25:
-		_randomize_all()
 
 
 func _set_chaos(value: float):
@@ -219,8 +188,8 @@ func _set_chaos(value: float):
 
 func _set_glow(value: float):
 	var env: Environment = world_env.environment
-	# À 0 on coupe vraiment la passe de glow plutôt que de la laisser tourner
-	# à intensité nulle : ça économise ~0.3 ms par image.
+	# At 0 the glow pass is genuinely switched off rather than left running at
+	# zero intensity: that saves about 0.3 ms per frame.
 	env.glow_enabled = value > 0.0
 	env.glow_intensity = value
 
@@ -259,10 +228,9 @@ func _set_color_mode(value: float):
 	palette.set_mode(int(value))
 
 
-## Toucher une couleur bascule en manuel : sans ça, bouger ROUGE ne produirait
-## rien de visible tant qu'on est en aléatoire, ce qui donnerait un slider mort.
-## Le garde-fou d'initialisation évite que poser les valeurs de départ ne fasse
-## démarrer le projet en manuel.
+## Touching a colour switches to manual: without that, moving RED while in random
+## mode would do nothing visible and the slider would look broken. The start-up
+## guard keeps the initial values from flipping the mode on launch.
 func _set_channel(value: float, index: int):
 	palette.set_channel(index, value)
 	if not _initializing and palette.mode != Palette.MANUAL and _mode_param:
@@ -278,7 +246,7 @@ func _spawn_lasers(count: int):
 			randf_range(0, screen_size.x),
 			randf_range(0, screen_size.y)
 		)
-		# Un laser créé en cours de route doit hériter des réglages courants.
+		# A laser spawned mid-set must inherit the current settings.
 		laser.speed_scale = v_speed
 		laser.spin_scale = v_spin
 		laser.chaos = v_chaos
@@ -289,7 +257,55 @@ func _spawn_lasers(count: int):
 
 
 # --------------------------------------------------------------------------
-# OSC (Chataigne, TouchOSC, ou n'importe quel émetteur)
+# Auto-pilot
+# --------------------------------------------------------------------------
+
+## It does not replace a hand on the sliders: it picks one or two settings and
+## puts them down somewhere else, at a pace set by its own value.
+func _set_randomizer(value: float):
+	_randomizer = value
+	_next_roll = _interval()
+
+
+func _interval() -> float:
+	return lerpf(12.0, 1.0, _randomizer)
+
+
+func _process(delta: float):
+	if _randomizer <= 0.0:
+		return
+	_next_roll -= delta
+	if _next_roll > 0.0:
+		return
+	_next_roll = _interval()
+	_roll()
+
+
+func _roll():
+	var candidates: Array[VJParam] = []
+	for p in params:
+		if p.randomizable:
+			candidates.append(p)
+	if candidates.is_empty():
+		return
+
+	# One or two at a time: beyond that it stops reading as a gesture and starts
+	# reading as a malfunction.
+	for i in range(randi_range(1, 2)):
+		var p: VJParam = candidates.pick_random()
+		# Averaging two draws clusters values towards the middle of the range, so
+		# we avoid the extremes that either empty or saturate the screen.
+		var t := (randf() + randf()) * 0.5
+		p.set_value(lerpf(p.min_value, p.max_value, t))
+
+	# Every so often, fresh colours too — but only if they are in random mode,
+	# otherwise we would trample a manual choice.
+	if palette.mode == Palette.RANDOM and randf() < 0.25:
+		_randomize_all()
+
+
+# --------------------------------------------------------------------------
+# OSC (Chataigne, TouchOSC, or any other sender)
 # --------------------------------------------------------------------------
 
 func _on_osc_message(address: String, args: Array):
@@ -300,8 +316,8 @@ func _on_osc_message(address: String, args: Array):
 		"/deferlante/randomize":
 			_randomize_all()
 			return
-		"/deferlante/couleur/rgb":
-			# Un sélecteur de couleur envoie ses composantes d'un bloc.
+		"/deferlante/color/rgb":
+			# A colour picker sends its components in one go.
 			if args.size() >= 3:
 				_set_rgb_from_osc(args)
 			return
@@ -310,9 +326,9 @@ func _on_osc_message(address: String, args: Array):
 		return
 	var value := float(args[0])
 
-	# Forme normalisée : /deferlante/norm/<nom> attend 0..1 et l'étale sur la
-	# plage du réglage. Pour un fader MIDI ou une surface tactile qui ne sait
-	# envoyer que du 0..1 sans connaître les bornes de chaque réglage.
+	# Normalised form: /deferlante/norm/<address> takes 0..1 and spreads it over
+	# the setting's range. For a MIDI fader or a touch surface that can only send
+	# 0..1 without knowing each setting's bounds.
 	var normalized := address.begins_with("/deferlante/norm/")
 	var key := address.replace("/norm/", "/") if normalized else address
 
@@ -324,16 +340,16 @@ func _on_osc_message(address: String, args: Array):
 	p.set_value(value)
 
 
-## Touche R : revient à l'aléatoire et retire de nouvelles teintes. C'est la
-## sortie du mode manuel, celle qu'on trouve sans réfléchir en plein set.
 func _set_rgb_from_osc(args: Array):
-	var names := ["couleur/rouge", "couleur/vert", "couleur/bleu"]
+	var names := ["color/red", "color/green", "color/blue"]
 	for i in range(3):
 		var p: VJParam = osc_routes.get("/deferlante/" + names[i])
 		if p:
 			p.set_value(float(args[i]))
 
 
+## R key: back to random colours, with a fresh draw. This is the way out of manual
+## mode, the one you find without thinking mid-set.
 func _randomize_all():
 	if _mode_param and palette.mode != Palette.RANDOM:
 		_mode_param.set_value(Palette.RANDOM)
@@ -344,7 +360,7 @@ func _randomize_all():
 
 
 # --------------------------------------------------------------------------
-# Raccourcis de scène (le panneau gère les siens : flèches, H, F3)
+# Show shortcuts (the panel handles its own: arrows, H, F3)
 # --------------------------------------------------------------------------
 
 func _unhandled_input(event: InputEvent):

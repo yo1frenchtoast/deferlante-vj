@@ -1,14 +1,14 @@
 extends CanvasLayer
 
-## Panneau de réglages : une ligne par paramètre, navigation clavier, effacement
-## automatique et compteur de FPS.
+## Settings panel: one row per parameter, keyboard navigation, auto-hide and an
+## FPS readout.
 ##
-## Le panneau ne réapparaît que sur une action de l'utilisateur. Une valeur qui
-## arrive par OSC met bien le slider à jour, mais sans réveiller l'affichage :
-## sinon une automation Chataigne laisserait les sliders visibles — donc projetés
-## sur le mur — pendant tout le set.
+## The panel only comes back on a gesture from the operator. A value arriving over
+## OSC does update its slider, but without waking the display: otherwise a
+## Chataigne automation would leave the sliders on screen — and therefore
+## projected on the wall — for the whole set.
 
-## Secondes d'inactivité avant que les sliders s'effacent d'eux-mêmes.
+## Seconds of inactivity before the sliders fade out on their own.
 @export var hide_delay: float = 4.0
 @export var show_fps: bool = false
 
@@ -17,29 +17,37 @@ extends CanvasLayer
 
 var params: Array[VJParam] = []
 var selected: int = 0
-## Figé : le panneau reste à l'écran pendant les réglages.
+## Pinned: the panel stays on screen while settings are being dialled in.
 var pinned: bool = false
 
+var _lang: Lang
 var _sliders: Array[HSlider] = []
 var _name_labels: Array[Label] = []
 var _value_labels: Array[Label] = []
+var _section_labels: Array[Label] = []
+var _section_keys: PackedStringArray = []
+var _help_labels: Array[Label] = []
 
 var _idle: float = 0.0
 var _fade: Tween
 
-# Moyennage du compteur de FPS : sur 0.25 s, sinon le chiffre est illisible.
+# The FPS readout is averaged over 0.25 s, otherwise the number is unreadable.
 const FPS_REFRESH := 0.25
 var _fps_elapsed: float = 0.0
 var _fps_frames: int = 0
 
+const HELP_KEYS := ["help.params", "help.keys"]
 
-## Couleur des en-têtes de section : chaude, pour trancher avec le blanc des
-## valeurs sans attirer l'œil plus que les réglages eux-mêmes.
+## Section header colour: warm, so it stands apart from the white values without
+## pulling more attention than the settings themselves.
 const SECTION_COLOR := Color(1.0, 0.72, 0.35)
 
 
-func build(p_params: Array[VJParam]):
+func build(p_params: Array[VJParam], lang: Lang):
 	params = p_params
+	_lang = lang
+	_lang.changed.connect(_retranslate)
+
 	var current_section := ""
 	for i in range(params.size()):
 		if params[i].section != current_section:
@@ -47,22 +55,25 @@ func build(p_params: Array[VJParam]):
 			_build_section_header(current_section, i > 0)
 		_build_row(params[i], i)
 	_build_help()
+
 	select(0)
 	fps_label.visible = show_fps
 	wake()
 
 
-func _build_section_header(name: String, spaced: bool):
+func _build_section_header(key: String, spaced: bool):
 	if spaced:
 		var spacer := Control.new()
 		spacer.custom_minimum_size.y = 10
 		rows.add_child(spacer)
 
 	var header := Label.new()
-	header.text = name
+	header.text = _lang.text(key)
 	header.add_theme_font_size_override("font_size", 13)
 	header.add_theme_color_override("font_color", SECTION_COLOR)
 	rows.add_child(header)
+	_section_labels.append(header)
+	_section_keys.append(key)
 
 
 func _build_row(p: VJParam, index: int):
@@ -82,7 +93,7 @@ func _build_row(p: VJParam, index: int):
 	slider.value = p.value
 	slider.custom_minimum_size.x = 260
 	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	# Sans ça les sliders captent les flèches et cassent la navigation clavier.
+	# Without this the sliders swallow the arrow keys and break navigation.
 	slider.focus_mode = Control.FOCUS_NONE
 	slider.value_changed.connect(_on_slider_moved.bind(index))
 	row.add_child(slider)
@@ -101,19 +112,27 @@ func _build_row(p: VJParam, index: int):
 
 
 func _build_help():
-	for text in [
-		"↑↓ paramètre    ←→ régler (Maj : précis)    ESPACE glitch    R couleurs",
-		"H figer l'UI    F3 fps    F11 plein écran    ÉCHAP quitter",
-	]:
+	for key in HELP_KEYS:
 		var label := Label.new()
-		label.text = text
+		label.text = _lang.text(key)
 		label.add_theme_font_size_override("font_size", 13)
 		label.modulate = Color(1, 1, 1, 0.55)
 		rows.add_child(label)
+		_help_labels.append(label)
+
+
+## Rewrites every piece of text in place when the language changes. Cheaper and
+## far less disruptive than tearing the panel down and rebuilding it.
+func _retranslate():
+	for i in range(_section_labels.size()):
+		_section_labels[i].text = _lang.text(_section_keys[i])
+	for i in range(_help_labels.size()):
+		_help_labels[i].text = _lang.text(HELP_KEYS[i])
+	select(selected)
 
 
 # --------------------------------------------------------------------------
-# Synchronisation valeurs <-> affichage
+# Keeping values and display in step
 # --------------------------------------------------------------------------
 
 func _on_slider_moved(value: float, index: int):
@@ -122,8 +141,8 @@ func _on_slider_moved(value: float, index: int):
 	wake()
 
 
-## Le paramètre a changé, d'où qu'il vienne. On remet le slider en place sans
-## réémettre son signal, sinon un aller-retour OSC ferait boucler l'affectation.
+## The parameter changed, wherever it came from. The slider is put back in place
+## without re-emitting, otherwise an OSC round trip would loop on itself.
 func _on_param_changed(value: float, index: int):
 	_sliders[index].set_value_no_signal(value)
 	_value_labels[index].text = params[index].format_value()
@@ -133,14 +152,14 @@ func select(index: int):
 	selected = wrapi(index, 0, params.size())
 	for i in range(params.size()):
 		var on := i == selected
-		_name_labels[i].text = ("  ▸ " if on else "     ") + params[i].label
+		_name_labels[i].text = ("  ▸ " if on else "     ") + params[i].label()
 		_name_labels[i].modulate = Color.WHITE if on else Color(1, 1, 1, 0.5)
 		_value_labels[i].modulate = Color.WHITE if on else Color(1, 1, 1, 0.5)
 		_value_labels[i].text = params[i].format_value()
 
 
 # --------------------------------------------------------------------------
-# Effacement automatique
+# Auto-hide
 # --------------------------------------------------------------------------
 
 func wake():
@@ -159,7 +178,7 @@ func _fade_out():
 
 
 func _input(event: InputEvent):
-	# Le moindre geste rappelle le panneau ; c'est le silence qui l'efface.
+	# The slightest gesture calls the panel back; it is silence that hides it.
 	if event is InputEventKey or event is InputEventMouse:
 		if rows.visible and _fade == null:
 			_idle = 0.0
@@ -189,7 +208,7 @@ func _unhandled_input(event: InputEvent):
 
 
 # --------------------------------------------------------------------------
-# Boucle
+# Loop
 # --------------------------------------------------------------------------
 
 func _process(delta: float):
@@ -208,18 +227,18 @@ func _update_fps(delta: float):
 	if _fps_elapsed < FPS_REFRESH:
 		return
 
-	# Temps par image moyenné : c'est lui qui compte, pas le chiffre de FPS.
-	# Un écart de 0.3 ms fait chuter le compteur de plusieurs centaines de FPS
-	# quand on tourne déjà très haut, sans que ça pèse sur le budget d'image.
+	# Averaged milliseconds per frame: that is the number that matters, not the
+	# FPS count. A 0.3 ms difference costs hundreds of FPS when already running
+	# very high, without weighing anything on the frame budget.
 	var avg_ms := (_fps_elapsed / _fps_frames) * 1000.0
 	var text := "%.0f FPS   %.2f ms" % [1000.0 / avg_ms, avg_ms]
 
-	# Le taux de l'écran (ou du vidéoprojecteur) : c'est la cible réelle à tenir.
+	# The screen (or projector) refresh rate: that is the real target to hold.
 	var refresh := DisplayServer.screen_get_refresh_rate(
 		DisplayServer.window_get_current_screen()
 	)
 	if refresh > 0.0:
-		text += "   écran %.0f Hz" % refresh
+		text += "   " + _lang.text("fps.screen") % refresh
 	fps_label.text = text
 
 	_fps_elapsed = 0.0
