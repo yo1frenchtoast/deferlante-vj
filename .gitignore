@@ -5,8 +5,8 @@
 # Outils Python
 __pycache__/
 
+# Sorties de build
+build/
+
 # Reglages locaux Claude Code
 .claude/settings.local.json
-
-# Preset d'export : chemin de sortie propre a chaque machine
-export_presets.cfg

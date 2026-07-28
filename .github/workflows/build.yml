@@ -1,0 +1,133 @@
+name: Build
+
+# Builds for Linux, Windows and Android on every push, and attaches the three of
+# them to a GitHub release when a tag like v1.0 is pushed.
+#
+# One Linux runner covers all three: Godot cross-exports from a single headless
+# binary, so there is nothing to gain from a matrix of operating systems here.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: 4.7.1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The export templates must match the engine exactly, so both come from the
+      # same release and the version lives in one place above.
+      - name: Install Godot and its export templates
+        run: |
+          set -euo pipefail
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -sSL -o godot.zip "${base}/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl -sSL -o templates.tpz "${base}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+
+          unzip -q godot.zip
+          sudo mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
+
+          unzip -q templates.tpz
+          mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          mv templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
+          godot --version
+
+      # Android signs even debug builds, and Godot looks for the SDK and the
+      # keystore in its editor settings — which do not exist on a fresh runner.
+      - name: Set up the Android signing key and editor settings
+        run: |
+          set -euo pipefail
+          keytool -keyalg RSA -genkeypair -alias androiddebugkey \
+            -keypass android -keystore "$HOME/debug.keystore" -storepass android \
+            -dname "CN=Android Debug,O=Android,C=US" -validity 9999 -deststoretype pkcs12
+
+          # The settings file is named after the minor version: 4.7 -> editor_settings-4.7.tres
+          minor="${GODOT_VERSION%.*}"
+          sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          test -n "$sdk" || { echo "no Android SDK on this runner"; exit 1; }
+          mkdir -p ~/.config/godot
+          # Written line by line rather than with a heredoc: inside an indented
+          # YAML block a heredoc keeps the leading spaces, and .tres will not have them.
+          {
+            echo '[gd_resource type="EditorSettings" format=3]'
+            echo ''
+            echo '[resource]'
+            echo "export/android/android_sdk_path = \"${sdk}\""
+            echo "export/android/debug_keystore = \"${HOME}/debug.keystore\""
+            echo 'export/android/debug_keystore_user = "androiddebugkey"'
+            echo 'export/android/debug_keystore_pass = "android"'
+          } > ~/.config/godot/editor_settings-${minor}.tres
+          cat ~/.config/godot/editor_settings-${minor}.tres
+
+          # A release export refuses to run without a release key. Rather than fall
+          # back to a debug build — slower, and this runs the visuals on a tablet —
+          # the throwaway key above is wired in as the release key too. The APK is
+          # therefore properly optimised, just not signed with a key you own: fine
+          # for sideloading, never for a store listing.
+          sed -i "/^permissions\/internet=true$/a keystore\/release=\"$HOME\/debug.keystore\"\nkeystore\/release_user=\"androiddebugkey\"\nkeystore\/release_password=\"android\"" export_presets.cfg
+          tail -5 export_presets.cfg
+
+      # First run resolves .uid files and fills the class cache. Without it the
+      # first export can miss freshly added scripts.
+      - name: Import the project
+        run: godot --headless --import || true
+
+      - name: Export
+        run: |
+          set -euo pipefail
+          mkdir -p build/linux build/windows build/android
+          godot --headless --export-release "Linux"   build/linux/deferlante.x86_64
+          godot --headless --export-release "Windows" build/windows/deferlante.exe
+          godot --headless --export-release "Android" build/android/deferlante.apk
+
+      # A build that starts but serves nothing is the failure mode that matters
+      # here: the control page ships through the export filter, not the code.
+      - name: Check the Linux build actually serves the control page
+        run: |
+          set -euo pipefail
+          chmod +x build/linux/deferlante.x86_64
+          ./build/linux/deferlante.x86_64 --headless --quit-after 3000 &
+          sleep 8
+          page=$(curl -sS --max-time 5 http://127.0.0.1:8080/)
+          # `grep -q ... && { exit 1; }` would fail the step on the *good* path
+          # under `set -e`, since grep exits 1 when it finds nothing.
+          if printf '%s' "$page" | grep -q "Page missing"; then
+            echo "web/ was left out of the export filter"
+            exit 1
+          fi
+          printf '%s' "$page" | grep -q "DÉFERLANTE" || { echo "control page missing"; exit 1; }
+          echo "control page served, $(printf '%s' "$page" | wc -c) bytes"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deferlante-linux
+          path: build/linux/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deferlante-windows
+          path: build/windows/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deferlante-android
+          path: build/android/
+
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/linux/*
+            build/windows/*
+            build/android/*

@@ -1,5 +1,7 @@
 # Déferlante
 
+[![Build](https://github.com/yo1frenchtoast/deferlante/actions/workflows/build.yml/badge.svg)](https://github.com/yo1frenchtoast/deferlante/actions/workflows/build.yml)
+
 VJ visuals in Godot 4: neon strokes on black, additively blended.
 Built for video projection with a haze machine.
 
@@ -7,7 +9,7 @@ Built for video projection with a haze machine.
 **External control** — [Web surface](#web-control-surface) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
 **The effects** — [Spotlight](#the-spotlight) · [Sphere](#the-sphere-effect) · [Kaleidoscope](#the-kaleidoscope) · [Chaos](#chaos) · [Auto-pilot](#the-auto-pilot) · [Colour](#the-two-colour-modes)
 **In the room** — [What starts off](#what-starts-switched-off) · [Glow](#the-glow) · [Projection notes](#projection-notes) · [Performance](#measuring-performance-f3)
-**The code** — [Structure](#structure) · [Renderer](#a-note-on-the-renderer)
+**The code** — [Structure](#structure) · [Builds](#builds) · [Renderer](#a-note-on-the-renderer)
 
 The on-screen interface speaks French or English — see `LANGUAGE` in the Global
 section. Everything else (code, OSC addresses, this document) stays in English.
@@ -421,6 +423,45 @@ A setting that only writes a property is declared in one line
 needing logic get their own function. `VJParam` is the single point every change goes
 through — slider, keyboard and OSC alike — which spares the rest of the code from
 having to know where a change came from.
+
+## Builds
+
+Every push to `main` builds for **Linux, Windows and Android** on GitHub Actions and
+uploads the three as artifacts. Pushing a tag like `v1.0` attaches them to a release.
+
+One Linux runner covers all three: Godot cross-exports from a single headless binary,
+so a matrix of operating systems would buy nothing.
+
+Linux and Windows come out as **one self-contained file** each (`embed_pck=true`);
+Android as an APK for `arm64-v8a`, which is every tablet made in the last decade.
+
+`export_presets.cfg` is committed on purpose — CI cannot export without it. Its
+export paths are relative (`build/linux/…`) so nothing machine-specific leaks. If you
+export locally to somewhere else, change the path in the editor and take care not to
+commit it back.
+
+### Android specifics
+
+The APK is signed with a **throwaway key generated during the build**. That is enough
+to sideload onto a tablet and it keeps the build properly optimised — a release export
+refuses to run without a release key, and falling back to a debug build would cost
+performance where it is least affordable. It is *not* suitable for a store listing:
+that needs a key you own, added as a repository secret.
+
+Two things to expect on a tablet, neither of them tested on a device:
+
+- **`GLOW` does nothing.** The mobile renderer is `gl_compatibility`, and 2D glow is
+  not rendered there — the same limitation documented below for the desktop.
+- The **web control surface and OSC still work** (`INTERNET` permission is set in the
+  preset), so a tablet can run the visuals while a phone drives them.
+
+### The one thing CI actually checks
+
+Beyond "the export succeeded", the workflow launches the Linux build and fetches
+`http://127.0.0.1:8080/`. The control page ships through the export *filter*, not
+through the code, so it is the one piece that can silently go missing while every
+build still passes. If the page is absent, or the built-in "Page missing" fallback
+comes back instead, the build fails.
 
 ## A note on the renderer
 
