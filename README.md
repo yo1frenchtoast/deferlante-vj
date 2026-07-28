@@ -143,31 +143,125 @@ is fine on a private Wi-Fi and a bad idea on a public one.
 
 ## External control over OSC
 
-Godot listens for OSC on port **9000** (UDP). Every setting can be driven remotely
-from Chataigne, TouchOSC, a sequencer, or any script at all.
+Godot listens for OSC on port **9000** (UDP), on every interface. Every setting can
+be driven remotely from Chataigne, TouchOSC, a sequencer, or any script at all.
 
-| Address | Argument |
-| --- | --- |
-| `/deferlante/<section>/<setting>` | the value, within the slider's bounds (clamped if it overshoots) |
-| `/deferlante/norm/<section>/<setting>` | 0 → 1, spread over the setting's range |
-| `/deferlante/color/rgb` | three floats 0 → 1: the whole colour in one go |
-| `/deferlante/glitch_now` | fires a glitch (no argument) |
-| `/deferlante/randomize` | redraws colours and trajectories |
+### How an address is built
 
-Addresses are hierarchical and follow the panel's sections:
-`/deferlante/sphere/spin`, `/deferlante/spot/hold`, `/deferlante/global/chaos`. The
-section is part of the path because three sections have a `WIDTH` setting — without
-it the addresses would collide.
+`/deferlante/<section>/<setting>` — the section is part of the path because three
+sections have a `WIDTH` and two have a `ROTATION`; without it the addresses would
+collide.
 
 The address and the label are **decoupled** in the code: `slug` carries the address,
 `Lang` carries what is displayed. Rewording a label, or switching the interface to
 French, can never break a console already wired to an address.
 
-The `norm` form is for surfaces that can only send 0 → 1 (MIDI faders, TouchOSC) and
-have no business knowing each setting's bounds.
+### Arguments
 
-A value arriving over OSC **does not wake the UI**. That is deliberate: an
-automation sending continuously would otherwise leave the sliders on screen — and
+One argument, a **float** or an **int**; anything else is ignored. The value is
+clamped to the setting's bounds and snapped to its step, so a console sending `999`
+lands on the maximum rather than breaking anything.
+
+**Bundles are supported.** Chataigne sends one when several values leave in the same
+frame. The timetag is deliberately ignored and the contents applied at once: when
+VJing you want the value now, not at a scheduled time.
+
+### Two forms, and why
+
+| Form | Argument |
+| --- | --- |
+| `/deferlante/<section>/<setting>` | the value, in the setting's own units |
+| `/deferlante/norm/<section>/<setting>` | 0 → 1, spread over the setting's range |
+
+The `norm` form is for surfaces that can only send 0 → 1 — MIDI faders, TouchOSC —
+and have no business knowing that `spot/radius` runs from 20 to 600.
+
+### Actions
+
+| Address | Effect |
+| --- | --- |
+| `/deferlante/glitch_now` | fires one glitch (no argument needed) |
+| `/deferlante/randomize` | redraws colours and trajectories, and returns colour to random mode |
+| `/deferlante/color/rgb` | three floats 0 → 1: the whole colour in one message, and switches to manual |
+
+### Every address
+
+Generated from the settings themselves, so this table cannot drift:
+
+```
+python3 tools/build_chataigne_module.py --addresses
+```
+
+| Address | Range | Default | On screen |
+| --- | --- | --- | --- |
+| `/deferlante/global/speed` | -3 – 3 | 1 | GLOBAL › SPEED |
+| `/deferlante/global/chaos` | 0 – 1 | 0 | GLOBAL › CHAOS |
+| `/deferlante/global/randomizer` | 0 – 1 | 0 | GLOBAL › RANDOMIZER |
+| `/deferlante/global/glow` | 0 – 2 | 0 | GLOBAL › GLOW |
+| `/deferlante/global/language` | 0 – 1 | 0 | GLOBAL › LANGUAGE |
+| `/deferlante/color/mode` | 0 – 1 | 0 | COLOR › MODE |
+| `/deferlante/color/saturation` | 0 – 1 | 0.7 | COLOR › SATURATION |
+| `/deferlante/color/red` | 0 – 1 | 1 | COLOR › RED |
+| `/deferlante/color/green` | 0 – 1 | 0.25 | COLOR › GREEN |
+| `/deferlante/color/blue` | 0 – 1 | 0.1 | COLOR › BLUE |
+| `/deferlante/mirror/effect` | 0 – 1 | 0 | MIRROR › EFFECT |
+| `/deferlante/mirror/segments` | 2 – 16 | 6 | MIRROR › SEGMENTS |
+| `/deferlante/mirror/rotation` | -1 – 1 | 0 | MIRROR › ROTATION |
+| `/deferlante/lasers/count` | 0 – 40 | 5 | LASERS › COUNT |
+| `/deferlante/lasers/width` | 1 – 24 | 5 | LASERS › WIDTH |
+| `/deferlante/lasers/length` | 0.1 – 2 | 1 | LASERS › LENGTH |
+| `/deferlante/lasers/spin` | -1 – 1 | 1 | LASERS › SPIN |
+| `/deferlante/spot/radius` | 20 – 600 | 200 | SPOTLIGHT › RADIUS |
+| `/deferlante/spot/pulse` | 0 – 300 | 50 | SPOTLIGHT › PULSE |
+| `/deferlante/spot/width` | 1 – 24 | 3 | SPOTLIGHT › WIDTH |
+| `/deferlante/spot/speed` | 0 – 2 | 1 | SPOTLIGHT › SPEED |
+| `/deferlante/spot/hold` | 0 – 3 | 0.9 | SPOTLIGHT › HOLD |
+| `/deferlante/spot/shake` | 0 – 3 | 1 | SPOTLIGHT › SHAKE |
+| `/deferlante/spot/frequency` | 0 – 20 | 6 | SPOTLIGHT › FREQUENCY |
+| `/deferlante/spot/glitch` | 0 – 0.05 | 0 | SPOTLIGHT › GLITCH |
+| `/deferlante/sphere/count` | 0 – 80 | 40 | SPHERE › CIRCLES |
+| `/deferlante/sphere/size` | 0.03 – 0.8 | 0.13 | SPHERE › SIZE |
+| `/deferlante/sphere/radius` | 100 – 800 | 400 | SPHERE › RADIUS |
+| `/deferlante/sphere/spin` | -1 – 1 | 0.6 | SPHERE › SPIN |
+| `/deferlante/sphere/depth` | 1.2 – 10 | 2 | SPHERE › DEPTH |
+| `/deferlante/sphere/width` | 1 – 24 | 3 | SPHERE › WIDTH |
+| `/deferlante/sphere/glass` | 0 – 1 | 0 | SPHERE › GLASS |
+
+### What it does not do
+
+**Nothing comes back.** Godot never sends OSC out, so a motorised console will not
+follow a change made on the keyboard or by the auto-pilot. The web surface does get
+that mirroring, over its own WebSocket — if you need it over OSC, that is the piece
+to add.
+
+There is also **no OSCQuery**: the table above is the discovery mechanism.
+
+### Trying it without a console
+
+```
+oscsend 127.0.0.1 9000 /deferlante/global/chaos f 0.8
+oscsend 127.0.0.1 9000 /deferlante/glitch_now
+```
+
+Or with no tooling at all, straight from Python:
+
+```python
+import socket, struct
+
+def osc(address, *args):
+    pad = lambda b: b + b"\0" * ((4 - len(b) % 4) % 4)
+    tags, body = ",", b""
+    for value in args:
+        tags += "f"
+        body += struct.pack(">f", float(value))
+    return pad(address.encode() + b"\0") + pad(tags.encode() + b"\0") + body
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock.sendto(osc("/deferlante/sphere/spin", -0.8), ("127.0.0.1", 9000))
+```
+
+A value arriving over OSC **does not wake the on-screen panel**. That is deliberate:
+an automation sending continuously would otherwise leave the sliders on screen — and
 therefore projected on the wall — for the whole set.
 
 A ready-made Chataigne module ships in `chataigne/Deferlante/`, with its own install

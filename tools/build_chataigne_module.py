@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Generate the Chataigne module from Godot's list of settings.
 
-    python3 tools/build_chataigne_module.py
+    python3 tools/build_chataigne_module.py              # write the module
+    python3 tools/build_chataigne_module.py --addresses  # print the OSC reference
 
 The module mirrors `_build_params()` in `scripts/vj_controller.gd`: same settings,
 same bounds, same defaults. Generating it rather than maintaining it by hand rules
@@ -228,9 +229,27 @@ def build(settings, labels):
     return module, "\n".join(lines)
 
 
+def address_table(settings, labels) -> str:
+    """The OSC reference as a markdown table, so the README cannot drift either."""
+    lines = ["| Address | Range | Default | On screen |", "| --- | --- | --- | --- |"]
+    for slug, low, high, step, default in settings:
+        fmt = (lambda v: f"{v:g}")
+        shown = labels.get(slug, slug)
+        section = labels.get("section." + slug.split("/")[0], "")
+        lines.append(
+            f"| `/deferlante/{slug}` | {fmt(low)} – {fmt(high)} | {fmt(default)} |"
+            f" {section} › {shown} |"
+        )
+    return "\n".join(lines)
+
+
 def main():
     labels = read_labels()
     settings = read_settings(CONTROLLER.read_text(encoding="utf-8"))
+
+    if "--addresses" in sys.argv:
+        print(address_table(settings, labels))
+        return
 
     addresses = [slug for slug, *_ in settings]
     if len(addresses) != len(set(addresses)):
