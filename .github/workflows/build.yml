@@ -120,21 +120,21 @@ jobs:
           printf '%s' "$page" | grep -q "DÉFERLANTE" || { echo "control page missing"; exit 1; }
           echo "control page served, $(printf '%s' "$page" | wc -c) bytes"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: deferlante-linux
           path: build/linux/
           if-no-files-found: warn
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: deferlante-windows
           path: build/windows/
           if-no-files-found: warn
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: deferlante-android
