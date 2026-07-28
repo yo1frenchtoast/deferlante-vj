@@ -5,6 +5,16 @@
 VJ visuals in Godot 4: neon strokes on black, additively blended.
 Built for video projection with a haze machine.
 
+*Déferlante* is French for the breaking wave — the one that surges in and takes the
+room. Pull the word apart in English and something else surfaces: **defer**, and a
+*lante* one syllable short of *lantern*. A light that keeps putting off the moment
+it finds you.
+
+Which is exactly what the spotlight does here. It sweeps, it stops, it trembles as
+though it had seen something, then it leaves. It never lands on anyone. Everything
+else — the lasers, the sphere, the glitches — happens around that deferral: a room
+swept by a light that is always about to arrive, and never does.
+
 **Getting started** — [Run](#run) · [Drive it](#drive-it) · [Settings](#settings)
 **External control** — [Web surface](#web-control-surface) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
 **The effects** — [Spotlight](#the-spotlight) · [Sphere](#the-sphere-effect) · [Kaleidoscope](#the-kaleidoscope) · [Chaos](#chaos) · [Auto-pilot](#the-auto-pilot) · [Colour](#the-two-colour-modes)
