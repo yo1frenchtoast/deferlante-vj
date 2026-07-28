@@ -108,7 +108,7 @@ jobs:
 
       # A build that starts but serves nothing is the failure mode that matters
       # here: the control page ships through the export filter, not the code.
-      - name: Check the Linux build actually serves the control page
+      - name: Check the Linux build serves the page and the API
         run: |
           set -euo pipefail
           chmod +x build/linux/deferlante.x86_64
@@ -123,6 +123,17 @@ jobs:
           fi
           printf '%s' "$page" | grep -q "DÉFERLANTE" || { echo "control page missing"; exit 1; }
           echo "control page served, $(printf '%s' "$page" | wc -c) bytes"
+
+          # The spec is generated from the settings, so this also catches a
+          # setting declared in a shape the generator cannot read.
+          spec=$(curl -sS --max-time 5 http://127.0.0.1:7331/openapi.json)
+          count=$(printf '%s' "$spec" | python3 -c "import json,sys; print(len(json.load(sys.stdin)['paths']['/api/params/{setting}']['get']['parameters'][0]['schema']['enum']))")
+          test "$count" -gt 0 || { echo "openapi spec lists no settings"; exit 1; }
+          echo "openapi spec served, $count settings"
+
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:7331/docs)
+          test "$code" = "200" || { echo "swagger page missing (HTTP $code)"; exit 1; }
+          echo "swagger page served"
 
       - uses: actions/upload-artifact@v7
         if: always()

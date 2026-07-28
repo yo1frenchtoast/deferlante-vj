@@ -16,7 +16,7 @@ else — the lasers, the sphere, the glitches — happens around that deferral: 
 swept by a light that is always about to arrive, and never does.
 
 **Getting started** — [Run](#run) · [Drive it](#drive-it) · [Settings](#settings)
-**External control** — [Web surface](#web-control-surface) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
+**External control** — [Web surface](#web-control-surface) · [REST API](#rest-api) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
 **The effects** — [Spotlight](#the-spotlight) · [Sphere](#the-sphere-effect) · [Kaleidoscope](#the-kaleidoscope) · [Chaos](#chaos) · [Auto-pilot](#the-auto-pilot) · [Colour](#the-two-colour-modes)
 **In the room** — [What starts off](#what-starts-switched-off) · [Glow](#the-glow) · [Projection notes](#projection-notes) · [Performance](#measuring-performance-f3)
 **The code** — [Structure](#structure) · [Builds](#builds) · [Renderer](#a-note-on-the-renderer)
@@ -140,6 +140,47 @@ A sleeping phone drops the socket; the page reconnects on its own without a relo
 
 ⚠️ There is **no authentication**: anyone on the network can drive the visuals. That
 is fine on a private Wi-Fi and a bad idea on a public one.
+
+## REST API
+
+The same HTTP server that carries the control page also exposes the settings as a
+REST API, described by an OpenAPI 3.0 specification.
+
+| | |
+| --- | --- |
+| `http://<machine-ip>:7331/docs` | Swagger UI, with *Try it out* wired up |
+| `http://<machine-ip>:7331/openapi.json` | the specification itself |
+
+| Endpoint | |
+| --- | --- |
+| `GET /api/params` | every setting, with bounds and current values |
+| `GET /api/params/{section}/{setting}` | one setting, e.g. `/api/params/spot/hold` |
+| `PUT /api/params/{section}/{setting}` | body `{"value": 2.5}` |
+| `POST /api/actions/glitch` | fire one glitch |
+| `POST /api/actions/randomize` | redraw colours and trajectories |
+
+A `PUT` goes through `VJParam.set_value()` like everything else, so the value is
+clamped and snapped, the on-screen panel follows, and every connected phone follows
+too. Sending `999` to a setting bounded at 3 returns `3` rather than an error — the
+response body is always the setting as it ended up.
+
+```
+curl -X PUT http://192.168.10.17:7331/api/params/global/chaos \
+     -H 'Content-Type: application/json' -d '{"value": 0.8}'
+
+curl -X POST http://192.168.10.17:7331/api/actions/glitch
+```
+
+**The specification is generated from the settings**, not written beside them: the
+`{setting}` parameter carries an enum of all 32 addresses, so Swagger UI offers them
+as a dropdown and cannot list one that no longer exists.
+
+⚠️ The Swagger UI page pulls its JavaScript from a CDN, so `/docs` needs an internet
+connection — which a venue often lacks. The API and the spec do not: they are served
+entirely by Déferlante. Without internet, `/docs` says so and points at
+`/openapi.json`, which any OpenAPI tool will read.
+
+As with everything else on this server, **there is no authentication**.
 
 ## External control over OSC
 

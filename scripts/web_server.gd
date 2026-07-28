@@ -8,7 +8,8 @@ extends Node
 ## costs one port and removes the guesswork.
 ##
 ## The page drives the very same `VJParam.set_value()` as the sliders and OSC, so
-## nothing here knows anything about lasers or spheres.
+## nothing here knows anything about lasers or spheres. The REST API is the same
+## story: this file only routes, the controller answers.
 
 signal set_requested(slug: String, value: float)
 signal action_requested(name: String)
@@ -21,6 +22,11 @@ signal client_connected
 @export var http_port: int = 7331
 ## The WebSocket sits on http_port + 1.
 @export var page: String = "res://web/index.html"
+@export var docs_page: String = "res://web/docs.html"
+
+## Set by the controller. Called as (method, path, body) and expected to return
+## { "code": int, "body": Variant } — the body is serialised to JSON.
+var api_handler: Callable
 
 var _http := TCPServer.new()
 var _ws := TCPServer.new()
@@ -28,6 +34,7 @@ var _clients: Array[WebSocketPeer] = []
 var _greeted: Array[bool] = []
 var _requests: Array = []
 var _page_bytes := PackedByteArray()
+var _docs_bytes := PackedByteArray()
 var _listening := false
 
 
@@ -36,7 +43,8 @@ func _ready():
 		set_process(false)
 		return
 
-	_page_bytes = _load_page()
+	_page_bytes = _load_page(page)
+	_docs_bytes = _load_page(docs_page)
 
 	var err := _http.listen(http_port)
 	var err_ws := _ws.listen(http_port + 1)
@@ -55,16 +63,16 @@ func is_listening() -> bool:
 	return _listening
 
 
-func _load_page() -> PackedByteArray:
-	if not FileAccess.file_exists(page):
+func _load_page(path: String) -> PackedByteArray:
+	if not FileAccess.file_exists(path):
 		# In an exported build this means *.html was not included in the export
 		# filter. Better to say so in the browser than to serve nothing.
-		push_warning("Web: %s not found (add *.html to the export filter)" % page)
+		push_warning("Web: %s not found (add *.html to the export filter)" % path)
 		return ("<!doctype html><meta charset=utf-8><body style=\"background:#111;color:#eee;"
 			+ "font-family:sans-serif;padding:2rem\"><h1>Page missing</h1><p>"
-			+ page + " was not found. Add <code>*.html</code> to the export filter.</p>"
+			+ path + " was not found. Add <code>*.html</code> to the export filter.</p>"
 			).to_utf8_buffer()
-	return FileAccess.get_file_as_bytes(page)
+	return FileAccess.get_file_as_bytes(path)
 
 
 func _process(_delta: float):
@@ -92,24 +100,75 @@ func _poll_http():
 		if available > 0:
 			request["data"].append_array(peer.get_data(available)[1])
 
-		# We do not parse the request at all: there is exactly one page to serve.
-		# Waiting for the blank line only tells us the browser has finished asking.
-		if request["data"].get_string_from_utf8().find("\r\n\r\n") != -1:
-			_serve_page(peer)
-			_requests.remove_at(i)
+		var text: String = request["data"].get_string_from_utf8()
+		var head_end := text.find("\r\n\r\n")
+		if head_end == -1:
+			continue
+
+		# A PUT carries a body, so the blank line is no longer the end of the story:
+		# we wait for as many bytes as Content-Length announced.
+		var head := text.substr(0, head_end)
+		var wanted := _content_length(head)
+		var body := text.substr(head_end + 4)
+		if body.length() < wanted:
+			continue
+
+		_route(peer, head, body.substr(0, wanted))
+		_requests.remove_at(i)
 
 
-func _serve_page(peer: StreamPeerTCP):
+func _content_length(head: String) -> int:
+	for line in head.split("\r\n"):
+		if line.to_lower().begins_with("content-length:"):
+			return int(line.split(":")[1].strip_edges())
+	return 0
+
+
+func _route(peer: StreamPeerTCP, head: String, body: String):
+	var parts := head.split("\r\n")[0].split(" ")
+	var method := parts[0] if parts.size() > 0 else "GET"
+	var path := parts[1] if parts.size() > 1 else "/"
+	path = path.split("?")[0]
+
+	if path.begins_with("/api/") or path == "/openapi.json":
+		if api_handler.is_valid():
+			var answer: Dictionary = api_handler.call(method, path, body)
+			_send(peer, int(answer.get("code", 200)), "application/json",
+				JSON.stringify(answer.get("body", {})).to_utf8_buffer())
+		else:
+			_send(peer, 503, "application/json",
+				'{"error":"no handler"}'.to_utf8_buffer())
+		return
+
+	match path:
+		"/docs", "/docs/":
+			_send(peer, 200, "text/html; charset=utf-8", _docs_bytes)
+		"/", "/index.html":
+			_send(peer, 200, "text/html; charset=utf-8", _page_bytes)
+		_:
+			_send(peer, 404, "text/plain; charset=utf-8", "not found".to_utf8_buffer())
+
+
+func _send(peer: StreamPeerTCP, code: int, content_type: String, payload: PackedByteArray):
+	var reason: String = {200: "OK", 400: "Bad Request", 404: "Not Found",
+		405: "Method Not Allowed", 503: "Service Unavailable"}.get(code, "OK")
 	var header := (
-		"HTTP/1.1 200 OK\r\n"
-		+ "Content-Type: text/html; charset=utf-8\r\n"
-		+ "Content-Length: %d\r\n" % _page_bytes.size()
+		"HTTP/1.1 %d %s\r\n" % [code, reason]
+		+ "Content-Type: %s\r\n" % content_type
+		+ "Content-Length: %d\r\n" % payload.size()
+		# Any tool pointed at the spec — Swagger UI on another host, Postman —
+		# would otherwise be blocked by the browser before reaching us.
+		+ "Access-Control-Allow-Origin: *\r\n"
+		+ "Access-Control-Allow-Methods: GET, PUT, POST, OPTIONS\r\n"
+		+ "Access-Control-Allow-Headers: Content-Type\r\n"
 		+ "Cache-Control: no-store\r\n"
 		+ "Connection: close\r\n\r\n"
 	)
 	peer.put_data(header.to_utf8_buffer())
-	peer.put_data(_page_bytes)
+	peer.put_data(payload)
 	peer.disconnect_from_host()
+
+
 
 
 # --------------------------------------------------------------------------

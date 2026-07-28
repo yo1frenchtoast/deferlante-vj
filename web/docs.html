@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Déferlante · API</title>
+<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+<style>
+  body { margin: 0; background: #fafafa; }
+  /* Shown only if Swagger UI never loads — see the note below. */
+  #offline {
+    display: none; margin: 0; padding: 2rem;
+    font: 15px/1.6 system-ui, sans-serif; color: #222; max-width: 42rem;
+  }
+  #offline code { background: #eee; padding: .1rem .35rem; border-radius: .2rem; }
+</style>
+</head>
+<body>
+
+<div id="swagger"></div>
+
+<div id="offline">
+  <h1>Swagger UI could not load</h1>
+  <p>
+    This page pulls Swagger UI from a CDN, so it needs an internet connection —
+    which a venue often does not have. The API itself does not: it is served
+    entirely by Déferlante.
+  </p>
+  <p>The specification is still right here:</p>
+  <p><a href="/openapi.json"><code>/openapi.json</code></a></p>
+  <p>
+    Point any OpenAPI tool at it — Postman, Insomnia, a local Swagger UI, a code
+    generator — or read the endpoints in the project README.
+  </p>
+</div>
+
+<script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+<script>
+window.addEventListener("load", () => {
+  // No CDN, no Swagger UI: say so plainly instead of leaving a blank page.
+  if (typeof SwaggerUIBundle === "undefined") {
+    document.getElementById("offline").style.display = "block";
+    return;
+  }
+  SwaggerUIBundle({
+    url: "/openapi.json",
+    dom_id: "#swagger",
+    deepLinking: true,
+    // The API is on the same host as this page, so "Try it out" works without
+    // any further configuration.
+    tryItOutEnabled: true,
+  });
+});
+</script>
+</body>
+</html>
