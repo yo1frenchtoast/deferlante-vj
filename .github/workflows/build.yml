@@ -20,6 +20,10 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # The default token is read-only, so creating a release fails with a 403.
+    # Granted at the job rather than the workflow level: only this needs it.
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v5
