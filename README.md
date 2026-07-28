@@ -103,7 +103,7 @@ the OSC address all follow. Its label goes in `scripts/lang.gd`.
 
 ## Web control surface
 
-Godot serves a control page on port **8080**. Open `http://<machine-ip>:8080` from a
+Godot serves a control page on port **7331**. Open `http://<machine-ip>:7331` from a
 phone or tablet on the same network — the address is printed at startup.
 
 It gives you, on top of every setting as a touch slider:
@@ -121,8 +121,8 @@ The page **builds itself from a schema** Godot sends on connect. It holds no lis
 settings of its own, so adding one in `_build_params()` makes it appear on the phone
 with no change to the HTML. Switching the interface language relabels it as well.
 
-Two ports rather than one, deliberately: the page is served over HTTP on 8080 and
-the control channel is a WebSocket on **8081**. `WebSocketPeer.accept_stream()` does
+Two ports rather than one, deliberately: the page is served over HTTP on 7331 and
+the control channel is a WebSocket on **7332**. `WebSocketPeer.accept_stream()` does
 the handshake itself and needs the stream untouched, which rules out reading the
 request first to tell an upgrade from a page request.
 
@@ -458,7 +458,7 @@ Two things to expect on a tablet, neither of them tested on a device:
 ### The one thing CI actually checks
 
 Beyond "the export succeeded", the workflow launches the Linux build and fetches
-`http://127.0.0.1:8080/`. The control page ships through the export *filter*, not
+`http://127.0.0.1:7331/`. The control page ships through the export *filter*, not
 through the code, so it is the one piece that can silently go missing while every
 build still passes. If the page is absent, or the built-in "Page missing" fallback
 comes back instead, the build fails.

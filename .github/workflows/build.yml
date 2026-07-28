@@ -114,7 +114,7 @@ jobs:
           chmod +x build/linux/deferlante.x86_64
           ./build/linux/deferlante.x86_64 --headless --quit-after 3000 &
           sleep 8
-          page=$(curl -sS --max-time 5 http://127.0.0.1:8080/)
+          page=$(curl -sS --max-time 5 http://127.0.0.1:7331/)
           # `grep -q ... && { exit 1; }` would fail the step on the *good* path
           # under `set -e`, since grep exits 1 when it finds nothing.
           if printf '%s' "$page" | grep -q "Page missing"; then

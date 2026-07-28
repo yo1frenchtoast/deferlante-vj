@@ -16,7 +16,9 @@ signal action_requested(name: String)
 signal client_connected
 
 @export var enabled: bool = true
-@export var http_port: int = 8080
+## 7331 rather than 8080: the latter is registered as webcache and is the first
+## port every proxy, dev server and container grabs. The WebSocket takes 7332.
+@export var http_port: int = 7331
 ## The WebSocket sits on http_port + 1.
 @export var page: String = "res://web/index.html"
 
