@@ -251,8 +251,6 @@ func _refresh_status():
 		bits.append("%s  %s" % [lang.text("status.web"), url])
 	if osc.is_listening():
 		bits.append("OSC %d" % osc.port)
-	if audio.capturing and _react > 0.0:
-		bits.append("%s %.0f%%" % [lang.text("status.audio"), _react * 100.0])
 	var meter: String = _audio_meter()
 	if meter != "":
 		bits.append(meter)
