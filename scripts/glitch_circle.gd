@@ -11,7 +11,7 @@ extends Line2D
 
 @export var base_radius: float = 200.0
 ## How far the radius swells and shrinks around base_radius.
-@export var fluctuation_range: float = 50.0
+@export var fluctuation_range: float = 25.0
 ## Segment count for the circle (128 is visually enough; 360 was waste).
 @export var segments: int = 128
 @export var line_width: float = 3.0
@@ -22,9 +22,9 @@ extends Line2D
 
 @export_group("Followspot")
 ## Sweep speed. Higher makes a jumpy head, lower a composed one.
-@export var seek_speed: float = 1.0
+@export var seek_speed: float = 0.5
 ## Base duration of the pauses on target, in seconds.
-@export var hold_time: float = 0.9
+@export var hold_time: float = 1.8
 ## Distance from head to wall, in pixels. Small gives strongly curved arcs and a
 ## large size difference between centre and edges; large gives an almost flat sweep.
 @export var throw_distance: float = 750.0
@@ -38,7 +38,7 @@ extends Line2D
 ## `seek_speed`: a head can sweep fast and peer calmly, or the other way round.
 ## Only the global speed catches both, so that 0 truly freezes everything.
 @export var wobble_speed: float = 6.0
-@export var wobble_amount: float = 1.0
+@export var wobble_amount: float = 0.4
 
 var time_passed: float = 0.0
 var hue: float

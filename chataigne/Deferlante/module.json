@@ -258,7 +258,7 @@
           "ui": "slider",
           "min": 0.0,
           "max": 40.0,
-          "default": 5.0,
+          "default": 3.0,
           "mappingIndex": 0
         }
       }
@@ -356,7 +356,7 @@
           "ui": "slider",
           "min": 0.0,
           "max": 300.0,
-          "default": 50.0,
+          "default": 25.0,
           "mappingIndex": 0
         }
       }
@@ -384,7 +384,7 @@
           "ui": "slider",
           "min": 0.0,
           "max": 2.0,
-          "default": 1.0,
+          "default": 0.5,
           "mappingIndex": 0
         }
       }
@@ -398,7 +398,7 @@
           "ui": "slider",
           "min": 0.0,
           "max": 3.0,
-          "default": 0.9,
+          "default": 1.8,
           "mappingIndex": 0
         }
       }
@@ -412,7 +412,7 @@
           "ui": "slider",
           "min": 0.0,
           "max": 3.0,
-          "default": 1.0,
+          "default": 0.4,
           "mappingIndex": 0
         }
       }
@@ -501,6 +501,76 @@
         }
       }
     },
+    "Audio Reactivity": {
+      "menu": "Audio",
+      "callback": "audioReactivity",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Audio Punch": {
+      "menu": "Audio",
+      "callback": "audioPunch",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.35,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Audio Lasers \u2190 Mid": {
+      "menu": "Audio",
+      "callback": "audioLasers",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 6.0,
+          "default": 1.5,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Audio Spot \u2190 Bass": {
+      "menu": "Audio",
+      "callback": "audioSpot",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 6.0,
+          "default": 1.5,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Audio Sphere \u2190 Treble": {
+      "menu": "Audio",
+      "callback": "audioSphere",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 6.0,
+          "default": 1.5,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Sphere Circles": {
       "menu": "Sphere",
       "callback": "sphereCount",
@@ -510,7 +580,7 @@
           "ui": "slider",
           "min": 0.0,
           "max": 80.0,
-          "default": 40.0,
+          "default": 14.0,
           "mappingIndex": 0
         }
       }

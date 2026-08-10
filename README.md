@@ -16,7 +16,7 @@ else — the lasers, the sphere, the glitches — happens around that deferral: 
 swept by a light that is always about to arrive, and never does.
 
 **Getting started** — [Run](#run) · [Drive it](#drive-it) · [Settings](#settings) · [Presets](#presets)
-**External control** — [Gamepad](#gamepad) · [Web surface](#web-control-surface) · [REST API](#rest-api) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
+**External control** — [Sound](#audio-reactivity) · [Gamepad](#gamepad) · [Web surface](#web-control-surface) · [REST API](#rest-api) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
 **The effects** — [Spotlight](#the-spotlight) · [Sphere](#the-sphere-effect) · [Kaleidoscope](#the-kaleidoscope) · [Chaos](#chaos) · [Auto-pilot](#the-auto-pilot) · [Colour](#the-two-colour-modes)
 **In the room** — [What starts off](#what-starts-switched-off) · [Glow](#the-glow) · [Projection notes](#projection-notes) · [Performance](#measuring-performance-f3)
 **The code** — [Structure](#structure) · [Builds](#builds) · [Renderer](#a-note-on-the-renderer)
@@ -91,7 +91,7 @@ Labels below are the English ones.
 ### Lasers
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `COUNT` | 0 – 40 | Number of strokes. Added and removed live. |
+| `COUNT` | 0 – 40 | Number of strokes. Added and removed live. Starts at 3. |
 | `WIDTH` | 1 – 24 | Stroke width. |
 | `LENGTH` | 0.1 – 2 | Scales the length (each stroke keeps its own). |
 | `SPIN` | -1 – 1 | ← leftwards, → rightwards. |
@@ -111,10 +111,19 @@ Labels below are the English ones.
 | `SPREAD` | 0 – 1 | How much the pool grows when aiming off-centre. See below. |
 | `GLITCH` | 0 – 0.05 | Glitch chance per frame. **0 by default.** Independent of `CHAOS`. 0.005 ≈ one every 3 s. |
 
+### Audio
+| Setting | Range | Effect |
+| --- | --- | --- |
+| `REACTIVITY` | 0 – 1 | Master amount. **0 by default** — nothing moves until asked. |
+| `PUNCH` | 0 – 1 | Response curve. Higher pushes the middle down so only hits show. |
+| `LASERS ← MID` | 0 – 6 | Mids drive the laser strokes. |
+| `SPOT ← BASS` | 0 – 6 | The kick drives the spotlight. |
+| `SPHERE ← TREBLE` | 0 – 6 | Treble drives the sphere. |
+
 ### Sphere
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `CIRCLES` | 0 – 80 | Number of circles. 0 switches the effect off. |
+| `CIRCLES` | 0 – 80 | Number of circles. 0 switches the effect off. Starts at 14. |
 | `SIZE` | 0.03 – 0.8 | Size of one circle, in radians on the sphere. |
 | `RADIUS` | 100 – 800 | Sphere radius on screen. |
 | `SPIN` | -1 – 1 | ← leftwards, → rightwards. |
@@ -489,40 +498,93 @@ addresses.
 
 ## Audio reactivity
 
-Nothing is implemented on the Godot side yet. This section records what has been
-checked, so it does not have to be rediscovered.
+Déferlante listens to **what is coming out of the machine**, not to a microphone, so
+it follows the track being played rather than the room.
 
-### The path that already works: Chataigne
+### Setting it up
 
-Chataigne has an **Audio** module that does the spectral analysis, and any band can
-be mapped onto any Deferlante command. **No code is needed**: it is the shortest way
-to try reactions out and see which ones hold up.
+```
+tools/listen-to-output.sh          # start listening
+tools/listen-to-output.sh --stop   # put everything back
+```
 
-### If the analysis were to happen inside Godot
+**Run it before launching** — that part is not optional. Godot binds to whatever the
+default source was when it started and never looks again: run the script afterwards
+and the app stays deaf, with nothing on screen to say so. Stopping and restarting the
+capture stream does not recover it either; measured, that leaves the analyser reading
+exactly zero. If the levels are dead, restart Déferlante.
 
-The building blocks exist (`AudioStreamMicrophone` + `AudioEffectSpectrumAnalyzer`
-on a bus, both confirmed present in 4.7), but three obstacles come first:
+It taps the output; it does not reroute it, so playback is untouched.
 
-1. **`audio/driver/enable_input` is `false`** in `project.godot`. That is the first
-   switch; without it there is no capture at all.
-2. **Godot captures an input, and music is an output.** If the sound comes from an
-   interface (a Focusrite, a mixing desk), you capture its input and all is well. If
-   the music plays out of the computer, you need to capture the output's *monitor* —
-   PipeWire routing (`pw-link`, qpwgraph) and `AudioServer.input_device` pointed at
-   the right source. That is the real trap, and it decides the ergonomics: in that
-   case a `DEVICE` setting becomes necessary in the interface.
-3. **Levels vary too much between tracks** for a fixed gain: it would need adaptive
-   normalisation, with a fast attack and a slow release.
+If your sound arrives through an interface instead — a Focusrite, a desk — you do
+not need the script at all: that is already an input, and Déferlante reads the
+default one.
 
-### The shape it should take
+### Why a script is needed at all
 
-Whatever the source, the modulation should **add to** the settings rather than
-overwrite them — the way `CHAOS` already does. Your values stay where you put them,
-and the sound adds a pulse on top.
+Godot captures an *input*, and music is an *output*. PipeWire does publish the
+output's monitor as a source, but **Godot's PulseAudio backend filters monitors out
+of its device list**, so it cannot be picked from inside the app.
 
-Band levels would also be worth exposing over OSC (`/deferlante/audio/bass`…), so
-Chataigne can feed the *same* modulation system instead of driving each setting
-separately. One mechanism, two possible sources.
+Worse, `AudioServer.input_device` does not hold in this build: assigned during
+`_ready` it reads back `"Default"`, one frame later it reads back empty, and the
+capture follows neither. So the script wraps the monitor in an ordinary source *and
+makes it the default* — pointing Godot at it by giving it no choice. `--stop`
+restores the source you had.
+
+### What the sound drives
+
+Three bands, one per effect: **the kick drives the spotlight**, mids drive the
+lasers, treble the sphere. Three effects breathing on one envelope read as a single
+thing pumping; on separate bands they pick out different parts of the track and the
+picture comes apart into layers. The kick goes to the spotlight because it is the
+biggest shape on screen, so it is what carries the beat.
+
+Each amount moves both the **thickness and the size** of its effect — the stroke
+width, and the spotlight's radius, the sphere's circle size, the lasers' length.
+Thickness alone tops out quickly: a stroke twice as wide is still the same shape in
+the same place, while a spotlight that swells on the kick changes the whole picture.
+Size moves at a third of the amount, since a radius reads far more strongly than a
+width. Measured at the default 1.5: laser strokes 6.1–10.6 px, spotlight radius
+208–274 px, spotlight stroke 3.4–6.4 px.
+
+The sound **adds to** the widths rather than setting them. The sliders keep meaning
+what they say, turning `REACTIVITY` back to 0 restores exactly the look that was
+there, and nothing the sound does is written to a setting — so it never lands in a
+preset and never fights you for a slider.
+
+### Levels, not volume
+
+Everything is done in decibels, against a **running peak** per band rather than a
+fixed gain. A fixed gain that suits one track sits flat or clips on the next; and
+normalising the compressed 0–1 value instead of the decibels pinned bass and mid at
+0.99 on real music, which looks like a constant rather than a pulse.
+
+The three bands live at completely different levels. Measured on a techno set: bass
+around −35 dB, hi-hats between −60 and −100. So there is no shared floor — each band
+scales against its own peak, and only an absolute silence gate stops room noise being
+amplified when nothing is playing. An earlier floor tight enough to gate a quiet room
+flattened the treble into a dead constant.
+
+Each band is read at its **loudest point** rather than averaged. Averaging a narrow
+tone across a wide band divides it by the silence either side: a 6 kHz tone read as
+nothing at all in a 2–12 kHz band until that changed.
+
+**Both ends of the scale follow the music**, not just the top. Tracking only the peak
+and sitting a fixed number of decibels below it is adaptive on paper and a constant in
+practice: a track with six decibels of movement spends all its time at the top of the
+range. The reference is a running average over a few bars, so the ordinary level of
+the track maps to zero and only what rises above it shows.
+
+Two things had to be right for that to work. The scale is primed on the first frame
+that actually carries sound — primed on the first frame at all, it starts at −130 dB
+and crawls upwards for a minute while every band reads 0.95. And the response curve is
+applied on the way out, never written back into the smoothed state, where it compounds
+frame after frame and collapses every band to zero within a second.
+
+`PUNCH` is the taste control on top. Adaptive scaling gets the *range* right, but how
+much of a busy track should read as "pulsing" rather than "loud" is a judgement.
+Measured on a techno set: at 0 the bass swings 0.39–0.87, at 0.5 it swings 0.12–0.40.
 
 ## The two colour modes
 
@@ -702,6 +764,16 @@ sphere, busier but stranger.
 Measured cost: **+0.32 ms** at 40 circles (the default), **+0.77 ms** at 80. Circles
 past the horizon are neither computed nor drawn.
 
+## A calm starting point
+
+The defaults are deliberately quiet: three lasers, fourteen sphere circles, and a
+spotlight that sweeps at half speed with long pauses and only a slight tremor —
+about five stops in twenty seconds where it used to make twenty in twenty-five.
+
+That is a setting to build up from and a setting you can debug in: with a busy scene
+it is hard to tell which effect a change belongs to, and the panel itself is hard to
+read over the top of it. Everything is one slider away from where it was.
+
 ## What starts switched off
 
 `GLOW` and `GLITCH` start at 0, and both are genuinely off rather than set to zero
@@ -771,8 +843,17 @@ scripts/
   laser_line.gd     A stroke that spins and bounces off the edges
   osc_server.gd     OSC receiver (UDP), messages and bundles
   web_server.gd     Serves the page and the WebSocket control channel
+  rest_api.gd       The /api endpoints and the OpenAPI document
   sphere_circles.gd Circles projected onto a virtual sphere
+  presets.gd        Nine slots on disk, recalled as a crossfade
+  audio_reactor.gd  Captures the output, reads bass / mid / treble
+  autopilot.gd      Moves settings on its own, at the pace you set
 ```
+
+The controller is the only script that knows the others exist. `rest_api.gd`,
+`autopilot.gd` and `presets.gd` are handed the few callables they need — find a
+setting, list them all — and are otherwise self-contained, which is what keeps the
+controller about running a show rather than about serving JSON.
 
 The UI is built at runtime from the list of settings: the scene holds nothing but an
 empty `VBoxContainer`, not 35 pairs of nodes to maintain by hand.

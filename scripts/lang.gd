@@ -56,6 +56,12 @@ const LABELS := {
 	"spot/track": ["SUIVI", "TRACKING"],
 	"spot/handback": ["RETOUR AUTO", "HAND BACK"],
 
+	"audio/reactivity": ["RÉACTIVITÉ", "REACTIVITY"],
+	"audio/punch": ["NERVOSITÉ", "PUNCH"],
+	"audio/lasers": ["LASERS ← MÉDIUMS", "LASERS ← MID"],
+	"audio/spot": ["POURSUITE ← GRAVES", "SPOT ← BASS"],
+	"audio/sphere": ["SPHÈRE ← AIGUS", "SPHERE ← TREBLE"],
+
 	"sphere/count": ["CERCLES", "CIRCLES"],
 	"sphere/size": ["TAILLE", "SIZE"],
 	"sphere/radius": ["RAYON", "RADIUS"],
@@ -71,6 +77,7 @@ const TEXTS := {
 	"section.mirror": ["MIROIR", "MIRROR"],
 	"section.lasers": ["LASERS", "LASERS"],
 	"section.spot": ["POURSUITE", "SPOTLIGHT"],
+	"section.audio": ["SON", "AUDIO"],
 	"section.sphere": ["SPHÈRE", "SPHERE"],
 
 	"mode.random": ["ALÉATOIRE", "RANDOM"],
@@ -98,6 +105,9 @@ const TEXTS := {
 	],
 	"status.web": ["surface web", "web surface"],
 	"status.pad": ["manette", "pad"],
+	"status.audio": ["son", "audio"],
+	"status.listening": ["à l'écoute", "listening"],
+	"status.deaf": ["pas de capture", "no capture"],
 	"status.nopad": ["aucune manette", "no pad"],
 	"fps.screen": ["écran %.0f Hz", "screen %.0f Hz"],
 }

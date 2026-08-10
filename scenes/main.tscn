@@ -7,6 +7,9 @@
 [ext_resource type="Script" path="res://scripts/web_server.gd" id="8_web"]
 [ext_resource type="Script" path="res://scripts/gamepad.gd" id="9_pad"]
 [ext_resource type="Script" path="res://scripts/presets.gd" id="10_presets"]
+[ext_resource type="Script" path="res://scripts/audio_reactor.gd" id="11_audio"]
+[ext_resource type="Script" path="res://scripts/rest_api.gd" id="12_api"]
+[ext_resource type="Script" path="res://scripts/autopilot.gd" id="13_auto"]
 [ext_resource type="Script" path="res://scripts/control_panel.gd" id="5_panel"]
 [ext_resource type="Script" path="res://scripts/kaleidoscope.gd" id="6_kaleido"]
 [ext_resource type="Shader" path="res://shaders/kaleidoscope.gdshader" id="7_shader"]
@@ -48,6 +51,15 @@ script = ExtResource("4_osc")
 [node name="WebServer" type="Node" parent="VJController"]
 script = ExtResource("8_web")
 
+[node name="Audio" type="Node" parent="VJController"]
+script = ExtResource("11_audio")
+
+[node name="RestApi" type="Node" parent="VJController"]
+script = ExtResource("12_api")
+
+[node name="Autopilot" type="Node" parent="VJController"]
+script = ExtResource("13_auto")
+
 [node name="Presets" type="Node" parent="VJController"]
 script = ExtResource("10_presets")
 
@@ -82,11 +94,18 @@ horizontal_alignment = 2
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 5
 
+[node name="Help" type="VBoxContainer" parent="VJController/ControlPanel"]
+offset_left = 24.0
+offset_top = 20.0
+offset_right = 1300.0
+offset_bottom = 160.0
+theme_override_constants/separation = 2
+
 [node name="Controls" type="VBoxContainer" parent="VJController/ControlPanel"]
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 24.0
-offset_top = -1040.0
+offset_top = -1000.0
 offset_right = 1300.0
 offset_bottom = -24.0
 grow_vertical = 0

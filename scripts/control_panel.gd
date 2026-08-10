@@ -13,6 +13,10 @@ extends CanvasLayer
 @export var show_fps: bool = false
 
 @onready var rows: VBoxContainer = $Controls
+## The shortcut list and the machine's address, kept at the top of the screen so
+## the bottom belongs entirely to the settings — that is where the eye goes when
+## reaching for a slider, and where the columns want to grow.
+@onready var help_box: VBoxContainer = $Help
 @onready var fps_label: Label = $FpsLabel
 
 var params: Array[VJParam] = []
@@ -67,7 +71,7 @@ const SECTION_COLOR := Color(1.0, 0.72, 0.35)
 # building the panel, measuring it, then rebuilding it a frame later.
 const ROW_HEIGHT := 27
 const HEADER_HEIGHT := 30
-const HELP_HEIGHT := 90
+const HELP_HEIGHT := 0
 
 ## Pixels kept clear at the top and bottom of the screen.
 @export var vertical_margin: float = 48.0
@@ -211,14 +215,14 @@ func _build_help():
 	_status = Label.new()
 	_status.add_theme_font_size_override("font_size", 13)
 	_status.add_theme_color_override("font_color", SECTION_COLOR)
-	rows.add_child(_status)
+	help_box.add_child(_status)
 
 	for key in HELP_KEYS:
 		var label := Label.new()
 		label.text = _lang.text(key)
 		label.add_theme_font_size_override("font_size", 13)
 		label.modulate = Color(1, 1, 1, 0.55)
-		rows.add_child(label)
+		help_box.add_child(label)
 		_help_labels.append(label)
 
 
@@ -274,6 +278,7 @@ func select(index: int):
 func set_brightness(value: float):
 	brightness = clampf(value, 0.0, 1.0)
 	fps_label.modulate.a = brightness
+	help_box.modulate.a = brightness
 	# Only touch the panel if it is actually up: mid-fade or hidden, the alpha
 	# belongs to the fade and writing to it would flash the panel back on.
 	if rows.visible and _fade == null:
@@ -302,12 +307,17 @@ func wake():
 		_fade = null
 	rows.visible = true
 	rows.modulate.a = brightness
+	help_box.visible = true
+	help_box.modulate.a = brightness
 
 
 func _fade_out():
 	_fade = create_tween()
 	_fade.tween_property(rows, "modulate:a", 0.0, 0.7)
-	_fade.tween_callback(func(): rows.visible = false)
+	_fade.parallel().tween_property(help_box, "modulate:a", 0.0, 0.7)
+	_fade.tween_callback(func():
+		rows.visible = false
+		help_box.visible = false)
 
 
 signal mouse_reclaimed
