@@ -843,8 +843,17 @@ scripts/
   laser_line.gd     A stroke that spins and bounces off the edges
   osc_server.gd     OSC receiver (UDP), messages and bundles
   web_server.gd     Serves the page and the WebSocket control channel
+  rest_api.gd       The /api endpoints and the OpenAPI document
   sphere_circles.gd Circles projected onto a virtual sphere
+  presets.gd        Nine slots on disk, recalled as a crossfade
+  audio_reactor.gd  Captures the output, reads bass / mid / treble
+  autopilot.gd      Moves settings on its own, at the pace you set
 ```
+
+The controller is the only script that knows the others exist. `rest_api.gd`,
+`autopilot.gd` and `presets.gd` are handed the few callables they need — find a
+setting, list them all — and are otherwise self-contained, which is what keeps the
+controller about running a show rather than about serving JSON.
 
 The UI is built at runtime from the list of settings: the scene holds nothing but an
 empty `VBoxContainer`, not 35 pairs of nodes to maintain by hand.

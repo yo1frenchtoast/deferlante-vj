@@ -192,8 +192,12 @@ func _build_params():
 	_section("section.audio")
 	_fn("audio/reactivity", 0, 1, 0.02, 0.0, _set_reactivity)
 	_prop("audio/punch", 0, 1, 0.02, 0.35, audio, "punch")
-	for cible in ["lasers", "spot", "sphere"]:
-		_fn("audio/" + cible, 0, 6, 0.05, 1.5, func(v): _amounts[cible] = v)
+	# Written out one by one rather than looped over: this list is read back by
+	# `tools/build_chataigne_module.py`, which parses the declarations as text, and
+	# a slug built at runtime is a slug the tooling cannot see.
+	_fn("audio/lasers", 0, 6, 0.05, 1.5, func(v): _amounts["lasers"] = v)
+	_fn("audio/spot", 0, 6, 0.05, 1.5, func(v): _amounts["spot"] = v)
+	_fn("audio/sphere", 0, 6, 0.05, 1.5, func(v): _amounts["sphere"] = v)
 
 	_section("section.sphere")
 	_prop("sphere/count", 0, 80, 1, 14.0, sphere, "circle_count")
