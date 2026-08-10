@@ -1,6 +1,6 @@
 # Déferlante
 
-[![Build](https://github.com/yo1frenchtoast/deferlante/actions/workflows/build.yml/badge.svg)](https://github.com/yo1frenchtoast/deferlante/actions/workflows/build.yml)
+[![Build](https://github.com/yo1frenchtoast/deferlante-vj/actions/workflows/build.yml/badge.svg)](https://github.com/yo1frenchtoast/deferlante-vj/actions/workflows/build.yml)
 
 VJ visuals in Godot 4: neon strokes on black, additively blended.
 Built for video projection with a haze machine.
