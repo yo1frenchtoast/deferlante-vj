@@ -24,6 +24,7 @@ extends Node2D
 @onready var web: Node = $WebServer
 @onready var pad: Node = $Gamepad
 @onready var presets: Node = $Presets
+@onready var audio: Node = $Audio
 
 var lang := Lang.new()
 ## Shared colour state, held by reference by every effect.
@@ -37,6 +38,9 @@ var osc_routes: Dictionary = {}
 var v_speed: float = 1.0
 var v_chaos: float = 0.0
 var v_laser_width: float = 5.0
+var v_spot_width: float = 3.0
+var v_sphere_width: float = 3.0
+var _audio_was_active: bool = false
 var v_length: float = 1.0
 var v_spin: float = 1.0
 var v_align: float = 0.0
@@ -45,6 +49,12 @@ var v_align: float = 0.0
 var _align_angle: float = 0.0
 var _scroll: float = 0.0
 var _scroll_phase: float = 0.0
+
+# Audio reactivity. The master is zero by default, so nothing moves until asked.
+var _react: float = 0.0
+var _react_lasers: float = 1.0
+var _react_spot: float = 1.0
+var _react_sphere: float = 1.0
 
 var _mode_param: VJParam
 ## True while start-up values are being applied: without this guard, setting the
@@ -156,7 +166,7 @@ func _build_params():
 	# Settings that only write a property are declared, not coded.
 	_prop("spot/radius", 20, 600, 5, 200.0, circle, "base_radius")
 	_prop("spot/pulse", 0, 300, 5, 50.0, circle, "fluctuation_range")
-	_fn("spot/width", 1, 24, 0.5, 3.0, func(v): circle.set_line_width(v))
+	_fn("spot/width", 1, 24, 0.5, 3.0, func(v): v_spot_width = v; circle.set_line_width(v))
 	_prop("spot/speed", 0, 2, 0.05, 1.0, circle, "seek_speed")
 	_prop("spot/hold", 0, 3, 0.05, 0.9, circle, "hold_time")
 	_prop("spot/shake", 0, 3, 0.05, 1.0, circle, "wobble_amount")
@@ -169,19 +179,25 @@ func _build_params():
 	_prop("spot/track", 0.2, 3, 0.05, 0.9, circle, "track_speed")
 	_prop("spot/handback", 2, 120, 1, 30.0, circle, "manual_hold")
 
+	_section("section.audio")
+	_fn("audio/reactivity", 0, 1, 0.02, 0.0, func(v): _react = v)
+	_fn("audio/lasers", 0, 3, 0.05, 1.0, func(v): _react_lasers = v)
+	_fn("audio/spot", 0, 3, 0.05, 1.0, func(v): _react_spot = v)
+	_fn("audio/sphere", 0, 3, 0.05, 1.0, func(v): _react_sphere = v)
+
 	_section("section.sphere")
 	_prop("sphere/count", 0, 80, 1, 40.0, sphere, "circle_count")
 	_prop("sphere/size", 0.03, 0.8, 0.01, 0.13, sphere, "circle_size")
 	_prop("sphere/radius", 100, 800, 10, 400.0, sphere, "sphere_radius")
 	_prop("sphere/spin", -1, 1, 0.05, 0.6, sphere, "spin", true)
 	_prop("sphere/depth", 1.2, 10, 0.1, 2.0, sphere, "eye_distance")
-	_prop("sphere/width", 1, 24, 0.5, 3.0, sphere, "line_width")
+	_fn("sphere/width", 1, 24, 0.5, 3.0, func(v): v_sphere_width = v; sphere.line_width = v)
 	_prop("sphere/glass", 0, 1, 0.02, 0.0, sphere, "back_dim")
 
 	# Out of the auto-pilot's reach: tempo, glow and colour are decisions — the
 	# room, the track — rather than variations to be subjected to.
 	for slug in ["global/speed", "global/glow", "global/recall", "global/panel",
-			"global/autodim", "color/saturation",
+			"global/autodim", "audio/reactivity", "color/saturation",
 			"color/mode", "color/red", "color/green", "color/blue"]:
 		param(slug).randomizable = false
 
@@ -234,6 +250,8 @@ func _refresh_status():
 		bits.append("%s  %s" % [lang.text("status.web"), url])
 	if osc.is_listening():
 		bits.append("OSC %d" % osc.port)
+	if audio.capturing and _react > 0.0:
+		bits.append("%s %.0f%%" % [lang.text("status.audio"), _react * 100.0])
 	if pad.is_connected_pad():
 		bits.append("%s  %s" % [lang.text("status.pad"), pad.pad_name()])
 	else:
@@ -371,6 +389,40 @@ func _spawn_lasers(count: int):
 
 
 # --------------------------------------------------------------------------
+# Audio reactivity
+# --------------------------------------------------------------------------
+
+## The sound *adds* to the widths rather than setting them: the sliders keep
+## meaning what they say, and turning REACTIVITY back to 0 restores exactly the
+## look that was there. Nothing here writes to a VJParam, so nothing the sound does
+## gets saved into a preset or fights the operator for a slider.
+##
+## Each effect follows a different band on purpose. Three effects all breathing on
+## the same envelope reads as one thing pumping; on bass, mid and treble they pick
+## out different parts of the track and the picture comes apart into layers.
+func _apply_audio():
+	if _react <= 0.0 or not audio.capturing:
+		if _audio_was_active:
+			_audio_was_active = false
+			_restore_widths()
+		return
+	_audio_was_active = true
+
+	var lasers_w: float = v_laser_width * (1.0 + _react * _react_lasers * audio.bass)
+	for l in lasers:
+		l.width = lasers_w
+	circle.set_line_width(v_spot_width * (1.0 + _react * _react_spot * audio.mid))
+	sphere.line_width = v_sphere_width * (1.0 + _react * _react_sphere * audio.treble)
+
+
+func _restore_widths():
+	for l in lasers:
+		l.width = v_laser_width
+	circle.set_line_width(v_spot_width)
+	sphere.line_width = v_sphere_width
+
+
+# --------------------------------------------------------------------------
 # Auto-pilot
 # --------------------------------------------------------------------------
 
@@ -386,6 +438,8 @@ func _interval() -> float:
 
 
 func _process(delta: float):
+	_apply_audio()
+
 	# The fan turns and scrolls once per frame, and every stroke reads the same
 	# two numbers — that is what keeps them parallel and evenly spaced.
 	if v_align > 0.0:

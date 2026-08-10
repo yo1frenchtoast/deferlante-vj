@@ -501,6 +501,62 @@
         }
       }
     },
+    "Audio Reactivity": {
+      "menu": "Audio",
+      "callback": "audioReactivity",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Audio Lasers \u2190 Bass": {
+      "menu": "Audio",
+      "callback": "audioLasers",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 3.0,
+          "default": 1.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Audio Spot \u2190 Mid": {
+      "menu": "Audio",
+      "callback": "audioSpot",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 3.0,
+          "default": 1.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Audio Sphere \u2190 Treble": {
+      "menu": "Audio",
+      "callback": "audioSphere",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 3.0,
+          "default": 1.0,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Sphere Circles": {
       "menu": "Sphere",
       "callback": "sphereCount",

@@ -16,7 +16,7 @@ else — the lasers, the sphere, the glitches — happens around that deferral: 
 swept by a light that is always about to arrive, and never does.
 
 **Getting started** — [Run](#run) · [Drive it](#drive-it) · [Settings](#settings) · [Presets](#presets)
-**External control** — [Gamepad](#gamepad) · [Web surface](#web-control-surface) · [REST API](#rest-api) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
+**External control** — [Sound](#audio-reactivity) · [Gamepad](#gamepad) · [Web surface](#web-control-surface) · [REST API](#rest-api) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
 **The effects** — [Spotlight](#the-spotlight) · [Sphere](#the-sphere-effect) · [Kaleidoscope](#the-kaleidoscope) · [Chaos](#chaos) · [Auto-pilot](#the-auto-pilot) · [Colour](#the-two-colour-modes)
 **In the room** — [What starts off](#what-starts-switched-off) · [Glow](#the-glow) · [Projection notes](#projection-notes) · [Performance](#measuring-performance-f3)
 **The code** — [Structure](#structure) · [Builds](#builds) · [Renderer](#a-note-on-the-renderer)
@@ -110,6 +110,14 @@ Labels below are the English ones.
 | `FREQUENCY` | 0 – 20 | Tremor rate, **independent of `SPEED`**. |
 | `SPREAD` | 0 – 1 | How much the pool grows when aiming off-centre. See below. |
 | `GLITCH` | 0 – 0.05 | Glitch chance per frame. **0 by default.** Independent of `CHAOS`. 0.005 ≈ one every 3 s. |
+
+### Audio
+| Setting | Range | Effect |
+| --- | --- | --- |
+| `REACTIVITY` | 0 – 1 | Master amount. **0 by default** — nothing moves until asked. |
+| `LASERS ← BASS` | 0 – 3 | How much the bass thickens the laser strokes. |
+| `SPOT ← MID` | 0 – 3 | How much the mids thicken the spotlight. |
+| `SPHERE ← TREBLE` | 0 – 3 | How much the treble thickens the sphere. |
 
 ### Sphere
 | Setting | Range | Effect |
@@ -489,40 +497,58 @@ addresses.
 
 ## Audio reactivity
 
-Nothing is implemented on the Godot side yet. This section records what has been
-checked, so it does not have to be rediscovered.
+Déferlante listens to **what is coming out of the machine**, not to a microphone, so
+it follows the track being played rather than the room.
 
-### The path that already works: Chataigne
+### Setting it up
 
-Chataigne has an **Audio** module that does the spectral analysis, and any band can
-be mapped onto any Deferlante command. **No code is needed**: it is the shortest way
-to try reactions out and see which ones hold up.
+```
+tools/listen-to-output.sh          # start listening
+tools/listen-to-output.sh --stop   # put everything back
+```
 
-### If the analysis were to happen inside Godot
+Run it before launching, and the levels are live. It taps the output; it does not
+reroute it, so playback is untouched.
 
-The building blocks exist (`AudioStreamMicrophone` + `AudioEffectSpectrumAnalyzer`
-on a bus, both confirmed present in 4.7), but three obstacles come first:
+If your sound arrives through an interface instead — a Focusrite, a desk — you do
+not need the script at all: that is already an input, and Déferlante reads the
+default one.
 
-1. **`audio/driver/enable_input` is `false`** in `project.godot`. That is the first
-   switch; without it there is no capture at all.
-2. **Godot captures an input, and music is an output.** If the sound comes from an
-   interface (a Focusrite, a mixing desk), you capture its input and all is well. If
-   the music plays out of the computer, you need to capture the output's *monitor* —
-   PipeWire routing (`pw-link`, qpwgraph) and `AudioServer.input_device` pointed at
-   the right source. That is the real trap, and it decides the ergonomics: in that
-   case a `DEVICE` setting becomes necessary in the interface.
-3. **Levels vary too much between tracks** for a fixed gain: it would need adaptive
-   normalisation, with a fast attack and a slow release.
+### Why a script is needed at all
 
-### The shape it should take
+Godot captures an *input*, and music is an *output*. PipeWire does publish the
+output's monitor as a source, but **Godot's PulseAudio backend filters monitors out
+of its device list**, so it cannot be picked from inside the app.
 
-Whatever the source, the modulation should **add to** the settings rather than
-overwrite them — the way `CHAOS` already does. Your values stay where you put them,
-and the sound adds a pulse on top.
+Worse, `AudioServer.input_device` does not hold in this build: assigned during
+`_ready` it reads back `"Default"`, one frame later it reads back empty, and the
+capture follows neither. So the script wraps the monitor in an ordinary source *and
+makes it the default* — pointing Godot at it by giving it no choice. `--stop`
+restores the source you had.
 
-Band levels would also be worth exposing over OSC (`/deferlante/audio/bass`…), so
-Chataigne can feed the *same* modulation system instead of driving each setting
-separately. One mechanism, two possible sources.
+### What the sound drives
+
+Three bands, and each effect follows a different one: **bass thickens the lasers,
+mids the spotlight, treble the sphere**. Three effects breathing on one envelope
+read as a single thing pumping; on separate bands they pick out different parts of
+the track and the picture comes apart into layers.
+
+The sound **adds to** the widths rather than setting them. The sliders keep meaning
+what they say, turning `REACTIVITY` back to 0 restores exactly the look that was
+there, and nothing the sound does is written to a setting — so it never lands in a
+preset and never fights you for a slider.
+
+### Levels, not volume
+
+Bands are normalised against a **running peak** rather than a fixed gain: one track
+masters six decibels louder than the next, and a fixed gain that suits one either
+sits flat or clips on the other. The peak decays slowly so a quiet passage opens back
+up, but never below a floor — without one, room noise during silence was climbing
+back to 0.66 of full scale.
+
+Each band is read at its **loudest point** rather than averaged. Averaging a narrow
+tone across a wide band divides it by the silence either side: a 6 kHz tone read as
+nothing at all in a 2–12 kHz band until that changed.
 
 ## The two colour modes
 
