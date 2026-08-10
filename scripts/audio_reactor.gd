@@ -125,17 +125,13 @@ func _pick_device() -> String:
 	return ""
 
 
-## Re-reads the device list, for when the helper is run after the app started.
-func rescan():
-	if not enabled:
-		return
-	var found := _pick_device()
-	if found != "" and found != device_name:
-		device_name = found
-		AudioServer.input_device = found
-		_player.stop()
-		_player.play()
-		print("Audio: switched to %s" % found)
+## There is deliberately no way to re-open the capture at runtime.
+##
+## Godot binds to whatever the default source was when the stream started. Stopping
+## and restarting the player does not re-read it — measured, the analyser then reads
+## exactly 0.00000 and the capture is dead until the process restarts. A button that
+## silently breaks capture is worse than no button, so the routing has to be in place
+## before launch and that is what the documentation says.
 
 
 func _process(delta: float):

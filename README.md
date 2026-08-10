@@ -507,8 +507,13 @@ tools/listen-to-output.sh          # start listening
 tools/listen-to-output.sh --stop   # put everything back
 ```
 
-Run it before launching, and the levels are live. It taps the output; it does not
-reroute it, so playback is untouched.
+**Run it before launching** — that part is not optional. Godot binds to whatever the
+default source was when it started and never looks again: run the script afterwards
+and the app stays deaf, with nothing on screen to say so. Stopping and restarting the
+capture stream does not recover it either; measured, that leaves the analyser reading
+exactly zero. If the levels are dead, restart Déferlante.
+
+It taps the output; it does not reroute it, so playback is untouched.
 
 If your sound arrives through an interface instead — a Focusrite, a desk — you do
 not need the script at all: that is already an input, and Déferlante reads the

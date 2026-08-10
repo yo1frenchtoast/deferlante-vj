@@ -180,7 +180,7 @@ func _build_params():
 	_prop("spot/handback", 2, 120, 1, 30.0, circle, "manual_hold")
 
 	_section("section.audio")
-	_fn("audio/reactivity", 0, 1, 0.02, 0.0, func(v): _react = v)
+	_fn("audio/reactivity", 0, 1, 0.02, 0.0, _set_reactivity)
 	_fn("audio/lasers", 0, 3, 0.05, 1.0, func(v): _react_lasers = v)
 	_fn("audio/spot", 0, 3, 0.05, 1.0, func(v): _react_spot = v)
 	_fn("audio/sphere", 0, 3, 0.05, 1.0, func(v): _react_sphere = v)
@@ -400,6 +400,10 @@ func _spawn_lasers(count: int):
 ## Each effect follows a different band on purpose. Three effects all breathing on
 ## the same envelope reads as one thing pumping; on bass, mid and treble they pick
 ## out different parts of the track and the picture comes apart into layers.
+func _set_reactivity(value: float):
+	_react = value
+
+
 func _apply_audio():
 	if _react <= 0.0 or not audio.capturing:
 		if _audio_was_active:
