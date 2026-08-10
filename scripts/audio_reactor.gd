@@ -32,8 +32,8 @@ signal levels(bass: float, mid: float, treble: float)
 ## on every kick rather than pulse with it.
 @export var attack: float = 0.06
 @export var release: float = 0.9
-## How fast the running peak forgets a loud moment.
-@export var peak_decay: float = 0.25
+## How fast the running peak forgets a loud moment, in decibels per second.
+@export var peak_fall: float = 6.0
 ## The reading is not clipped: measured on a techno set, bass lives around -35 dB
 ## while the hi-hats sit between -60 and -100. Any floor high enough to gate a
 ## quiet room flattened the treble into a constant, so the reading runs free and
@@ -41,14 +41,23 @@ signal levels(bass: float, mid: float, treble: float)
 @export var floor_db: float = -130.0
 ## Below this a band is silence and reads zero, whatever the running peak says.
 @export var silence_db: float = -98.0
-## How many decibels below the running peak still count as "nothing". This is the
-## band's dynamic range, and it is what makes the level move: normalising the
-## compressed 0..1 value instead pinned bass and mid at 0.99 on real music, which
-## looks like a constant rather than a pulse.
-@export var dynamic_range: float = 22.0
+## The narrowest window the band is allowed to stretch across, in decibels. Below
+## this the range is treated as noise rather than dynamics, so a steady tone does
+## not get expanded into a full-scale flicker.
+@export var min_range_db: float = 9.0
+## Seconds the running average looks back over. This is the reference the level is
+## measured *against*, so it wants to be a few bars: short enough to follow a build,
+## long enough that a single bar does not become the new normal.
+@export var average_window: float = 4.0
 ## The running peak never falls below this many dB. It has to sit under the
 ## quietest band's real peak — the treble's — or that band never leaves the floor.
 @export var peak_floor_db: float = -92.0
+
+## Response curve. 0 leaves the levels as measured; higher pushes the middle down
+## so only the hits show. Adaptive scaling gets the range right but still leaves a
+## busy track sitting high on average, and how much of that reads as "pulsing"
+## rather than "loud" is a taste call, not a measurement.
+var punch: float = 0.35
 
 var bass: float = 0.0
 var mid: float = 0.0
@@ -63,7 +72,16 @@ const BUS := "DeferlanteCapture"
 
 var _player: AudioStreamPlayer
 var _analyser: AudioEffectSpectrumAnalyzerInstance
+## The smoothed levels before the response curve. The curve has to be applied on
+## the way out, never to these: written back into the state it compounds frame
+## after frame — measured, every band collapsed to 0.00 within a second.
+var _smoothed := [0.0, 0.0, 0.0]
 var _peaks := [-92.0, -92.0, -92.0]
+var _floors := [-92.0, -92.0, -92.0]
+## Both ends start at the first reading rather than at the bottom of the scale.
+## Starting at -92 dB with a floor that climbs a few decibels a second, it took
+## half a minute to reach the music — and until it did, every band read 0.9 flat.
+var _primed := false
 
 
 func _ready():
@@ -144,24 +162,48 @@ func _process(delta: float):
 		_read(treble_range),
 	]
 
+	# Primed on the first frame that actually carries sound, not the first frame
+	# full stop. The analyser has no data yet when _process first runs, so priming
+	# there set the reference to -130 dB and left it crawling upwards for a minute
+	# while every band read 0.95 — a plateau, exactly what this was meant to avoid.
+	if not _primed and raw[0] > silence_db:
+		_primed = true
+		for i in range(3):
+			_peaks[i] = raw[i]
+			_floors[i] = raw[i]
+
 	for i in range(3):
-		# Everything happens in decibels: loudness is what the ear follows, and a
-		# ratio of linear magnitudes spends its whole range on the loudest instant.
-		# The peak sags so the scale follows the track rather than being pinned by
-		# the loudest moment of the night.
-		_peaks[i] = maxf(peak_floor_db, maxf(raw[i], _peaks[i] - peak_decay * 12.0 * delta))
-		var quiet: float = _peaks[i] - dynamic_range
-		var target: float = clampf((raw[i] - quiet) / maxf(dynamic_range, 1.0), 0.0, 1.0)
+		# Both ends of the scale follow the music, not just the top. Tracking only
+		# the peak and sitting a fixed number of decibels below it meant that a
+		# track with six decibels of movement spent all its time in the top of the
+		# range: technically adaptive, visually a constant.
+		#
+		# The peak jumps up and sags down; the floor drops instantly and climbs
+		# slowly. Between them they stretch whatever range the music actually has
+		# across the whole output, so a calm passage opens up and a loud one still
+		# pulses instead of pinning.
+		_peaks[i] = maxf(peak_floor_db, maxf(raw[i], _peaks[i] - peak_fall * delta))
+		# The reference is the running *average*, not the running minimum. On
+		# continuous music the quietest moment between two kicks is still loud, so
+		# a minimum-tracking floor sat just under the signal and everything read
+		# 0.85 — thick all the time with a slight tremble. Measured against the
+		# average instead, the ordinary level of the track maps to zero and only
+		# what rises above it shows: a pulse rather than a plateau.
+		_floors[i] = lerpf(_floors[i], raw[i], clampf(delta / average_window, 0.0, 1.0))
+		var span: float = maxf(_peaks[i] - _floors[i], min_range_db)
+		var target: float = clampf((raw[i] - _floors[i]) / span, 0.0, 1.0)
 		if raw[i] <= silence_db:
 			target = 0.0
-		var current: float = [bass, mid, treble][i]
+		var current: float = _smoothed[i]
 		# Asymmetric smoothing: fast towards a louder value, slow away from it.
 		var speed := attack if target > current else release
-		var smoothed := lerpf(current, target, clampf(delta / maxf(speed, 0.001), 0.0, 1.0))
-		match i:
-			0: bass = smoothed
-			1: mid = smoothed
-			2: treble = smoothed
+		_smoothed[i] = lerpf(current, target, clampf(delta / maxf(speed, 0.001), 0.0, 1.0))
+
+	# Capped at 3: measured, a fourth power left even a loud track reading 0.01.
+	var gamma := 1.0 + punch * 2.0
+	bass = pow(_smoothed[0], gamma)
+	mid = pow(_smoothed[1], gamma)
+	treble = pow(_smoothed[2], gamma)
 
 	level = maxf(bass, maxf(mid, treble))
 	levels.emit(bass, mid, treble)

@@ -57,6 +57,7 @@ const LABELS := {
 	"spot/handback": ["RETOUR AUTO", "HAND BACK"],
 
 	"audio/reactivity": ["RÉACTIVITÉ", "REACTIVITY"],
+	"audio/punch": ["NERVOSITÉ", "PUNCH"],
 	"audio/lasers": ["LASERS ← GRAVES", "LASERS ← BASS"],
 	"audio/spot": ["POURSUITE ← MÉDIUMS", "SPOT ← MID"],
 	"audio/sphere": ["SPHÈRE ← AIGUS", "SPHERE ← TREBLE"],

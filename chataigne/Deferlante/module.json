@@ -515,6 +515,20 @@
         }
       }
     },
+    "Audio Punch": {
+      "menu": "Audio",
+      "callback": "audioPunch",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.35,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Audio Lasers \u2190 Bass": {
       "menu": "Audio",
       "callback": "audioLasers",

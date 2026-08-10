@@ -115,6 +115,7 @@ Labels below are the English ones.
 | Setting | Range | Effect |
 | --- | --- | --- |
 | `REACTIVITY` | 0 – 1 | Master amount. **0 by default** — nothing moves until asked. |
+| `PUNCH` | 0 – 1 | Response curve. Higher pushes the middle down so only hits show. |
 | `LASERS ← BASS` | 0 – 3 | How much the bass thickens the laser strokes. |
 | `SPOT ← MID` | 0 – 3 | How much the mids thicken the spotlight. |
 | `SPHERE ← TREBLE` | 0 – 3 | How much the treble thickens the sphere. |
@@ -560,8 +561,21 @@ Each band is read at its **loudest point** rather than averaged. Averaging a nar
 tone across a wide band divides it by the silence either side: a 6 kHz tone read as
 nothing at all in a 2–12 kHz band until that changed.
 
-Measured on a real set, all three bands swing across most of their range: bass
-0.14–0.98, mid 0.28–0.99, treble 0.17–0.99.
+**Both ends of the scale follow the music**, not just the top. Tracking only the peak
+and sitting a fixed number of decibels below it is adaptive on paper and a constant in
+practice: a track with six decibels of movement spends all its time at the top of the
+range. The reference is a running average over a few bars, so the ordinary level of
+the track maps to zero and only what rises above it shows.
+
+Two things had to be right for that to work. The scale is primed on the first frame
+that actually carries sound — primed on the first frame at all, it starts at −130 dB
+and crawls upwards for a minute while every band reads 0.95. And the response curve is
+applied on the way out, never written back into the smoothed state, where it compounds
+frame after frame and collapses every band to zero within a second.
+
+`PUNCH` is the taste control on top. Adaptive scaling gets the *range* right, but how
+much of a busy track should read as "pulsing" rather than "loud" is a judgement.
+Measured on a techno set: at 0 the bass swings 0.39–0.87, at 0.5 it swings 0.12–0.40.
 
 ## The two colour modes
 

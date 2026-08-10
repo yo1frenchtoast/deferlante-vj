@@ -182,6 +182,7 @@ func _build_params():
 
 	_section("section.audio")
 	_fn("audio/reactivity", 0, 1, 0.02, 0.0, _set_reactivity)
+	_prop("audio/punch", 0, 1, 0.02, 0.35, audio, "punch")
 	_fn("audio/lasers", 0, 3, 0.05, 1.0, func(v): _react_lasers = v)
 	_fn("audio/spot", 0, 3, 0.05, 1.0, func(v): _react_spot = v)
 	_fn("audio/sphere", 0, 3, 0.05, 1.0, func(v): _react_sphere = v)
