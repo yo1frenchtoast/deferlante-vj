@@ -25,6 +25,14 @@ function globalRecall(value) {
 	local.send("/deferlante/global/recall", value);
 }
 
+function globalPanel(value) {
+	local.send("/deferlante/global/panel", value);
+}
+
+function globalAutodim(value) {
+	local.send("/deferlante/global/autodim", value);
+}
+
 function globalLanguage(value) {
 	local.send("/deferlante/global/language", value);
 }

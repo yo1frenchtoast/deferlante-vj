@@ -36,6 +36,11 @@ var _status_text: String = ""
 ## turning it down lets the operator keep reading it at arm's length while the room
 ## barely sees it. 1 is the ordinary look.
 var brightness: float = 1.0
+## An external surface — phone, pad, console — is driving. The panel ducks out of
+## the way *and* stops taking the mouse: dimming alone would hide the sliders
+## without making them any harder to nudge by accident, which is the actual risk.
+var external_control: bool = false
+var _restore_brightness: float = 1.0
 
 var _idle: float = 0.0
 var _fade: Tween
@@ -269,6 +274,21 @@ func set_brightness(value: float):
 		rows.modulate.a = brightness
 
 
+## Called when something other than this keyboard moves a setting. Any keypress
+## hands control back, so the way out is the thing you were about to do anyway.
+func set_external_control(active: bool, dim_to: float):
+	if active == external_control:
+		return
+	external_control = active
+	for slider in _sliders:
+		slider.mouse_filter = Control.MOUSE_FILTER_IGNORE if active else Control.MOUSE_FILTER_STOP
+	if active:
+		_restore_brightness = brightness
+		set_brightness(dim_to)
+	else:
+		set_brightness(_restore_brightness)
+
+
 func wake():
 	_idle = 0.0
 	if _fade:
@@ -286,6 +306,10 @@ func _fade_out():
 
 func _input(event: InputEvent):
 	# The slightest gesture calls the panel back; it is silence that hides it.
+	# While an external surface has the wheel the mouse is ignored entirely,
+	# which is the point — only the keyboard takes it back.
+	if event is InputEventMouse and external_control:
+		return
 	if event is InputEventKey or event is InputEventMouse:
 		if rows.visible and _fade == null:
 			_idle = 0.0

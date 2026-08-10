@@ -44,6 +44,7 @@ var _mode_param: VJParam
 ## True while start-up values are being applied: without this guard, setting the
 ## initial RED would flip the project into manual colour mode on launch.
 var _initializing: bool = true
+var _autodim: bool = true
 
 # Auto-pilot: 0 is off, 1 is roughly one change per second.
 var _randomizer: float = 0.0
@@ -86,8 +87,10 @@ func _ready():
 	presets.slots_changed.connect(_send_schema)
 
 	pad.connection_changed.connect(_refresh_status)
-	pad.find_param = param
+	# Wrapping the lookup catches every pad interaction in one place.
+	pad.find_param = func(slug): _external_touch(); return param(slug)
 	pad.aim.connect(circle.aim_by)
+	pad.aim.connect(func(_a, _b, _c): _external_touch())
 	pad.aim_released.connect(circle.release_aim)
 	pad.glitch_requested.connect(circle.apply_glitch)
 	pad.randomize_requested.connect(_randomize_all)
@@ -110,6 +113,9 @@ func _build_params():
 	_fn("global/glow", 0, 2, 0.05, default_glow, _set_glow)
 	_prop("global/recall", 0, 10, 0.1, 2.0, presets, "recall_time")
 	_fn("global/panel", 0.05, 1, 0.05, 1.0, panel.set_brightness)
+	var autodim := _fn("global/autodim", 0, 1, 1, 1.0, _set_autodim)
+	autodim.choices = PackedStringArray(["mode.off", "mode.on"])
+	autodim.randomizable = false
 	var language := _fn("global/language", 0, 1, 1, 0.0, _set_language)
 	language.choices = PackedStringArray(Lang.LANGUAGES)
 	# Language names stay in their own tongue, so they are not Lang keys.
@@ -164,7 +170,7 @@ func _build_params():
 	# Out of the auto-pilot's reach: tempo, glow and colour are decisions — the
 	# room, the track — rather than variations to be subjected to.
 	for slug in ["global/speed", "global/glow", "global/recall", "global/panel",
-			"color/saturation",
+			"global/autodim", "color/saturation",
 			"color/mode", "color/red", "color/green", "color/blue"]:
 		param(slug).randomizable = false
 
@@ -222,6 +228,19 @@ func _refresh_status():
 	else:
 		bits.append(lang.text("status.nopad"))
 	panel.set_status("   ·   ".join(bits))
+
+
+func _set_autodim(value: float):
+	_autodim = value >= 0.5
+	if not _autodim:
+		panel.set_external_control(false, discreet_brightness)
+
+
+## Something other than this keyboard just moved a setting: get the panel out of
+## the way, and out of the mouse's reach.
+func _external_touch():
+	if _autodim and not _initializing:
+		panel.set_external_control(true, discreet_brightness)
 
 
 func _set_manual_lock(value: float):
@@ -406,6 +425,7 @@ func _on_osc_message(address: String, args: Array):
 	var p: VJParam = osc_routes.get(key)
 	if p == null:
 		return
+	_external_touch()
 	if normalized:
 		value = lerpf(p.min_value, p.max_value, clampf(value, 0.0, 1.0))
 	p.set_value(value)
@@ -461,12 +481,14 @@ func _send_schema():
 
 
 func _on_web_set(slug: String, value: float):
+	_external_touch()
 	var p := param(slug)
 	if p:
 		p.set_value(value)
 
 
 func _on_web_action(name: String):
+	_external_touch()
 	if name.begins_with("preset:"):
 		var bits := name.split(":")
 		if bits[1] == "save":
@@ -658,6 +680,9 @@ func _unhandled_input(event: InputEvent):
 		get_tree().quit()
 	if not (event is InputEventKey and event.pressed):
 		return
+	# Any key takes the wheel back from whatever external surface had it.
+	panel.set_external_control(false, discreet_brightness)
+
 	# Number keys: recall a preset, or save into it with Ctrl held. Ctrl rather
 	# than Shift because Shift is already the fine-adjust modifier on the arrows.
 	var slot := _preset_slot(event)

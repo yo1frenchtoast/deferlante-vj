@@ -70,6 +70,7 @@ Labels below are the English ones.
 | `RANDOMIZER` | 0 – 1 | Auto-pilot. 0 is off, 1 is about one change per second. |
 | `RECALL FADE` | 0 – 10 | Seconds a preset takes to crossfade in. 0 snaps. |
 | `PANEL` | 0.05 – 1 | Panel brightness. `F2` toggles it. See below. |
+| `AUTO DIM` | OFF / ON | Duck the panel automatically when something else takes over. |
 | `GLOW` | 0 – 2 | Halo. **0 by default**, see below. |
 | `LANGUAGE` | FRANÇAIS / ENGLISH | On-screen language. Affects nothing else. |
 
@@ -137,6 +138,22 @@ after you have deliberately dimmed it.
 
 `H` and `F2` answer different problems and combine: `H` keeps the panel from fading
 away while you work, `F2` makes that work invisible.
+
+### Getting out of the way on its own
+
+With `AUTO DIM` on — it is, by default — the panel ducks to discreet the moment
+**anything else moves a setting**: the phone, the gamepad, OSC, an API call. Any
+keypress takes the wheel back and restores the brightness you had chosen, not a
+blanket 1: if you were working at 0.5, 0.5 is what returns.
+
+While an external surface has control the panel also **stops accepting the mouse**.
+That is the half that matters. Dimming alone hides the sliders without making them
+any harder to nudge by accident, and a stray click on a projected panel is exactly
+the accident worth designing out. Moving the mouse does not take control back —
+only the keyboard does, which is the thing you were about to do anyway.
+
+The `PANEL` setting keeps reading the brightness *you* chose while this is going on:
+the auto-dim is a temporary override, not a change to your preference.
 
 ## Presets
 

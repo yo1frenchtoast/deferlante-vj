@@ -23,6 +23,7 @@ const LABELS := {
 	"global/glow": ["HALO", "GLOW"],
 	"global/recall": ["FONDU PRESET", "RECALL FADE"],
 	"global/panel": ["PANNEAU", "PANEL"],
+	"global/autodim": ["AUTO DISCRET", "AUTO DIM"],
 	"global/language": ["LANGUE", "LANGUAGE"],
 
 	"color/mode": ["MODE", "MODE"],
@@ -73,6 +74,8 @@ const TEXTS := {
 	"mode.random": ["ALÉATOIRE", "RANDOM"],
 	"mode.manual": ["MANUEL", "MANUAL"],
 	"mode.auto": ["AUTO", "AUTO"],
+	"mode.off": ["NON", "OFF"],
+	"mode.on": ["OUI", "ON"],
 	"mode.manual_lock": ["MANETTE", "STICK"],
 
 	"help.params": [
