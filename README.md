@@ -30,7 +30,8 @@ Open the project in Godot 4.7+ and press F5. The main scene is `scenes/main.tscn
 
 ## Drive it
 
-The sliders **fade out on their own after 4 s of inactivity** (over 0.7 s) and come
+The panel sits in the bottom-left corner, in one or more columns depending on how many
+settings there are. The sliders **fade out on their own after 4 s of inactivity** (over 0.7 s) and come
 back on any key press or mouse move. `H` pins them on screen while you dial things in.
 
 | Key | Action |
@@ -635,7 +636,13 @@ scripts/
 ```
 
 The UI is built at runtime from the list of settings: the scene holds nothing but an
-empty `VBoxContainer`, not 32 pairs of nodes to maintain by hand.
+empty `VBoxContainer`, not 35 pairs of nodes to maintain by hand.
+
+It also **lays itself out in as many columns as it takes to fit the screen**, breaking
+only between sections so a section is never split in two, and balancing the columns
+rather than filling the first to the brim. The panel had been growing by one row per
+setting and had just started running off the bottom of a 1080p screen; this way it
+cannot, however many settings get added.
 
 A setting that only writes a property is declared in one line
 (`_prop("spot/pulse", 0, 300, 5, 50.0, circle, "fluctuation_range")`); only those

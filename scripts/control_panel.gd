@@ -42,18 +42,25 @@ const HELP_KEYS := ["help.params", "help.keys"]
 ## pulling more attention than the settings themselves.
 const SECTION_COLOR := Color(1.0, 0.72, 0.35)
 
+# Rough heights, used only to decide where to break into a new column. They do not
+# have to be exact — being a few pixels out costs nothing, and the alternative is
+# building the panel, measuring it, then rebuilding it a frame later.
+const ROW_HEIGHT := 27
+const HEADER_HEIGHT := 30
+const HELP_HEIGHT := 40
+
+## Pixels kept clear at the top and bottom of the screen.
+@export var vertical_margin: float = 48.0
+
+var _column: VBoxContainer
+
 
 func build(p_params: Array[VJParam], lang: Lang):
 	params = p_params
 	_lang = lang
 	_lang.changed.connect(_retranslate)
 
-	var current_section := ""
-	for i in range(params.size()):
-		if params[i].section != current_section:
-			current_section = params[i].section
-			_build_section_header(current_section, i > 0)
-		_build_row(params[i], i)
+	_build_columns()
 	_build_help()
 
 	select(0)
@@ -61,17 +68,86 @@ func build(p_params: Array[VJParam], lang: Lang):
 	wake()
 
 
+## Lays the settings out in as many columns as it takes to fit the screen, breaking
+## only between sections so a section is never split in two. The panel used to be a
+## single column and simply grew past the bottom of the screen every time a setting
+## was added; this way it cannot.
+func _build_columns():
+	var groups := _group_by_section()
+	var budget := get_viewport().get_visible_rect().size.y - vertical_margin - HELP_HEIGHT
+
+	var total := 0.0
+	for group in groups:
+		total += _height_of(group)
+
+	# Work out how many columns are needed, then aim for equal columns rather than
+	# filling the first one to the brim. Two lopsided columns read worse than two
+	# balanced ones, and the eye has to travel further to find anything.
+	var wanted := maxi(1, ceili(total / maxf(1.0, budget)))
+	var target := total / wanted
+
+	var columns := HBoxContainer.new()
+	columns.add_theme_constant_override("separation", 28)
+	# Columns run left to right from the screen edge; each one is bottom-aligned
+	# inside itself, so the whole panel sits in the bottom-left corner as before.
+	columns.alignment = BoxContainer.ALIGNMENT_BEGIN
+	columns.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	rows.add_child(columns)
+
+	_column = _new_column(columns)
+	var used := 0.0
+	var remaining := wanted
+	var index := 0
+
+	for group in groups:
+		var height := _height_of(group)
+		# Break when this section's midpoint would land past the target: the usual
+		# balancing rule, and it keeps a section whole either side of the break.
+		if used > 0.0 and remaining > 1 and used + height * 0.5 > target:
+			_column = _new_column(columns)
+			used = 0.0
+			remaining -= 1
+		_build_section_header(group["key"], used > 0.0)
+		for p in group["params"]:
+			_build_row(p, index)
+			index += 1
+		used += height
+
+
+func _height_of(group: Dictionary) -> float:
+	return HEADER_HEIGHT + group["params"].size() * ROW_HEIGHT
+
+
+func _group_by_section() -> Array:
+	var groups: Array = []
+	var current := ""
+	for p in params:
+		if p.section != current:
+			current = p.section
+			groups.append({"key": current, "params": []})
+		groups[-1]["params"].append(p)
+	return groups
+
+
+func _new_column(parent: HBoxContainer) -> VBoxContainer:
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 2)
+	column.alignment = BoxContainer.ALIGNMENT_END
+	parent.add_child(column)
+	return column
+
+
 func _build_section_header(key: String, spaced: bool):
 	if spaced:
 		var spacer := Control.new()
 		spacer.custom_minimum_size.y = 10
-		rows.add_child(spacer)
+		_column.add_child(spacer)
 
 	var header := Label.new()
 	header.text = _lang.text(key)
 	header.add_theme_font_size_override("font_size", 13)
 	header.add_theme_color_override("font_color", SECTION_COLOR)
-	rows.add_child(header)
+	_column.add_child(header)
 	_section_labels.append(header)
 	_section_keys.append(key)
 
@@ -91,7 +167,7 @@ func _build_row(p: VJParam, index: int):
 	slider.max_value = p.max_value
 	slider.step = p.step
 	slider.value = p.value
-	slider.custom_minimum_size.x = 260
+	slider.custom_minimum_size.x = 200
 	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	# Without this the sliders swallow the arrow keys and break navigation.
 	slider.focus_mode = Control.FOCUS_NONE
@@ -103,7 +179,7 @@ func _build_row(p: VJParam, index: int):
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	row.add_child(value_label)
 
-	rows.add_child(row)
+	_column.add_child(row)
 	_name_labels.append(name_label)
 	_sliders.append(slider)
 	_value_labels.append(value_label)
