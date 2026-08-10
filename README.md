@@ -95,6 +95,7 @@ Labels below are the English ones.
 | `HOLD` | 0 – 3 | How long it rests on target. 0 sweeps without stopping. |
 | `SHAKE` | 0 – 3 | Tremor amplitude at rest. 0 holds perfectly still. |
 | `FREQUENCY` | 0 – 20 | Tremor rate, **independent of `SPEED`**. |
+| `SPREAD` | 0 – 1 | How much the pool grows when aiming off-centre. See below. |
 | `GLITCH` | 0 – 0.05 | Glitch chance per frame. **0 by default.** Independent of `CHAOS`. 0.005 ≈ one every 3 s. |
 
 ### Sphere
@@ -530,9 +531,20 @@ amplitude, `FREQUENCY` its rate. A head can sweep fast while peering calmly, or 
 slowly while shivering hard. Only the global `SPEED` catches both, so that 0 truly
 freezes everything.
 
-On top of that sit the motor profile (brisk start, long braking, slight damped
-overshoot at the end of travel) and the widening of the pool when the head aims far
-out to the sides: the beam travels further, so the pool is wider.
+On top of that sits the motor profile: brisk start, long braking, and a slight damped
+overshoot at the end of travel as the head settles.
+
+### Why the pool changes size
+
+A real followspot's pool grows as it aims away from centre — the beam travels further
+and lands at an angle. Taken literally that is **+61 % at the edge of the pan range and
++76 % in the corner**, which is a lot, and because the pool is scaled evenly rather
+than stretched into an ellipse it reads as the circle resizing rather than as an
+oblique beam.
+
+`SPREAD` is the dose. At **0** the pool is the same size wherever it points; at **1**
+you get the full physical effect. The default of **0.35** gives +22 % at the edge —
+enough to feel like a light rather than a shape, without drawing attention to itself.
 
 The spotlight's `SPEED` and `HOLD` drive all this live. `HOLD` at 0 gives a
 continuous sweep with no stops; pushed to 3, a head that lingers on each target.

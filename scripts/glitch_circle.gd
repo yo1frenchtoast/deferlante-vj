@@ -51,6 +51,10 @@ var speed_scale: float = 1.0
 ## 0 is a composed followspot; 1 is a panicked head that can no longer settle.
 var chaos: float = 0.0
 
+## How much of the physical off-axis growth to apply. 0 keeps the pool the same
+## size wherever it points, 1 is the full effect.
+@export_range(0.0, 1.0, 0.01) var spread_amount: float = 0.35
+
 @export_group("Manual aim")
 ## How fast the head travels under the stick, in radians per second at full
 ## deflection. This is the feel of the handle: too slow and you lose the actor,
@@ -154,8 +158,11 @@ func default_behaviour(delta: float):
 	)
 
 	# The further out to the sides the head aims, the longer the beam travels and
-	# the wider the pool grows — just like a real followspot.
-	var spread = 1.0 / (cos(pan) * cos(tilt))
+	# the wider the pool grows — a real followspot does this. Taken literally it is
+	# a lot, though: +61 % at the edge of the pan range and +76 % in the corner,
+	# and since the pool is scaled evenly rather than stretched into an ellipse it
+	# reads as the circle resizing rather than as an oblique beam. Hence the dose.
+	var spread = lerpf(1.0, 1.0 / (cos(pan) * cos(tilt)), spread_amount)
 	var radius = (base_radius + sin(time_passed * 2.0) * fluctuation_range) * spread
 	generate_circle_points(radius, segments)
 

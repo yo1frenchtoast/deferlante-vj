@@ -45,6 +45,7 @@ const LABELS := {
 	"spot/hold": ["ARRÊTS", "HOLD"],
 	"spot/shake": ["TREMBLEMENT", "SHAKE"],
 	"spot/frequency": ["FRÉQUENCE", "FREQUENCY"],
+	"spot/spread": ["ÉTALEMENT", "SPREAD"],
 	"spot/glitch": ["GLITCH", "GLITCH"],
 	"spot/manual": ["PILOTAGE", "AIMING"],
 	"spot/track": ["SUIVI", "TRACKING"],

@@ -132,6 +132,7 @@ func _build_params():
 	_prop("spot/hold", 0, 3, 0.05, 0.9, circle, "hold_time")
 	_prop("spot/shake", 0, 3, 0.05, 1.0, circle, "wobble_amount")
 	_prop("spot/frequency", 0, 20, 0.5, 6.0, circle, "wobble_speed")
+	_prop("spot/spread", 0, 1, 0.02, 0.35, circle, "spread_amount")
 	_prop("spot/glitch", 0, 0.05, 0.001, 0.0, circle, "glitch_chance")
 	var manual := _fn("spot/manual", 0, 1, 1, 0.0, _set_manual_lock)
 	manual.choices = PackedStringArray(["mode.auto", "mode.manual_lock"])

@@ -361,6 +361,20 @@
         }
       }
     },
+    "Spotlight Spread": {
+      "menu": "Spotlight",
+      "callback": "spotSpread",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.35,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Spotlight Glitch": {
       "menu": "Spotlight",
       "callback": "spotGlitch",

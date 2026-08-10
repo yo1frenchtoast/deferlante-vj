@@ -101,6 +101,10 @@ function spotFrequency(value) {
 	local.send("/deferlante/spot/frequency", value);
 }
 
+function spotSpread(value) {
+	local.send("/deferlante/spot/spread", value);
+}
+
 function spotGlitch(value) {
 	local.send("/deferlante/spot/glitch", value);
 }
