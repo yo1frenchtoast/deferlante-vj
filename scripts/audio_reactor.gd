@@ -26,7 +26,7 @@ signal levels(bass: float, mid: float, treble: float)
 ## Where each band is read, in hertz.
 @export var bass_range := Vector2(30, 250)
 @export var mid_range := Vector2(250, 2000)
-@export var treble_range := Vector2(2000, 12000)
+@export var treble_range := Vector2(2000, 8000)
 
 ## Rise instantly, fall slowly: a level that fell as fast as it rose would flicker
 ## on every kick rather than pulse with it.
@@ -34,13 +34,21 @@ signal levels(bass: float, mid: float, treble: float)
 @export var release: float = 0.9
 ## How fast the running peak forgets a loud moment.
 @export var peak_decay: float = 0.25
-## Below this the band counts as silence, so a quiet room does not get amplified
-## into noise by the normalisation.
-@export var floor_db: float = -55.0
-## The running peak never falls below this. Without a floor, a quiet passage drags
-## the scale down until the room noise reads as a full-scale signal — measured:
-## bass climbing back to 0.66 during actual silence.
-@export var peak_floor: float = 0.12
+## The reading is not clipped: measured on a techno set, bass lives around -35 dB
+## while the hi-hats sit between -60 and -100. Any floor high enough to gate a
+## quiet room flattened the treble into a constant, so the reading runs free and
+## `silence_db` does the gating instead.
+@export var floor_db: float = -130.0
+## Below this a band is silence and reads zero, whatever the running peak says.
+@export var silence_db: float = -98.0
+## How many decibels below the running peak still count as "nothing". This is the
+## band's dynamic range, and it is what makes the level move: normalising the
+## compressed 0..1 value instead pinned bass and mid at 0.99 on real music, which
+## looks like a constant rather than a pulse.
+@export var dynamic_range: float = 22.0
+## The running peak never falls below this many dB. It has to sit under the
+## quietest band's real peak — the treble's — or that band never leaves the floor.
+@export var peak_floor_db: float = -92.0
 
 var bass: float = 0.0
 var mid: float = 0.0
@@ -55,7 +63,7 @@ const BUS := "DeferlanteCapture"
 
 var _player: AudioStreamPlayer
 var _analyser: AudioEffectSpectrumAnalyzerInstance
-var _peaks := [0.001, 0.001, 0.001]
+var _peaks := [-92.0, -92.0, -92.0]
 
 
 func _ready():
@@ -141,10 +149,15 @@ func _process(delta: float):
 	]
 
 	for i in range(3):
-		# The peak sags towards the current value, so the scale follows the track
-		# rather than being pinned by the loudest moment of the night.
-		_peaks[i] = maxf(peak_floor, maxf(raw[i], _peaks[i] - _peaks[i] * peak_decay * delta))
-		var target := clampf(raw[i] / maxf(_peaks[i], 0.0001), 0.0, 1.0)
+		# Everything happens in decibels: loudness is what the ear follows, and a
+		# ratio of linear magnitudes spends its whole range on the loudest instant.
+		# The peak sags so the scale follows the track rather than being pinned by
+		# the loudest moment of the night.
+		_peaks[i] = maxf(peak_floor_db, maxf(raw[i], _peaks[i] - peak_decay * 12.0 * delta))
+		var quiet: float = _peaks[i] - dynamic_range
+		var target: float = clampf((raw[i] - quiet) / maxf(dynamic_range, 1.0), 0.0, 1.0)
+		if raw[i] <= silence_db:
+			target = 0.0
 		var current: float = [bass, mid, treble][i]
 		# Asymmetric smoothing: fast towards a louder value, slow away from it.
 		var speed := attack if target > current else release
@@ -165,9 +178,5 @@ func _read(band: Vector2) -> float:
 	var magnitude := _analyser.get_magnitude_for_frequency_range(
 		band.x, band.y, AudioEffectSpectrumAnalyzerInstance.MAGNITUDE_MAX
 	).length()
-	var db := linear_to_db(magnitude)
-	if db < floor_db:
-		return 0.0
-	# Decibels rather than raw magnitude: loudness is what the ear follows, and a
-	# linear magnitude spends almost all its range on the loudest few percent.
-	return clampf((db - floor_db) / -floor_db, 0.0, 1.0)
+	# Returned in decibels; the caller does the scaling against its running peak.
+	return maxf(linear_to_db(magnitude), floor_db)

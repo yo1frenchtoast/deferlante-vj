@@ -540,15 +540,23 @@ preset and never fights you for a slider.
 
 ### Levels, not volume
 
-Bands are normalised against a **running peak** rather than a fixed gain: one track
-masters six decibels louder than the next, and a fixed gain that suits one either
-sits flat or clips on the other. The peak decays slowly so a quiet passage opens back
-up, but never below a floor — without one, room noise during silence was climbing
-back to 0.66 of full scale.
+Everything is done in decibels, against a **running peak** per band rather than a
+fixed gain. A fixed gain that suits one track sits flat or clips on the next; and
+normalising the compressed 0–1 value instead of the decibels pinned bass and mid at
+0.99 on real music, which looks like a constant rather than a pulse.
+
+The three bands live at completely different levels. Measured on a techno set: bass
+around −35 dB, hi-hats between −60 and −100. So there is no shared floor — each band
+scales against its own peak, and only an absolute silence gate stops room noise being
+amplified when nothing is playing. An earlier floor tight enough to gate a quiet room
+flattened the treble into a dead constant.
 
 Each band is read at its **loudest point** rather than averaged. Averaging a narrow
 tone across a wide band divides it by the silence either side: a 6 kHz tone read as
 nothing at all in a 2–12 kHz band until that changed.
+
+Measured on a real set, all three bands swing across most of their range: bass
+0.14–0.98, mid 0.28–0.99, treble 0.17–0.99.
 
 ## The two colour modes
 

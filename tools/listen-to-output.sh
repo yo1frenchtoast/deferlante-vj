@@ -42,8 +42,19 @@ if [[ "${1:-}" == "--stop" ]]; then
     exit 0
 fi
 
+# The source existing is not the same as it being listened to. An earlier run can
+# leave it behind while something else takes the default back, and bailing out here
+# on the strength of the source alone reported success while capturing the wrong
+# thing entirely.
 if [[ -n "$(existing)" ]]; then
-    echo "Already listening — source '$NAME' exists."
+    if [[ "$(pactl get-default-source)" == "$NAME" ]]; then
+        echo "Already listening to $(pactl get-default-sink)."
+        exit 0
+    fi
+    echo "Source exists but was not the default — pointing capture back at it."
+    pactl get-default-source > "$PREVIOUS"
+    pactl set-default-source "$NAME"
+    echo "Listening to: $(pactl get-default-sink)"
     exit 0
 fi
 
