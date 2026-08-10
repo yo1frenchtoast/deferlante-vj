@@ -20,6 +20,7 @@ extends Node2D
 @onready var panel: CanvasLayer = $ControlPanel
 @onready var osc: Node = $OscServer
 @onready var web: Node = $WebServer
+@onready var pad: Node = $Gamepad
 
 var lang := Lang.new()
 ## Shared colour state, held by reference by every effect.
@@ -74,6 +75,15 @@ func _ready():
 		p.changed.connect(func(v): web.broadcast({"type": "value", "slug": p.slug, "value": v}))
 	# Switching language relabels the page too, so it is rebuilt from scratch.
 	lang.changed.connect(_send_schema)
+
+	pad.find_param = param
+	pad.aim.connect(circle.aim_at)
+	pad.aim_released.connect(circle.release_aim)
+	pad.glitch_requested.connect(circle.apply_glitch)
+	pad.randomize_requested.connect(_randomize_all)
+	pad.panel_toggled.connect(func():
+		panel.pinned = not panel.pinned
+		panel.wake())
 
 
 # --------------------------------------------------------------------------

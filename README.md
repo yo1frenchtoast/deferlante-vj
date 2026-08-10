@@ -16,7 +16,7 @@ else — the lasers, the sphere, the glitches — happens around that deferral: 
 swept by a light that is always about to arrive, and never does.
 
 **Getting started** — [Run](#run) · [Drive it](#drive-it) · [Settings](#settings)
-**External control** — [Web surface](#web-control-surface) · [REST API](#rest-api) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
+**External control** — [Gamepad](#gamepad) · [Web surface](#web-control-surface) · [REST API](#rest-api) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
 **The effects** — [Spotlight](#the-spotlight) · [Sphere](#the-sphere-effect) · [Kaleidoscope](#the-kaleidoscope) · [Chaos](#chaos) · [Auto-pilot](#the-auto-pilot) · [Colour](#the-two-colour-modes)
 **In the room** — [What starts off](#what-starts-switched-off) · [Glow](#the-glow) · [Projection notes](#projection-notes) · [Performance](#measuring-performance-f3)
 **The code** — [Structure](#structure) · [Builds](#builds) · [Renderer](#a-note-on-the-renderer)
@@ -110,6 +110,56 @@ Labels below are the English ones.
 Adding a setting takes one line in `_build_params()` of `vj_controller.gd`: the
 section, the UI row, the slider, the number formatting, the keyboard handling and
 the OSC address all follow. Its label goes in `scripts/lang.gd`.
+
+## Gamepad
+
+An Xbox pad is picked up automatically when plugged in — nothing to configure. It is
+the only surface that can **take the spotlight off auto-pilot and aim it by hand**.
+
+| Control | Effect |
+| --- | --- |
+| **Left stick** | Aim the spotlight. Absolute: stick centre is room centre. |
+| **LT / RT** | Shrink / grow the pool. Analogue — a light squeeze creeps, a full pull sweeps. |
+| **A** | Fire a glitch |
+| **B** | Redraw colours (same as `R`) |
+| **X** | Mirror on / off, back to the amount it had |
+| **Y** | Glow on / off |
+| **LB** *(hold)* | Freeze — everything stops while held |
+| **RB** *(hold)* | Boost — 2.5× speed while held |
+| **Right stick** ←→ | Laser spin |
+| **Right stick** ↑↓ | Chaos |
+| **D-pad** ↑↓ | Laser count |
+| **D-pad** ←→ | Mirror segments |
+| **Start** | Pin / unpin the panel |
+| **Back** | Hand the spotlight back to auto |
+
+### Letting go
+
+The interesting part is not grabbing the spotlight, it is releasing it. Let the stick
+centre and the head **holds exactly where you left it**, takes its normal pause, then
+resumes hunting from there. Nothing snaps back, nothing jumps — the same rest it takes
+after any sweep of its own. You can hand it over mid-gesture and the audience cannot
+tell where the operator stopped and the machine resumed.
+
+`Back` does the same without waiting for the stick to centre.
+
+### Why the shoulders are momentary
+
+`LB` and `RB` are held, not latched. In a set you lean on a button for four bars and
+want it to let go by itself — a latch is one more thing to remember to undo. Both
+remember the speed you were at and put it back on release, so they can be used over
+any tempo rather than only from 1.0.
+
+### Two deliberate choices
+
+**The pad does not wake the on-screen panel**, unlike the keyboard. It is a
+performance surface like OSC: holding a stick for a whole track would otherwise leave
+the sliders on screen — and projected on the wall. `Start` shows them when you want
+them.
+
+**Everything except the aim goes through `VJParam.set_value()`**, the same entry point
+as the sliders, OSC and the web page. Squeeze a trigger and the radius moves on the
+panel, on every connected phone, and in any console reading back over the API.
 
 ## Web control surface
 
@@ -547,6 +597,7 @@ web/
 shaders/
   kaleidoscope.gdshader   Polar fold into symmetrical wedges
 scripts/
+  gamepad.gd        Xbox pad: aims the spotlight, drives the rest through VJParam
   lang.gd           On-screen translations, keyed by OSC address
   kaleidoscope.gd   Drives the mirror's full-screen pass
   palette.gd        Colour state, shared by reference with the three effects

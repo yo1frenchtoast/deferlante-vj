@@ -51,6 +51,11 @@ var speed_scale: float = 1.0
 ## 0 is a composed followspot; 1 is a panicked head that can no longer settle.
 var chaos: float = 0.0
 
+## Manual aim, from a gamepad. It does not replace the state machine, it suspends
+## it: on release the head simply pauses where it is, then goes back to hunting
+## from there. Nothing snaps, and the operator can hand it back mid-sweep.
+var manual_aim: bool = false
+
 enum { SEEK_MOVE, SEEK_HOLD }
 var _state: int = SEEK_MOVE
 var _state_time: float = 0.0
@@ -131,7 +136,33 @@ func default_behaviour(delta: float):
 	generate_circle_points(radius, segments)
 
 
+## Point the head straight at a spot, as fractions of its travel range (-1..1).
+## Called every frame while the stick is held.
+func aim_at(pan_fraction: float, tilt_fraction: float):
+	manual_aim = true
+	_pan = clampf(pan_fraction, -1.0, 1.0) * pan_range
+	_tilt = clampf(tilt_fraction, -1.0, 1.0) * tilt_range
+
+
+## Hand the head back. It holds where it is for a normal pause, then resumes
+## hunting from there — the same rest it takes after any sweep of its own.
+func release_aim():
+	if not manual_aim:
+		return
+	manual_aim = false
+	_pan_to = _pan
+	_tilt_to = _tilt
+	_state = SEEK_HOLD
+	_state_time = 0.0
+	_hold_duration = hold_time * randf_range(0.3, 1.6) * lerpf(1.0, 0.12, chaos)
+
+
 func _update_head(delta: float):
+	# Under manual aim the state machine is left frozen: its clock does not run,
+	# so releasing resumes from a clean pause rather than mid-interpolation.
+	if manual_aim:
+		return
+
 	# Absolute value: a negative global speed plays the lasers and the sphere
 	# backwards, but a followspot does not "un-search". It keeps sweeping forwards,
 	# otherwise its state machine would sit stuck.
