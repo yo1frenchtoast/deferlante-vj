@@ -669,9 +669,11 @@ func _unhandled_input(event: InputEvent):
 		return
 
 	match event.keycode:
-		KEY_D:
+		KEY_F2:
 			# One key to duck the panel out of sight and back. A slider is fine for
-			# choosing how discreet, but not for getting there quickly.
+			# choosing how discreet, but not for getting there quickly. F2 sits
+			# beside F3, the other key that changes what is on screen rather than
+			# what the visuals do.
 			#
 			# Comparing against the midpoint rather than against the dim level
 			# itself: the setting is snapped to its step, so the value never comes
