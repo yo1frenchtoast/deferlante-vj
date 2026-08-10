@@ -255,7 +255,12 @@ panel, on every connected phone, and in any console reading back over the API.
 Godot serves a control page on port **7331**. Open `http://<machine-ip>:7331` from a
 phone or tablet on the same network — the address is printed at startup.
 
-It is built for **landscape**, and splits into two pages.
+It is built for **landscape**. A **preset bar** sits across the top, above the tabs
+and visible from both pages — presets are what you reach for most in a set, so they
+should never be a tab away. Empty slots are outlined in dashes, filled ones in solid
+amber, and a slot saved from one phone lights up on every other one at once.
+
+Below that, two pages.
 
 **RÉGLAGES** — every setting as a touch slider, with each section a card. The cards
 flow into as many columns as the screen can take: one on a phone held upright, three
@@ -268,7 +273,6 @@ or four across a tablet in landscape. Nothing is nested and nothing scrolls side
   (`X · SPOTLIGHT WIDTH`) — three sections have a `WIDTH`, and on a pad you pick
   blind from a list rather than reading a labelled row. They default to chaos × speed
   and spotlight radius × pulse.
-- **Nine preset slots**: tap to recall, hold to save.
 - **GLITCH** and **COLORS**.
 
 Splitting them is the point: the pads need the whole screen to be playable and the

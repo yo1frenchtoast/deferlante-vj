@@ -90,15 +90,25 @@
   }
   .strip button:active { background: var(--accent); color: #000; }
 
-  .slots { flex: 0 0 auto; display: flex; gap: .4rem; align-items: center; }
-  .slots button {
-    flex: 1; padding: .55rem 0; font-size: .9rem; font-variant-numeric: tabular-nums;
-    background: var(--panel); color: var(--dim);
-    border: 1px solid var(--line); border-radius: .5rem;
+  .slots {
+    flex: 0 0 auto; display: flex; gap: .4rem; align-items: center;
+    padding: .5rem .9rem; border-bottom: 1px solid var(--line);
+    padding-left: max(.9rem, env(safe-area-inset-left));
+    padding-right: max(.9rem, env(safe-area-inset-right));
   }
-  .slots button.used { color: var(--text); border-color: var(--accent); }
+  .slots .label { flex: 0 0 auto; font-size: .68rem; letter-spacing: .14em; color: var(--accent); }
+  .slots button {
+    flex: 1; padding: .5rem 0; font-size: .88rem; font-variant-numeric: tabular-nums;
+    background: transparent; color: #4a4a52;
+    /* An empty slot is dashed: somewhere to put a look, not a dead button. */
+    border: 1px dashed var(--line); border-radius: .5rem;
+  }
+  .slots button.used {
+    color: var(--text); background: var(--panel);
+    border-style: solid; border-color: var(--accent);
+  }
   .slots button:active { background: var(--accent); color: #000; }
-  .slots .hint { flex: 0 0 auto; font-size: .68rem; color: var(--dim); padding-left: .3rem; }
+  .slots .hint { flex: 0 0 auto; font-size: .66rem; color: var(--dim); padding-left: .2rem; }
 
   .pads { flex: 1 1 auto; display: flex; gap: .6rem; min-height: 200px; }
   .pad {
@@ -136,6 +146,11 @@
   <span id="status">connecting…</span>
 </header>
 
+<!-- Presets live above the tabs, not inside one: they are the control reached for
+     most often in a set, and hiding them behind a tab meant hunting for them at
+     exactly the wrong moment. -->
+<div class="slots" id="slots"></div>
+
 <main>
   <section class="view settings on" id="settings"><div class="grid" id="grid"></div></section>
 
@@ -144,7 +159,6 @@
       <button data-action="glitch">GLITCH</button>
       <button data-action="randomize">COLORS</button>
     </div>
-    <div class="slots" id="slots"></div>
     <div class="pads" id="pads"></div>
   </section>
 </main>
@@ -263,6 +277,11 @@ function buildPresets(info) {
   const holder = document.getElementById("slots");
   holder.innerHTML = "";
   const used = new Set(info.used || []);
+
+  const label = document.createElement("span");
+  label.className = "label";
+  label.textContent = "PRESETS";
+  holder.appendChild(label);
 
   for (let slot = 1; slot <= (info.count || 9); slot++) {
     const button = document.createElement("button");
