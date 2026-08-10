@@ -375,6 +375,48 @@
         }
       }
     },
+    "Spotlight Aiming": {
+      "menu": "Spotlight",
+      "callback": "spotManual",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Spotlight Tracking": {
+      "menu": "Spotlight",
+      "callback": "spotTrack",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.2,
+          "max": 3.0,
+          "default": 0.9,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Spotlight Hand Back": {
+      "menu": "Spotlight",
+      "callback": "spotHandback",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 2.0,
+          "max": 120.0,
+          "default": 30.0,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Sphere Circles": {
       "menu": "Sphere",
       "callback": "sphereCount",

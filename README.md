@@ -118,7 +118,7 @@ the only surface that can **take the spotlight off auto-pilot and aim it by hand
 
 | Control | Effect |
 | --- | --- |
-| **Left stick** | Aim the spotlight. Absolute: stick centre is room centre. |
+| **Left stick** | Walk the beam. A *rate*, not a position — see below. |
 | **LT / RT** | Shrink / grow the pool. Analogue — a light squeeze creeps, a full pull sweeps. |
 | **A** | Fire a glitch |
 | **B** | Redraw colours (same as `R`) |
@@ -131,17 +131,40 @@ the only surface that can **take the spotlight off auto-pilot and aim it by hand
 | **D-pad** ↑↓ | Laser count |
 | **D-pad** ←→ | Mirror segments |
 | **Start** | Pin / unpin the panel |
-| **Back** | Hand the spotlight back to auto |
+| **Back** | Hand the spotlight back to auto now |
 
-### Letting go
+### It is a handle, not a pointer
 
-The interesting part is not grabbing the spotlight, it is releasing it. Let the stick
-centre and the head **holds exactly where you left it**, takes its normal pause, then
-resumes hunting from there. Nothing snaps back, nothing jumps — the same rest it takes
-after any sweep of its own. You can hand it over mid-gesture and the audience cannot
-tell where the operator stopped and the machine resumed.
+The stick sets a **rate**: push and the beam travels, stop pushing and it stays exactly
+where you stopped. That is how a real followspot works, and it is the only way to walk
+a beam alongside someone crossing a stage — an absolute stick would snap the beam back
+to centre the moment you let go, which is useless for following anyone.
 
-`Back` does the same without waiting for the stick to centre.
+The response is squared, so the same stick gives fine tracking near centre and fast
+repositioning at the edge. `TRACKING` sets how fast the handle moves at full
+deflection: too slow and you lose your actor, too fast and you cannot hold him.
+
+Aiming works even at `SPEED` 0. Freezing the show must not take the handle out of the
+operator's hands.
+
+### Handing back, progressively
+
+Stop pushing and the beam stays put for `HAND BACK` seconds — 30 by default, long on
+purpose: an actor stops moving, the operator stops pushing, and the beam must not
+wander off during the monologue.
+
+After that the automatic sweep **fades back in over a few seconds** rather than
+switching on. Under the hood the state machine never stopped: it kept picking targets
+and sweeping the whole time, and what you see is a blend between where the operator
+left the beam and where the machine wants it. The blend weight slides from 1 to 0, so
+there is no moment where control visibly changes hands.
+
+Grabbing the stick again takes over from wherever the beam currently is, never from
+where it was last left — so it never teleports.
+
+`AIMING` is the cursor: leave it on `AUTO` for the behaviour above, or set it to
+`STICK` and the beam is yours until you say otherwise. `Back` forces the hand-back
+without waiting out the delay, and it is still progressive — it does not cut.
 
 ### Why the shoulders are momentary
 

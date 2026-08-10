@@ -51,10 +51,29 @@ var speed_scale: float = 1.0
 ## 0 is a composed followspot; 1 is a panicked head that can no longer settle.
 var chaos: float = 0.0
 
-## Manual aim, from a gamepad. It does not replace the state machine, it suspends
-## it: on release the head simply pauses where it is, then goes back to hunting
-## from there. Nothing snaps, and the operator can hand it back mid-sweep.
-var manual_aim: bool = false
+@export_group("Manual aim")
+## How fast the head travels under the stick, in radians per second at full
+## deflection. This is the feel of the handle: too slow and you lose the actor,
+## too fast and you cannot hold him.
+@export var track_speed: float = 0.9
+## Seconds the head stays where the operator left it after the stick goes still.
+## Long on purpose: an actor stops moving, the operator stops pushing, and the
+## beam must not wander off during the monologue.
+@export var manual_hold: float = 30.0
+## Seconds the auto sweep takes to reassert itself afterwards.
+@export var manual_blend: float = 6.0
+## Locked by the operator: the head never returns to hunting on its own.
+var manual_lock: bool = false
+
+# The state machine keeps its own `_pan`/`_tilt` throughout — it is never
+# suspended. Manual aim is a second pair of angles, and what actually gets drawn
+# is a blend of the two. That is what makes the hand-back progressive rather than
+# a switch: the sweep fades back in over seconds while the machine is already
+# mid-gesture, so there is no moment where control visibly changes hands.
+var _manual_pan: float = 0.0
+var _manual_tilt: float = 0.0
+var _manual_weight: float = 0.0
+var _manual_idle: float = 0.0
 
 enum { SEEK_MOVE, SEEK_HOLD }
 var _state: int = SEEK_MOVE
@@ -121,48 +140,69 @@ func default_behaviour(delta: float):
 	_wobble_time += delta * speed_scale * wobble_speed
 	_update_head(delta * speed_scale * seek_speed)
 
+	_decay_manual(delta)
+	var pan := aimed_pan()
+	var tilt := aimed_tilt()
+
 	# Projecting the beam onto the wall. The 1/cos(pan) term is what curves the
 	# path: at constant tilt, a horizontal sweep traces an arc.
 	var center = get_viewport_rect().size / 2
 	position = center + Vector2(
-		throw_distance * tan(_pan),
-		throw_distance * tan(_tilt) / cos(_pan)
+		throw_distance * tan(pan),
+		# Minus: tilt grows upwards, screen Y grows downwards.
+		-throw_distance * tan(tilt) / cos(pan)
 	)
 
 	# The further out to the sides the head aims, the longer the beam travels and
 	# the wider the pool grows — just like a real followspot.
-	var spread = 1.0 / (cos(_pan) * cos(_tilt))
+	var spread = 1.0 / (cos(pan) * cos(tilt))
 	var radius = (base_radius + sin(time_passed * 2.0) * fluctuation_range) * spread
 	generate_circle_points(radius, segments)
 
 
-## Point the head straight at a spot, as fractions of its travel range (-1..1).
-## Called every frame while the stick is held.
-func aim_at(pan_fraction: float, tilt_fraction: float):
-	manual_aim = true
-	_pan = clampf(pan_fraction, -1.0, 1.0) * pan_range
-	_tilt = clampf(tilt_fraction, -1.0, 1.0) * tilt_range
+## What is actually drawn: the machine's own aim, pulled towards the operator's.
+func aimed_pan() -> float:
+	return lerpf(_pan, _manual_pan, _manual_weight)
 
 
-## Hand the head back. It holds where it is for a normal pause, then resumes
-## hunting from there — the same rest it takes after any sweep of its own.
+func aimed_tilt() -> float:
+	return lerpf(_tilt, _manual_tilt, _manual_weight)
+
+
+## Drive the head like a followspot handle: the stick sets a *rate*, not a
+## position, and the beam stays where you stopped pushing. That is the only way
+## to walk a beam alongside someone crossing a stage.
+##
+## Deliberately independent of `speed_scale`: freezing the show must not take the
+## handle out of the operator's hands.
+func aim_by(dx: float, dy: float, delta: float):
+	if _manual_weight <= 0.0:
+		# Take over from wherever the beam currently is, never from wherever it
+		# was left last time — otherwise grabbing the stick would teleport it.
+		_manual_pan = aimed_pan()
+		_manual_tilt = aimed_tilt()
+	_manual_weight = 1.0
+	_manual_idle = 0.0
+	_manual_pan = clampf(_manual_pan + dx * track_speed * delta, -pan_range, pan_range)
+	_manual_tilt = clampf(_manual_tilt + dy * track_speed * delta, -tilt_range, tilt_range)
+
+
+## Give the head back now, without waiting out the hold. Still progressive: the
+## blend runs, it does not cut.
 func release_aim():
-	if not manual_aim:
+	_manual_idle = manual_hold
+
+
+func _decay_manual(delta: float):
+	if _manual_weight <= 0.0 or manual_lock:
 		return
-	manual_aim = false
-	_pan_to = _pan
-	_tilt_to = _tilt
-	_state = SEEK_HOLD
-	_state_time = 0.0
-	_hold_duration = hold_time * randf_range(0.3, 1.6) * lerpf(1.0, 0.12, chaos)
+	_manual_idle += absf(delta)
+	if _manual_idle < manual_hold:
+		return
+	_manual_weight = maxf(0.0, _manual_weight - absf(delta) / maxf(0.01, manual_blend))
 
 
 func _update_head(delta: float):
-	# Under manual aim the state machine is left frozen: its clock does not run,
-	# so releasing resumes from a clean pause rather than mid-interpolation.
-	if manual_aim:
-		return
-
 	# Absolute value: a negative global speed plays the lasers and the sphere
 	# backwards, but a followspot does not "un-search". It keeps sweeping forwards,
 	# otherwise its state machine would sit stuck.

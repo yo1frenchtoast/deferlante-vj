@@ -105,6 +105,18 @@ function spotGlitch(value) {
 	local.send("/deferlante/spot/glitch", value);
 }
 
+function spotManual(value) {
+	local.send("/deferlante/spot/manual", value);
+}
+
+function spotTrack(value) {
+	local.send("/deferlante/spot/track", value);
+}
+
+function spotHandback(value) {
+	local.send("/deferlante/spot/handback", value);
+}
+
 function sphereCount(value) {
 	local.send("/deferlante/sphere/count", value);
 }

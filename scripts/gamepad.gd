@@ -4,9 +4,10 @@ extends Node
 ##
 ## Two kinds of control, and they behave differently on purpose:
 ##
-##   * The left stick **aims the spotlight**, absolutely — stick centre is room
-##     centre. Let go and the head pauses where it is, then resumes hunting on its
-##     own. Nothing snaps back.
+##   * The left stick **drives the spotlight like a followspot handle**: it sets a
+##     rate, not a position. Push and the beam travels; stop pushing and it stays
+##     exactly where you left it, so a beam can be walked alongside someone
+##     crossing a stage.
 ##   * Everything else drives ordinary settings through `VJParam.set_value()`, the
 ##     same entry point as the sliders, OSC and the web page, so a value changed
 ##     from the pad shows up everywhere at once.
@@ -15,7 +16,7 @@ extends Node
 ## surface like OSC: holding a stick for a whole track would otherwise leave the
 ## sliders projected on the wall.
 
-signal aim(pan: float, tilt: float)
+signal aim(dx: float, dy: float, delta: float)
 signal aim_released
 signal glitch_requested
 signal randomize_requested
@@ -71,7 +72,7 @@ func is_connected_pad() -> bool:
 func _process(delta: float):
 	if _pad < 0:
 		return
-	_read_aim()
+	_read_aim(delta)
 	_read_triggers(delta)
 	_read_right_stick(delta)
 	_read_speed_holds()
@@ -81,7 +82,7 @@ func _process(delta: float):
 # Left stick: aiming the spotlight
 # --------------------------------------------------------------------------
 
-func _read_aim():
+func _read_aim(delta: float):
 	var stick := Vector2(
 		Input.get_joy_axis(_pad, JOY_AXIS_LEFT_X),
 		Input.get_joy_axis(_pad, JOY_AXIS_LEFT_Y)
@@ -97,9 +98,12 @@ func _read_aim():
 
 	# Rescale past the deadzone so the first millimetre of travel is not a jump.
 	var scaled := stick.normalized() * ((stick.length() - deadzone) / (1.0 - deadzone))
+	# Squared response: fine tracking near centre, fast repositioning at the edge.
+	# A followspot operator needs both from the same stick.
+	var shaped := scaled * scaled.length()
 	_aiming = true
-	# Screen Y grows downwards, tilt grows upwards.
-	aim.emit(clampf(scaled.x, -1.0, 1.0), clampf(-scaled.y, -1.0, 1.0))
+	# A stick reports -1 upwards; tilt grows upwards too, so the sign flips.
+	aim.emit(clampf(shaped.x, -1.0, 1.0), clampf(-shaped.y, -1.0, 1.0), delta)
 
 
 # --------------------------------------------------------------------------

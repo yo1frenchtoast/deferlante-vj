@@ -77,7 +77,7 @@ func _ready():
 	lang.changed.connect(_send_schema)
 
 	pad.find_param = param
-	pad.aim.connect(circle.aim_at)
+	pad.aim.connect(circle.aim_by)
 	pad.aim_released.connect(circle.release_aim)
 	pad.glitch_requested.connect(circle.apply_glitch)
 	pad.randomize_requested.connect(_randomize_all)
@@ -133,6 +133,11 @@ func _build_params():
 	_prop("spot/shake", 0, 3, 0.05, 1.0, circle, "wobble_amount")
 	_prop("spot/frequency", 0, 20, 0.5, 6.0, circle, "wobble_speed")
 	_prop("spot/glitch", 0, 0.05, 0.001, 0.0, circle, "glitch_chance")
+	var manual := _fn("spot/manual", 0, 1, 1, 0.0, _set_manual_lock)
+	manual.choices = PackedStringArray(["mode.auto", "mode.manual_lock"])
+	manual.randomizable = false
+	_prop("spot/track", 0.2, 3, 0.05, 0.9, circle, "track_speed")
+	_prop("spot/handback", 2, 120, 1, 30.0, circle, "manual_hold")
 
 	_section("section.sphere")
 	_prop("sphere/count", 0, 80, 1, 40.0, sphere, "circle_count")
@@ -184,6 +189,12 @@ func param(slug: String) -> VJParam:
 func _append(p: VJParam):
 	p.section = _current_section
 	params.append(p)
+
+
+## The cursor the operator can set: locked to the stick, or free to go hunting
+## again after the hand-back delay.
+func _set_manual_lock(value: float):
+	circle.manual_lock = value >= 0.5
 
 
 func _set_language(value: float):

@@ -46,6 +46,9 @@ const LABELS := {
 	"spot/shake": ["TREMBLEMENT", "SHAKE"],
 	"spot/frequency": ["FRÉQUENCE", "FREQUENCY"],
 	"spot/glitch": ["GLITCH", "GLITCH"],
+	"spot/manual": ["PILOTAGE", "AIMING"],
+	"spot/track": ["SUIVI", "TRACKING"],
+	"spot/handback": ["RETOUR AUTO", "HAND BACK"],
 
 	"sphere/count": ["CERCLES", "CIRCLES"],
 	"sphere/size": ["TAILLE", "SIZE"],
@@ -66,6 +69,8 @@ const TEXTS := {
 
 	"mode.random": ["ALÉATOIRE", "RANDOM"],
 	"mode.manual": ["MANUEL", "MANUAL"],
+	"mode.auto": ["AUTO", "AUTO"],
+	"mode.manual_lock": ["MANETTE", "STICK"],
 
 	"help.params": [
 		"↑↓ paramètre    ←→ régler (Maj : précis)    ESPACE glitch    R couleurs",
