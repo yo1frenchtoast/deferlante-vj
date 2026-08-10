@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0c">
 <title>Déferlante</title>
 <style>
@@ -13,50 +13,105 @@
     --red: #ff7366; --green: #73ff80; --blue: #80a6ff;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
   body {
-    margin: 0; padding: 0 0 3rem; background: var(--bg); color: var(--text);
+    margin: 0; background: var(--bg); color: var(--text);
     font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
     overscroll-behavior: none; touch-action: manipulation;
+    display: flex; flex-direction: column;
   }
+
   header {
-    position: sticky; top: 0; z-index: 10; background: var(--bg);
-    border-bottom: 1px solid var(--line); padding: .6rem .9rem;
-    display: flex; align-items: center; gap: .7rem;
+    flex: 0 0 auto; display: flex; align-items: center; gap: .8rem;
+    padding: .5rem .9rem; border-bottom: 1px solid var(--line);
+    padding-left: max(.9rem, env(safe-area-inset-left));
+    padding-right: max(.9rem, env(safe-area-inset-right));
   }
-  h1 { font-size: 1rem; margin: 0; letter-spacing: .06em; font-weight: 600; }
-  #status { font-size: .78rem; color: var(--dim); margin-left: auto; }
+  h1 { font-size: .95rem; margin: 0; letter-spacing: .08em; font-weight: 600; }
+  .tabs { display: flex; gap: .3rem; margin-left: .4rem; }
+  .tabs button {
+    padding: .4rem .9rem; font-size: .8rem; letter-spacing: .04em;
+    background: transparent; color: var(--dim);
+    border: 1px solid var(--line); border-radius: .4rem;
+  }
+  .tabs button.on { color: #000; background: var(--accent); border-color: var(--accent); }
+  #status { font-size: .75rem; color: var(--dim); margin-left: auto; }
   #status.on { color: var(--green); }
   #status.off { color: var(--red); }
 
-  .actions { display: flex; gap: .5rem; padding: .8rem .9rem 0; }
-  .actions button {
-    flex: 1; padding: .85rem; font-size: .85rem; letter-spacing: .06em;
+  main { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; }
+  .view { display: none; height: 100%; }
+  .view.on { display: block; }
+  .view.surfaces.on { display: flex; flex-direction: column; }
+
+  /* Settings: sections become cards, and the cards flow into as many columns as
+     the screen can take. Landscape on a tablet gives three or four. */
+  .grid {
+    display: grid; gap: .7rem; padding: .7rem;
+    padding-left: max(.7rem, env(safe-area-inset-left));
+    padding-right: max(.7rem, env(safe-area-inset-right));
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    align-items: start;
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: .6rem; padding: .5rem .7rem .7rem;
+  }
+  .card h2 {
+    font-size: .68rem; letter-spacing: .16em; color: var(--accent);
+    margin: .1rem 0 .4rem; font-weight: 600;
+  }
+
+  .row { padding: .12rem 0; }
+  .row .top { display: flex; justify-content: space-between; font-size: .78rem; }
+  .row .name { color: var(--dim); letter-spacing: .04em; }
+  .row .val { font-variant-numeric: tabular-nums; }
+  .row.red .name { color: var(--red); }
+  .row.green .name { color: var(--green); }
+  .row.blue .name { color: var(--blue); }
+
+  /* Tall thumbs: this is driven with a thumb, not a mouse pointer. */
+  input[type=range] { width: 100%; height: 30px; -webkit-appearance: none; background: transparent; }
+  input[type=range]::-webkit-slider-runnable-track { height: 4px; background: var(--line); border-radius: 3px; }
+  input[type=range]::-moz-range-track { height: 4px; background: var(--line); border-radius: 3px; }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 24px; height: 24px; margin-top: -10px;
+    border-radius: 50%; background: var(--text);
+  }
+  input[type=range]::-moz-range-thumb { width: 24px; height: 24px; border: 0; border-radius: 50%; background: var(--text); }
+
+  /* Surfaces: the pads get the room, which is the whole point of a second page. */
+  .surfaces { gap: .6rem; padding: .7rem; }
+  .strip { flex: 0 0 auto; display: flex; gap: .5rem; }
+  .strip button {
+    flex: 1; padding: .7rem; font-size: .82rem; letter-spacing: .06em;
     background: var(--panel); color: var(--text);
     border: 1px solid var(--line); border-radius: .5rem;
   }
-  .actions button:active { background: var(--accent); color: #000; }
+  .strip button:active { background: var(--accent); color: #000; }
 
-  .presets { display: flex; gap: .4rem; padding: .8rem .9rem 0; }
-  .presets button {
-    flex: 1; aspect-ratio: 1 / 1; font-size: .95rem; font-variant-numeric: tabular-nums;
+  .slots { flex: 0 0 auto; display: flex; gap: .4rem; align-items: center; }
+  .slots button {
+    flex: 1; padding: .55rem 0; font-size: .9rem; font-variant-numeric: tabular-nums;
     background: var(--panel); color: var(--dim);
     border: 1px solid var(--line); border-radius: .5rem;
   }
-  /* A filled slot is legible at a glance; an empty one is somewhere to put a look. */
-  .presets button.used { color: var(--text); border-color: var(--accent); }
-  .presets button:active { background: var(--accent); color: #000; }
-  .presets .hint { flex: 0 0 100%; font-size: .7rem; color: var(--dim); padding-top: .1rem; }
+  .slots button.used { color: var(--text); border-color: var(--accent); }
+  .slots button:active { background: var(--accent); color: #000; }
+  .slots .hint { flex: 0 0 auto; font-size: .68rem; color: var(--dim); padding-left: .3rem; }
 
-  .pads { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; padding: .8rem .9rem 0; }
-  @media (max-width: 520px) { .pads { grid-template-columns: 1fr; } }
-  .pad { background: var(--panel); border: 1px solid var(--line); border-radius: .6rem; padding: .5rem; }
+  .pads { flex: 1 1 auto; display: flex; gap: .6rem; min-height: 200px; }
+  .pad {
+    flex: 1; display: flex; flex-direction: column; gap: .35rem;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: .6rem; padding: .5rem; min-width: 0;
+  }
   .pad select {
     width: 100%; background: #0e0e12; color: var(--text);
-    border: 1px solid var(--line); border-radius: .35rem; padding: .35rem; font-size: .75rem;
+    border: 1px solid var(--line); border-radius: .35rem; padding: .3rem; font-size: .72rem;
   }
-  .pad .axes { display: flex; flex-direction: column; gap: .35rem; margin-bottom: .45rem; }
   .surface {
-    position: relative; width: 100%; aspect-ratio: 1 / 1;
+    flex: 1 1 auto; position: relative; min-height: 120px;
     background:
       linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 100% 25%,
       linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 25% 100%,
@@ -68,45 +123,31 @@
     border-radius: 50%; background: var(--accent); opacity: .9;
     box-shadow: 0 0 18px var(--accent); pointer-events: none;
   }
-
-  h2 {
-    font-size: .72rem; letter-spacing: .14em; color: var(--accent);
-    margin: 1.4rem .9rem .4rem; font-weight: 600;
-  }
-  .row { padding: .3rem .9rem; }
-  .row .top { display: flex; justify-content: space-between; font-size: .8rem; }
-  .row .name { color: var(--dim); letter-spacing: .05em; }
-  .row .val { font-variant-numeric: tabular-nums; }
-  .row.red .name { color: var(--red); }
-  .row.green .name { color: var(--green); }
-  .row.blue .name { color: var(--blue); }
-
-  /* Tall thumbs: this is driven with a thumb, not a mouse pointer. */
-  input[type=range] { width: 100%; height: 34px; -webkit-appearance: none; background: transparent; }
-  input[type=range]::-webkit-slider-runnable-track { height: 5px; background: var(--line); border-radius: 3px; }
-  input[type=range]::-moz-range-track { height: 5px; background: var(--line); border-radius: 3px; }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 26px; height: 26px; margin-top: -11px;
-    border-radius: 50%; background: var(--text);
-  }
-  input[type=range]::-moz-range-thumb { width: 26px; height: 26px; border: 0; border-radius: 50%; background: var(--text); }
 </style>
 </head>
 <body>
 
 <header>
   <h1>DÉFERLANTE</h1>
+  <div class="tabs">
+    <button data-view="settings" class="on">RÉGLAGES</button>
+    <button data-view="surfaces">SURFACES</button>
+  </div>
   <span id="status">connecting…</span>
 </header>
 
-<div class="actions">
-  <button data-action="glitch">GLITCH</button>
-  <button data-action="randomize">COLORS</button>
-</div>
+<main>
+  <section class="view settings on" id="settings"><div class="grid" id="grid"></div></section>
 
-<div class="presets" id="presets"></div>
-<div class="pads" id="pads"></div>
-<div id="sections"></div>
+  <section class="view surfaces" id="surfaces">
+    <div class="strip">
+      <button data-action="glitch">GLITCH</button>
+      <button data-action="randomize">COLORS</button>
+    </div>
+    <div class="slots" id="slots"></div>
+    <div class="pads" id="pads"></div>
+  </section>
+</main>
 
 <script>
 "use strict";
@@ -140,6 +181,8 @@ function send(payload) {
   if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(payload));
 }
 
+// Kept identical to VJParam.format_value() in GDScript: the phone and the panel
+// must never disagree about what a value reads as.
 function format(p, value) {
   if (p.choices && p.choices.length) return p.choices[Math.min(p.choices.length - 1, Math.round(value))];
   if (p.bidirectional) {
@@ -157,17 +200,21 @@ const TINTS = { "color/red": "red", "color/green": "green", "color/blue": "blue"
 function build(schema) {
   params = new Map();
   rows = new Map();
-  const holder = document.getElementById("sections");
-  holder.innerHTML = "";
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
 
+  let card = null;
   let section = null;
   for (const p of schema.params) {
     params.set(p.slug, p);
     if (p.section !== section) {
       section = p.section;
+      card = document.createElement("div");
+      card.className = "card";
       const h = document.createElement("h2");
       h.textContent = section;
-      holder.appendChild(h);
+      card.appendChild(h);
+      grid.appendChild(card);
     }
 
     const row = document.createElement("div");
@@ -190,7 +237,7 @@ function build(schema) {
     });
 
     row.append(top, slider);
-    holder.appendChild(row);
+    card.appendChild(row);
     rows.set(p.slug, { slider, val, p });
   }
 
@@ -213,7 +260,7 @@ function apply(slug, value) {
 // desk uses, and it needs no second button in a row that is already tight.
 function buildPresets(info) {
   if (!info) return;
-  const holder = document.getElementById("presets");
+  const holder = document.getElementById("slots");
   holder.innerHTML = "";
   const used = new Set(info.used || []);
 
@@ -223,23 +270,22 @@ function buildPresets(info) {
     if (used.has(slot)) button.classList.add("used");
 
     let timer = null, saved = false;
-    const start = () => {
+    button.addEventListener("pointerdown", () => {
       saved = false;
       timer = setTimeout(() => {
         saved = true;
         send({ type: "action", name: `preset:save:${slot}` });
         button.classList.add("used");
+        used.add(slot);
         // A save is silent otherwise, and holding a button with no feedback
         // feels like nothing happened.
         if (navigator.vibrate) navigator.vibrate(40);
       }, 600);
-    };
-    const end = () => {
+    });
+    button.addEventListener("pointerup", () => {
       clearTimeout(timer);
       if (!saved && used.has(slot)) send({ type: "action", name: `preset:recall:${slot}` });
-    };
-    button.addEventListener("pointerdown", start);
-    button.addEventListener("pointerup", end);
+    });
     button.addEventListener("pointercancel", () => clearTimeout(timer));
     button.addEventListener("pointerleave", () => clearTimeout(timer));
     holder.appendChild(button);
@@ -247,7 +293,7 @@ function buildPresets(info) {
 
   const hint = document.createElement("span");
   hint.className = "hint";
-  hint.textContent = "tap to recall · hold to save";
+  hint.textContent = "tap recall · hold save";
   holder.appendChild(hint);
 }
 
@@ -260,11 +306,9 @@ function buildPads(list) {
   holder.innerHTML = "";
   pads.length = 0;
 
-  PAD_DEFAULTS.forEach((defaults, index) => {
+  PAD_DEFAULTS.forEach((defaults) => {
     const pad = document.createElement("div");
     pad.className = "pad";
-    const axes = document.createElement("div");
-    axes.className = "axes";
 
     const pick = (axis) => {
       const select = document.createElement("select");
@@ -282,14 +326,12 @@ function buildPads(list) {
     };
 
     const selectX = pick(0), selectY = pick(1);
-    axes.append(selectX, selectY);
-
     const surface = document.createElement("div");
     surface.className = "surface";
     const dot = document.createElement("div");
     dot.className = "dot";
     surface.appendChild(dot);
-    pad.append(axes, surface);
+    pad.append(selectX, selectY, surface);
     holder.appendChild(pad);
 
     function refresh() {
@@ -320,14 +362,11 @@ function buildPads(list) {
     }
 
     let dragging = false;
-    const start = (e) => { dragging = true; drag(e); };
-    const move = (e) => { if (dragging) drag(e); };
-    const end = () => { dragging = false; };
-    surface.addEventListener("pointerdown", start);
-    surface.addEventListener("pointermove", move);
-    surface.addEventListener("pointerup", end);
-    surface.addEventListener("pointercancel", end);
-    surface.addEventListener("pointerleave", end);
+    surface.addEventListener("pointerdown", (e) => { dragging = true; drag(e); });
+    surface.addEventListener("pointermove", (e) => { if (dragging) drag(e); });
+    for (const done of ["pointerup", "pointercancel", "pointerleave"]) {
+      surface.addEventListener(done, () => { dragging = false; });
+    }
 
     pads.push({ refresh });
     refresh();
@@ -336,6 +375,20 @@ function buildPads(list) {
 
 for (const button of document.querySelectorAll("[data-action]")) {
   button.addEventListener("click", () => send({ type: "action", name: button.dataset.action }));
+}
+
+// Tabs. The pads need the whole screen to be playable and the grid needs it to be
+// readable; neither works squeezed above the other.
+for (const tab of document.querySelectorAll("[data-view]")) {
+  tab.addEventListener("click", () => {
+    for (const other of document.querySelectorAll("[data-view]")) other.classList.remove("on");
+    tab.classList.add("on");
+    for (const view of document.querySelectorAll(".view")) view.classList.remove("on");
+    document.getElementById(tab.dataset.view).classList.add("on");
+    // The pads size themselves to the page, so they only know where the dot goes
+    // once they are actually visible.
+    for (const pad of pads) pad.refresh();
+  });
 }
 
 connect();

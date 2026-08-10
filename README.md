@@ -255,16 +255,27 @@ panel, on every connected phone, and in any console reading back over the API.
 Godot serves a control page on port **7331**. Open `http://<machine-ip>:7331` from a
 phone or tablet on the same network — the address is printed at startup.
 
-It gives you, on top of every setting as a touch slider:
+It is built for **landscape**, and splits into two pages.
 
-- **Two XY pads** whose axes are assignable from dropdowns, each entry naming its
-  section as well as the setting (`X · SPOTLIGHT WIDTH`) — three sections have a
-  `WIDTH`, and on a pad you pick blind from a list rather than reading a labelled
-  row. Which pair is worth playing with changes from one track to the next, so they
-  are not hard-wired; they default to chaos × speed and spotlight radius × pulse.
-- **GLITCH** and **COLORS** buttons.
-- **Live mirroring**: a value changed on the keyboard, over OSC or by the auto-pilot
-  moves on the phone too, and vice versa.
+**RÉGLAGES** — every setting as a touch slider, with each section a card. The cards
+flow into as many columns as the screen can take: one on a phone held upright, three
+or four across a tablet in landscape. Nothing is nested and nothing scrolls sideways.
+
+**SURFACES** — the things you play rather than set, given the whole screen:
+
+- **Two XY pads**, now full height instead of squeezed under the sliders. Their axes
+  are assignable from dropdowns, each entry naming its section as well as the setting
+  (`X · SPOTLIGHT WIDTH`) — three sections have a `WIDTH`, and on a pad you pick
+  blind from a list rather than reading a labelled row. They default to chaos × speed
+  and spotlight radius × pulse.
+- **Nine preset slots**: tap to recall, hold to save.
+- **GLITCH** and **COLORS**.
+
+Splitting them is the point: the pads need the whole screen to be playable and the
+grid needs it to be readable, and neither works squeezed above the other.
+
+**Live mirroring** applies across both: a value changed on the keyboard, over OSC, by
+the auto-pilot or from the gamepad moves on the phone too, and vice versa.
 
 The page **builds itself from a schema** Godot sends on connect. It holds no list of
 settings of its own, so adding one in `_build_params()` makes it appear on the phone
