@@ -463,6 +463,23 @@ func _on_web_action(name: String):
 ## Same entry point as everything else: a PUT ends up in `VJParam.set_value()`,
 ## so a value set over HTTP is clamped, snapped and mirrored to the panel and to
 ## every connected phone exactly like one set over OSC.
+## Which preset slot a key means, if any.
+##
+## Read from the *physical* key rather than the character it produces. On AZERTY
+## the top row is & é " ' ( - è _ ç, and only é, è and ç fell through to a digit —
+## Godot maps the ASCII ones to their punctuation keycodes, so six slots out of
+## nine were unreachable. The physical code is the same key wherever the layout
+## puts it, which is also what any game means by "the 1 key".
+func _preset_slot(event: InputEventKey) -> int:
+	if event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_9:
+		return event.physical_keycode - KEY_0
+	# The numeric keypad is laid out the same everywhere, so it can use its own
+	# keycodes — and it is the obvious surface for stabbing presets anyway.
+	if event.keycode >= KEY_KP_1 and event.keycode <= KEY_KP_9:
+		return event.keycode - KEY_KP_0
+	return 0
+
+
 func _handle_api(method: String, path: String, body: String) -> Dictionary:
 	if path == "/openapi.json":
 		return {"code": 200, "body": _openapi()}
@@ -618,8 +635,8 @@ func _unhandled_input(event: InputEvent):
 		return
 	# Number keys: recall a preset, or save into it with Ctrl held. Ctrl rather
 	# than Shift because Shift is already the fine-adjust modifier on the arrows.
-	if event.keycode >= KEY_1 and event.keycode <= KEY_9:
-		var slot: int = event.keycode - KEY_0
+	var slot := _preset_slot(event)
+	if slot > 0:
 		if event.ctrl_pressed:
 			presets.save_slot(slot)
 		else:

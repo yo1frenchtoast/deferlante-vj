@@ -120,7 +120,7 @@ Nine slots hold a snapshot of every setting, saved to disk and recalled live.
 
 | Where | Recall | Save |
 | --- | --- | --- |
-| Keyboard | `1` – `9` | `Ctrl` + `1` – `9` |
+| Keyboard | `1` – `9`, or the numeric keypad | `Ctrl` + the same |
 | Phone | tap a slot | hold it |
 | OSC | `/deferlante/preset/recall` *(int)* | `/deferlante/preset/save` *(int)* |
 | API | `POST /api/presets/{n}/recall` | `POST /api/presets/{n}/save` |
@@ -135,6 +135,11 @@ nobody sees a cut. Set it to **0** to snap, which is what you want for a stab.
 
 The curve is a smoothstep, not linear — a linear crossfade starts and stops abruptly,
 and on a slow move that beginning is exactly what gives it away.
+
+The number keys are read by **physical position**, not by the character they type,
+so the top row works the same on AZERTY, QWERTY or Dvorak. (Read as characters, an
+AZERTY top row gives `& é " ' ( - è _ ç`, and only the three non-ASCII ones happened
+to fall through to a digit — six slots out of nine were unreachable.)
 
 ### What is and is not saved
 
