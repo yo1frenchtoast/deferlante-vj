@@ -8,6 +8,8 @@
 [ext_resource type="Script" path="res://scripts/gamepad.gd" id="9_pad"]
 [ext_resource type="Script" path="res://scripts/presets.gd" id="10_presets"]
 [ext_resource type="Script" path="res://scripts/audio_reactor.gd" id="11_audio"]
+[ext_resource type="Script" path="res://scripts/rest_api.gd" id="12_api"]
+[ext_resource type="Script" path="res://scripts/autopilot.gd" id="13_auto"]
 [ext_resource type="Script" path="res://scripts/control_panel.gd" id="5_panel"]
 [ext_resource type="Script" path="res://scripts/kaleidoscope.gd" id="6_kaleido"]
 [ext_resource type="Shader" path="res://shaders/kaleidoscope.gdshader" id="7_shader"]
@@ -51,6 +53,12 @@ script = ExtResource("8_web")
 
 [node name="Audio" type="Node" parent="VJController"]
 script = ExtResource("11_audio")
+
+[node name="RestApi" type="Node" parent="VJController"]
+script = ExtResource("12_api")
+
+[node name="Autopilot" type="Node" parent="VJController"]
+script = ExtResource("13_auto")
 
 [node name="Presets" type="Node" parent="VJController"]
 script = ExtResource("10_presets")
