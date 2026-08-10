@@ -11,7 +11,7 @@ extends Node2D
 ## It is chiefly the flattening that makes this read as a sphere rather than as
 ## circles of assorted sizes.
 
-@export var circle_count: int = 40:
+@export var circle_count: int = 14:
 	set(value):
 		circle_count = maxi(0, value)
 		if is_inside_tree():

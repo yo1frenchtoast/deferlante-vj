@@ -8,7 +8,7 @@ extends Node2D
 ## navigation and the OSC address in one go.
 
 @export var laser_scene: PackedScene = preload("res://scenes/laser.tscn")
-@export var laser_count: int = 5
+@export var laser_count: int = 3
 ## Where the D key ducks the panel to: readable up close, all but gone on a wall.
 @export_range(0.05, 1.0, 0.05) var discreet_brightness: float = 0.15
 ## Glow off by default: with a haze machine the beam is diffused physically, and
@@ -165,11 +165,11 @@ func _build_params():
 	_section("section.spot")
 	# Settings that only write a property are declared, not coded.
 	_prop("spot/radius", 20, 600, 5, 200.0, circle, "base_radius")
-	_prop("spot/pulse", 0, 300, 5, 50.0, circle, "fluctuation_range")
+	_prop("spot/pulse", 0, 300, 5, 25.0, circle, "fluctuation_range")
 	_fn("spot/width", 1, 24, 0.5, 3.0, func(v): v_spot_width = v; circle.set_line_width(v))
-	_prop("spot/speed", 0, 2, 0.05, 1.0, circle, "seek_speed")
-	_prop("spot/hold", 0, 3, 0.05, 0.9, circle, "hold_time")
-	_prop("spot/shake", 0, 3, 0.05, 1.0, circle, "wobble_amount")
+	_prop("spot/speed", 0, 2, 0.05, 0.5, circle, "seek_speed")
+	_prop("spot/hold", 0, 3, 0.05, 1.8, circle, "hold_time")
+	_prop("spot/shake", 0, 3, 0.05, 0.4, circle, "wobble_amount")
 	_prop("spot/frequency", 0, 20, 0.5, 6.0, circle, "wobble_speed")
 	_prop("spot/spread", 0, 1, 0.02, 0.35, circle, "spread_amount")
 	_prop("spot/glitch", 0, 0.05, 0.001, 0.0, circle, "glitch_chance")
@@ -186,7 +186,7 @@ func _build_params():
 	_fn("audio/sphere", 0, 3, 0.05, 1.0, func(v): _react_sphere = v)
 
 	_section("section.sphere")
-	_prop("sphere/count", 0, 80, 1, 40.0, sphere, "circle_count")
+	_prop("sphere/count", 0, 80, 1, 14.0, sphere, "circle_count")
 	_prop("sphere/size", 0.03, 0.8, 0.01, 0.13, sphere, "circle_size")
 	_prop("sphere/radius", 100, 800, 10, 400.0, sphere, "sphere_radius")
 	_prop("sphere/spin", -1, 1, 0.05, 0.6, sphere, "spin", true)

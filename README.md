@@ -91,7 +91,7 @@ Labels below are the English ones.
 ### Lasers
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `COUNT` | 0 – 40 | Number of strokes. Added and removed live. |
+| `COUNT` | 0 – 40 | Number of strokes. Added and removed live. Starts at 3. |
 | `WIDTH` | 1 – 24 | Stroke width. |
 | `LENGTH` | 0.1 – 2 | Scales the length (each stroke keeps its own). |
 | `SPIN` | -1 – 1 | ← leftwards, → rightwards. |
@@ -122,7 +122,7 @@ Labels below are the English ones.
 ### Sphere
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `CIRCLES` | 0 – 80 | Number of circles. 0 switches the effect off. |
+| `CIRCLES` | 0 – 80 | Number of circles. 0 switches the effect off. Starts at 14. |
 | `SIZE` | 0.03 – 0.8 | Size of one circle, in radians on the sphere. |
 | `RADIUS` | 100 – 800 | Sphere radius on screen. |
 | `SPIN` | -1 – 1 | ← leftwards, → rightwards. |
@@ -735,6 +735,16 @@ sphere, busier but stranger.
 
 Measured cost: **+0.32 ms** at 40 circles (the default), **+0.77 ms** at 80. Circles
 past the horizon are neither computed nor drawn.
+
+## A calm starting point
+
+The defaults are deliberately quiet: three lasers, fourteen sphere circles, and a
+spotlight that sweeps at half speed with long pauses and only a slight tremor —
+about five stops in twenty seconds where it used to make twenty in twenty-five.
+
+That is a setting to build up from and a setting you can debug in: with a busy scene
+it is hard to tell which effect a change belongs to, and the panel itself is hard to
+read over the top of it. Everything is one slider away from where it was.
 
 ## What starts switched off
 

@@ -258,7 +258,7 @@
           "ui": "slider",
           "min": 0.0,
           "max": 40.0,
-          "default": 5.0,
+          "default": 3.0,
           "mappingIndex": 0
         }
       }
@@ -356,7 +356,7 @@
           "ui": "slider",
           "min": 0.0,
           "max": 300.0,
-          "default": 50.0,
+          "default": 25.0,
           "mappingIndex": 0
         }
       }
@@ -384,7 +384,7 @@
           "ui": "slider",
           "min": 0.0,
           "max": 2.0,
-          "default": 1.0,
+          "default": 0.5,
           "mappingIndex": 0
         }
       }
@@ -398,7 +398,7 @@
           "ui": "slider",
           "min": 0.0,
           "max": 3.0,
-          "default": 0.9,
+          "default": 1.8,
           "mappingIndex": 0
         }
       }
@@ -412,7 +412,7 @@
           "ui": "slider",
           "min": 0.0,
           "max": 3.0,
-          "default": 1.0,
+          "default": 0.4,
           "mappingIndex": 0
         }
       }
@@ -566,7 +566,7 @@
           "ui": "slider",
           "min": 0.0,
           "max": 80.0,
-          "default": 40.0,
+          "default": 14.0,
           "mappingIndex": 0
         }
       }
