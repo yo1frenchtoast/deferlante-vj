@@ -124,7 +124,7 @@ the only surface that can **take the spotlight off auto-pilot and aim it by hand
 | **LT / RT** | Shrink / grow the pool. Analogue — a light squeeze creeps, a full pull sweeps. |
 | **A** | Fire a glitch |
 | **B** | Redraw colours (same as `R`) |
-| **X** | Mirror on / off, back to the amount it had |
+| **X** | Mirror fully on / off |
 | **Y** | Glow on / off |
 | **LB** *(hold)* | Freeze — everything stops while held |
 | **RB** *(hold)* | Boost — 2.5× speed while held |

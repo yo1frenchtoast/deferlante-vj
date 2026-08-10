@@ -42,8 +42,6 @@ var _pad: int = -1
 var _aiming: bool = false
 var _speed_before_hold: float = 0.0
 var _holding_speed: bool = false
-## Last non-zero mirror amount, so X toggles back to what it was rather than to 1.
-var _mirror_memory: float = 0.6
 
 
 func _ready():
@@ -190,7 +188,9 @@ func _unhandled_input(event: InputEvent):
 		JOY_BUTTON_B:
 			randomize_requested.emit()
 		JOY_BUTTON_X:
-			_toggle_mirror()
+			# Full on, like Y does for the glow. A stab button wants one
+			# predictable result, not whatever the slider happened to be at.
+			_write("mirror/effect", 0.0 if _value_of("mirror/effect") > 0.0 else 1.0)
 		JOY_BUTTON_Y:
 			# Glow is a room decision, so the pad only flips it on and off rather
 			# than sweeping it: 0 or a usable amount, nothing in between.
@@ -209,11 +209,3 @@ func _unhandled_input(event: InputEvent):
 			# Hand the spotlight back without waiting to let go of the stick.
 			aim_released.emit()
 
-
-func _toggle_mirror():
-	var current := _value_of("mirror/effect")
-	if current > 0.0:
-		_mirror_memory = current
-		_write("mirror/effect", 0.0)
-	else:
-		_write("mirror/effect", _mirror_memory)
