@@ -83,6 +83,9 @@ func _ready():
 	_refresh_status()
 	lang.changed.connect(_refresh_status)
 
+	# A deliberate click hands the panel back, exactly like a keypress does.
+	panel.mouse_reclaimed.connect(func(): panel.set_external_control(false, discreet_brightness))
+
 	presets.all_params = func(): return params
 	presets.slots_changed.connect(_send_schema)
 

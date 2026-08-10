@@ -39,6 +39,12 @@ var brightness: float = 1.0
 ## An external surface — phone, pad, console — is driving. The panel ducks out of
 ## the way *and* stops taking the mouse: dimming alone would hide the sliders
 ## without making them any harder to nudge by accident, which is the actual risk.
+##
+## Moving the mouse does not end it, but clicking does. A brush of the trackpad is
+## not a decision; a click is. The click that ends it is swallowed rather than
+## passed on, so the gesture that takes the panel back cannot also move a slider —
+## the same way clicking an unfocused window activates it without pressing what
+## happens to be under the pointer.
 var external_control: bool = false
 var _restore_brightness: float = 1.0
 
@@ -304,12 +310,19 @@ func _fade_out():
 	_fade.tween_callback(func(): rows.visible = false)
 
 
+signal mouse_reclaimed
+
+
 func _input(event: InputEvent):
-	# The slightest gesture calls the panel back; it is silence that hides it.
-	# While an external surface has the wheel the mouse is ignored entirely,
-	# which is the point — only the keyboard takes it back.
-	if event is InputEventMouse and external_control:
+	if external_control and event is InputEventMouse:
+		# A click asks for the panel back; motion does not.
+		if event is InputEventMouseButton and event.pressed:
+			mouse_reclaimed.emit()
+			wake()
+			get_viewport().set_input_as_handled()
 		return
+
+	# The slightest gesture calls the panel back; it is silence that hides it.
 	if event is InputEventKey or event is InputEventMouse:
 		if rows.visible and _fade == null:
 			_idle = 0.0

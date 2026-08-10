@@ -147,10 +147,15 @@ keypress takes the wheel back and restores the brightness you had chosen, not a
 blanket 1: if you were working at 0.5, 0.5 is what returns.
 
 While an external surface has control the panel also **stops accepting the mouse**.
-That is the half that matters. Dimming alone hides the sliders without making them
-any harder to nudge by accident, and a stray click on a projected panel is exactly
-the accident worth designing out. Moving the mouse does not take control back —
-only the keyboard does, which is the thing you were about to do anyway.
+That is the half that matters: dimming alone hides the sliders without making them
+any harder to nudge by accident, and a stray brush on a projected panel is exactly
+the accident worth designing out.
+
+Moving the mouse does not end it — but **clicking does**, along with any keypress. A
+brush of the trackpad is not a decision; a click is. That first click is swallowed
+rather than passed on, so the gesture that takes the panel back cannot also move a
+slider, the same way clicking an unfocused window activates it without pressing
+whatever sits under the pointer.
 
 The `PANEL` setting keeps reading the brightness *you* chose while this is going on:
 the auto-dim is a temporary override, not a change to your preference.
