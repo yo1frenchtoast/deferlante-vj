@@ -337,11 +337,16 @@ func _set_color_mode(value: float):
 
 
 ## Touching a colour switches to manual: without that, moving RED while in random
-## mode would do nothing visible and the slider would look broken. The start-up
-## guard keeps the initial values from flipping the mode on launch.
+## mode would do nothing visible and the slider would look broken.
+##
+## It has to stay quiet for anything that sets several values at once, though. On
+## launch and on a preset recall the colour channels land alongside the mode, and
+## they would drag a preset saved in random mode straight back into manual.
 func _set_channel(value: float, index: int):
 	palette.set_channel(index, value)
-	if not _initializing and palette.mode != Palette.MANUAL and _mode_param:
+	if _initializing or presets.applying:
+		return
+	if palette.mode != Palette.MANUAL and _mode_param:
 		_mode_param.set_value(Palette.MANUAL)
 
 

@@ -26,6 +26,11 @@ const EXCLUDED := ["global/language", "global/panel"]
 ## Set by the controller: called as () -> Array[VJParam].
 var all_params: Callable
 
+## True while a slot is being applied. Rules that react to one setting changing —
+## "touching a colour means you want manual" — must stay quiet during a recall,
+## or a preset's own values fight each other as they land.
+var applying: bool = false
+
 var _slots: Dictionary = {}
 var _from: Dictionary = {}
 var _to: Dictionary = {}
@@ -122,9 +127,11 @@ func _process(delta: float):
 func _apply(t: float):
 	if not all_params.is_valid():
 		return
+	applying = true
 	for p in all_params.call():
 		if _to.has(p.slug):
 			p.set_value(lerpf(_from[p.slug], _to[p.slug], t))
+	applying = false
 
 
 # --------------------------------------------------------------------------
