@@ -27,6 +27,10 @@ var _value_labels: Array[Label] = []
 var _section_labels: Array[Label] = []
 var _section_keys: PackedStringArray = []
 var _help_labels: Array[Label] = []
+## Where to reach the machine, kept apart from the shortcut lines because it is
+## looked up rather than remembered — it is what gets typed into a phone.
+var _status: Label
+var _status_text: String = ""
 
 var _idle: float = 0.0
 var _fade: Tween
@@ -36,7 +40,7 @@ const FPS_REFRESH := 0.25
 var _fps_elapsed: float = 0.0
 var _fps_frames: int = 0
 
-const HELP_KEYS := ["help.params", "help.keys"]
+const HELP_KEYS := ["help.params", "help.actions", "help.keys", "help.pad"]
 
 ## Section header colour: warm, so it stands apart from the white values without
 ## pulling more attention than the settings themselves.
@@ -47,7 +51,7 @@ const SECTION_COLOR := Color(1.0, 0.72, 0.35)
 # building the panel, measuring it, then rebuilding it a frame later.
 const ROW_HEIGHT := 27
 const HEADER_HEIGHT := 30
-const HELP_HEIGHT := 40
+const HELP_HEIGHT := 90
 
 ## Pixels kept clear at the top and bottom of the screen.
 @export var vertical_margin: float = 48.0
@@ -188,6 +192,11 @@ func _build_row(p: VJParam, index: int):
 
 
 func _build_help():
+	_status = Label.new()
+	_status.add_theme_font_size_override("font_size", 13)
+	_status.add_theme_color_override("font_color", SECTION_COLOR)
+	rows.add_child(_status)
+
 	for key in HELP_KEYS:
 		var label := Label.new()
 		label.text = _lang.text(key)
@@ -195,6 +204,14 @@ func _build_help():
 		label.modulate = Color(1, 1, 1, 0.55)
 		rows.add_child(label)
 		_help_labels.append(label)
+
+
+## Set by the controller once the servers are up: the address to type into a phone,
+## and whether a pad is plugged in.
+func set_status(text: String):
+	_status_text = text
+	if _status:
+		_status.text = text
 
 
 ## Rewrites every piece of text in place when the language changes. Cheaper and

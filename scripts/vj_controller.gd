@@ -77,9 +77,13 @@ func _ready():
 	# Switching language relabels the page too, so it is rebuilt from scratch.
 	lang.changed.connect(_send_schema)
 
+	_refresh_status()
+	lang.changed.connect(_refresh_status)
+
 	presets.all_params = func(): return params
 	presets.slots_changed.connect(_send_schema)
 
+	pad.connection_changed.connect(_refresh_status)
 	pad.find_param = param
 	pad.aim.connect(circle.aim_by)
 	pad.aim_released.connect(circle.release_aim)
@@ -199,6 +203,23 @@ func _append(p: VJParam):
 
 ## The cursor the operator can set: locked to the stick, or free to go hunting
 ## again after the hand-back delay.
+## The line under the panel: where to reach this machine, and what is plugged in.
+## It is looked up rather than remembered, so it belongs on screen and not only in
+## the console, where it scrolls away before anyone needs it.
+func _refresh_status():
+	var bits: Array = []
+	var url: String = web.address()
+	if url != "":
+		bits.append("%s  %s" % [lang.text("status.web"), url])
+	if osc.is_listening():
+		bits.append("OSC %d" % osc.port)
+	if pad.is_connected_pad():
+		bits.append("%s  %s" % [lang.text("status.pad"), pad.pad_name()])
+	else:
+		bits.append(lang.text("status.nopad"))
+	panel.set_status("   ·   ".join(bits))
+
+
 func _set_manual_lock(value: float):
 	circle.manual_lock = value >= 0.5
 

@@ -21,6 +21,8 @@ signal aim_released
 signal glitch_requested
 signal randomize_requested
 signal panel_toggled
+## A pad was plugged in or pulled out: the status line follows.
+signal connection_changed
 
 @export var enabled: bool = true
 ## Below this the stick counts as centred. Worn sticks rest off-zero, and a
@@ -61,10 +63,15 @@ func _refresh_pad():
 	_pad = pads[0] if pads.size() > 0 else -1
 	if _pad >= 0:
 		print("Gamepad: %s connected" % Input.get_joy_name(_pad))
+	connection_changed.emit()
 
 
 func is_connected_pad() -> bool:
 	return _pad >= 0
+
+
+func pad_name() -> String:
+	return Input.get_joy_name(_pad) if _pad >= 0 else ""
 
 
 func _process(delta: float):

@@ -41,6 +41,8 @@ back on any key press or mouse move. `H` pins them on screen while you dial thin
 | `Shift` + `←` `→` | Fine adjust, one step at a time |
 | `Space` | Fire a glitch immediately |
 | `R` | Redraw every colour and trajectory |
+| `1` – `9` | Recall a preset (also on the numeric keypad) |
+| `Ctrl` + `1` – `9` | Store the current look into that slot |
 | `H` | Pin / unpin the panel (stops it fading) |
 | `F3` | FPS readout |
 | `F11` | Fullscreen |
@@ -48,6 +50,11 @@ back on any key press or mouse move. `H` pins them on screen while you dial thin
 
 The mouse works on the sliders too, but the keyboard is safer live: no aiming in
 the dark.
+
+Under the sliders sits a status line — **the web address to type into a phone**, the
+OSC port, and which pad is plugged in — followed by the shortcuts. The address is
+something you look up rather than remember, so it belongs on screen and not only in
+the console, where it scrolls away long before anyone needs it.
 
 ## Settings
 

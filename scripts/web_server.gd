@@ -63,6 +63,16 @@ func is_listening() -> bool:
 	return _listening
 
 
+## The address to type into a phone, or empty if nothing is being served.
+func address() -> String:
+	if not _listening:
+		return ""
+	for a in IP.get_local_addresses():
+		if a.begins_with("192.") or a.begins_with("10.") or a.begins_with("172."):
+			return "http://%s:%d" % [a, http_port]
+	return "http://127.0.0.1:%d" % http_port
+
+
 func _load_page(path: String) -> PackedByteArray:
 	if not FileAccess.file_exists(path):
 		# In an exported build this means *.html was not included in the export

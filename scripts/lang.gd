@@ -75,13 +75,24 @@ const TEXTS := {
 	"mode.manual_lock": ["MANETTE", "STICK"],
 
 	"help.params": [
-		"↑↓ paramètre    ←→ régler (Maj : précis)    ESPACE glitch    R couleurs",
-		"↑↓ parameter    ←→ adjust (Shift: fine)    SPACE glitch    R colors",
+		"↑↓ paramètre    ←→ régler    Maj+←→ précis",
+		"↑↓ parameter    ←→ adjust    Shift+←→ fine",
+	],
+	"help.actions": [
+		"ESPACE glitch    R couleurs    1-9 preset    Ctrl+1-9 enregistrer",
+		"SPACE glitch    R colours    1-9 preset    Ctrl+1-9 store",
 	],
 	"help.keys": [
 		"H figer l'UI    F3 fps    F11 plein écran    ÉCHAP quitter",
 		"H pin UI    F3 fps    F11 fullscreen    ESC quit",
 	],
+	"help.pad": [
+		"manette : stick gauche vise    gâchettes taille    A glitch    LB/RB gel/boost",
+		"pad: left stick aims    triggers size    A glitch    LB/RB freeze/boost",
+	],
+	"status.web": ["surface web", "web surface"],
+	"status.pad": ["manette", "pad"],
+	"status.nopad": ["aucune manette", "no pad"],
 	"fps.screen": ["écran %.0f Hz", "screen %.0f Hz"],
 }
 
