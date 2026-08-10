@@ -17,8 +17,6 @@ config/icon="res://icon.svg"
 
 [audio]
 
-; Godot captures an *input*, and the music is an *output*: what we want is the
-; monitor of the main sink. Without this switch there is no capture at all.
 driver/enable_input=true
 
 [display]

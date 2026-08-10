@@ -41,6 +41,7 @@ var v_laser_width: float = 5.0
 var v_spot_width: float = 3.0
 var v_sphere_width: float = 3.0
 var _audio_was_active: bool = false
+var _status_tick: float = 0.0
 var v_length: float = 1.0
 var v_spin: float = 1.0
 var v_align: float = 0.0
@@ -252,6 +253,9 @@ func _refresh_status():
 		bits.append("OSC %d" % osc.port)
 	if audio.capturing and _react > 0.0:
 		bits.append("%s %.0f%%" % [lang.text("status.audio"), _react * 100.0])
+	var meter: String = _audio_meter()
+	if meter != "":
+		bits.append(meter)
 	if pad.is_connected_pad():
 		bits.append("%s  %s" % [lang.text("status.pad"), pad.pad_name()])
 	else:
@@ -404,6 +408,22 @@ func _set_reactivity(value: float):
 	_react = value
 
 
+## A live bar in the status line. Without it, "the visuals are not moving" could be
+## silence, wrong routing, a stale process or a slider at zero, and nothing on
+## screen told them apart.
+func _audio_meter() -> String:
+	var label: String = lang.text("status.audio")
+	if not audio.capturing:
+		return "%s %s" % [label, lang.text("status.deaf")]
+	var glyphs := ["▁", "▂", "▃", "▄", "▅", "█"]
+	var bars := ""
+	for value in [audio.bass, audio.mid, audio.treble]:
+		bars += glyphs[clampi(int(round(value * 5.0)), 0, 5)]
+	# The amount is shown next to the bars: bars moving while this reads 0 % is
+	# the difference between "it cannot hear you" and "you have not turned it up".
+	return "%s %s %.0f%%" % [label, bars, _react * 100.0]
+
+
 func _apply_audio():
 	if _react <= 0.0 or not audio.capturing:
 		if _audio_was_active:
@@ -443,6 +463,14 @@ func _interval() -> float:
 
 func _process(delta: float):
 	_apply_audio()
+
+	# The meter has to be refreshed on a clock: the status line is otherwise only
+	# rebuilt on events, and levels are not events.
+	_status_tick += delta
+	if _status_tick > 0.2:
+		_status_tick = 0.0
+		if audio.capturing:
+			_refresh_status()
 
 	# The fan turns and scrolls once per frame, and every stroke reads the same
 	# two numbers — that is what keeps them parallel and evenly spaced.

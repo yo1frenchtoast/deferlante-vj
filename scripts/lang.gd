@@ -105,6 +105,8 @@ const TEXTS := {
 	"status.web": ["surface web", "web surface"],
 	"status.pad": ["manette", "pad"],
 	"status.audio": ["son", "audio"],
+	"status.listening": ["à l'écoute", "listening"],
+	"status.deaf": ["pas de capture", "no capture"],
 	"status.nopad": ["aucune manette", "no pad"],
 	"fps.screen": ["écran %.0f Hz", "screen %.0f Hz"],
 }
