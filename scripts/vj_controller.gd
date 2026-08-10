@@ -39,6 +39,12 @@ var v_chaos: float = 0.0
 var v_laser_width: float = 5.0
 var v_length: float = 1.0
 var v_spin: float = 1.0
+var v_align: float = 0.0
+## The fan's shared angle and its scrolling phase. Kept here rather than in each
+## stroke so they agree even when a stroke is spawned mid-set.
+var _align_angle: float = 0.0
+var _scroll: float = 0.0
+var _scroll_phase: float = 0.0
 
 var _mode_param: VJParam
 ## True while start-up values are being applied: without this guard, setting the
@@ -143,6 +149,8 @@ func _build_params():
 	_fn("lasers/width", 1, 24, 0.5, 5.0, _set_laser_width)
 	_fn("lasers/length", 0.1, 2, 0.05, 1.0, _set_length)
 	_fn("lasers/spin", -1, 1, 0.05, 1.0, _set_spin, true)
+	_fn("lasers/parallel", 0, 1, 0.02, 0.0, _set_align)
+	_fn("lasers/scroll", -1, 1, 0.02, 0.0, func(v): _scroll = v, true)
 
 	_section("section.spot")
 	# Settings that only write a property are declared, not coded.
@@ -285,6 +293,15 @@ func _set_laser_count(value: float):
 		lasers.pop_back().queue_free()
 	if lasers.size() < target:
 		_spawn_lasers(target - lasers.size())
+	_reslot()
+
+
+## Spreads the strokes evenly across the fan. Without this the scanlines would
+## inherit the random spacing they had as a scatter, which is most of what makes
+## them read as scanlines rather than as parallel lines that happen to coincide.
+func _reslot():
+	for i in range(lasers.size()):
+		lasers[i].slot = float(i) / maxf(1.0, float(lasers.size()))
 
 
 func _set_laser_width(value: float):
@@ -303,6 +320,12 @@ func _set_spin(value: float):
 	v_spin = value
 	for l in lasers:
 		l.spin_scale = value
+
+
+func _set_align(value: float):
+	v_align = value
+	for l in lasers:
+		l.align = value
 
 
 func _set_saturation(value: float):
@@ -338,6 +361,7 @@ func _spawn_lasers(count: int):
 		laser.width = v_laser_width
 		laser.use_palette(palette)
 		laser.set_length_scale(v_length)
+		laser.align = v_align
 		lasers.append(laser)
 
 
@@ -357,6 +381,16 @@ func _interval() -> float:
 
 
 func _process(delta: float):
+	# The fan turns and scrolls once per frame, and every stroke reads the same
+	# two numbers — that is what keeps them parallel and evenly spaced.
+	if v_align > 0.0:
+		var step := delta * v_speed
+		_align_angle += v_spin * step * 0.4
+		_scroll_phase += _scroll * step * 0.25
+		for l in lasers:
+			l.align_angle = _align_angle
+			l.scroll_phase = _scroll_phase
+
 	if _randomizer <= 0.0:
 		return
 	_next_roll -= delta

@@ -95,6 +95,8 @@ Labels below are the English ones.
 | `WIDTH` | 1 – 24 | Stroke width. |
 | `LENGTH` | 0.1 – 2 | Scales the length (each stroke keeps its own). |
 | `SPIN` | -1 – 1 | ← leftwards, → rightwards. |
+| `PARALLEL` | 0 – 1 | 0 a scatter, 1 an evenly spaced fan. See below. |
+| `SCROLL` | -1 – 1 | Walks that fan sideways. ← one way, → the other. |
 
 ### Spotlight
 | Setting | Range | Effect |
@@ -570,6 +572,30 @@ sliders would end up multiplied across the screen too.
 
 Like the glow, at 0 the pass is genuinely switched off rather than left running as
 an identity transform.
+
+## Scanlines
+
+`PARALLEL` does not tune the scatter, it crossfades between two different
+behaviours. At **0** every stroke drifts and spins on its own, bouncing off the
+edges — the original look. At **1** they all take a shared angle and an evenly
+spaced place in a fan. In between the two are simply mixed, so it can be opened and
+closed like any other effect.
+
+`SCROLL` then walks that fan sideways, perpendicular to the shared angle, wrapping
+around. That is what turns a set of parallel lines into scanlines: they have to be
+*moving through* the frame, not just pointing the same way.
+
+Two details do most of the work:
+
+- **The spacing is reassigned whenever the count changes**, so the strokes are
+  always evenly spread rather than keeping the random gaps they had as a scatter.
+  Without that they read as lines that happen to be parallel, not as a raster.
+- **The wrap happens off screen.** The fan spans the screen diagonal, so a stroke
+  has completely left the frame before it reappears on the other side, whatever
+  angle it is at — measured at 1101 px of travel against a 1101 px half-diagonal.
+
+`SPIN` still turns the whole fan while it scrolls, which gives a raster slowly
+rotating through the room.
 
 ## Chaos
 

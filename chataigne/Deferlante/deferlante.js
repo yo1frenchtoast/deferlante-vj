@@ -85,6 +85,14 @@ function lasersSpin(value) {
 	local.send("/deferlante/lasers/spin", value);
 }
 
+function lasersParallel(value) {
+	local.send("/deferlante/lasers/parallel", value);
+}
+
+function lasersScroll(value) {
+	local.send("/deferlante/lasers/scroll", value);
+}
+
 function spotRadius(value) {
 	local.send("/deferlante/spot/radius", value);
 }

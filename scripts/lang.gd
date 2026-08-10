@@ -40,6 +40,8 @@ const LABELS := {
 	"lasers/width": ["ÉPAISSEUR", "WIDTH"],
 	"lasers/length": ["LONGUEUR", "LENGTH"],
 	"lasers/spin": ["ROTATION", "SPIN"],
+	"lasers/parallel": ["PARALLÈLES", "PARALLEL"],
+	"lasers/scroll": ["DÉFILEMENT", "SCROLL"],
 
 	"spot/radius": ["RAYON", "RADIUS"],
 	"spot/pulse": ["PULSATION", "PULSE"],

@@ -305,6 +305,34 @@
         }
       }
     },
+    "Lasers Parallel": {
+      "menu": "Lasers",
+      "callback": "lasersParallel",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Lasers Scroll": {
+      "menu": "Lasers",
+      "callback": "lasersScroll",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": -1.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Spotlight Radius": {
       "menu": "Spotlight",
       "callback": "spotRadius",
