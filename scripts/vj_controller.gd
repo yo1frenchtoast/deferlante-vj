@@ -9,6 +9,8 @@ extends Node2D
 
 @export var laser_scene: PackedScene = preload("res://scenes/laser.tscn")
 @export var laser_count: int = 5
+## Where the D key ducks the panel to: readable up close, all but gone on a wall.
+@export_range(0.05, 1.0, 0.05) var discreet_brightness: float = 0.15
 ## Glow off by default: with a haze machine the beam is diffused physically, and
 ## the software glow only softens the edges.
 @export_range(0.0, 2.0, 0.01) var default_glow: float = 0.0
@@ -107,6 +109,7 @@ func _build_params():
 	_fn("global/randomizer", 0, 1, 0.02, 0.0, _set_randomizer).randomizable = false
 	_fn("global/glow", 0, 2, 0.05, default_glow, _set_glow)
 	_prop("global/recall", 0, 10, 0.1, 2.0, presets, "recall_time")
+	_fn("global/panel", 0.05, 1, 0.05, 1.0, panel.set_brightness)
 	var language := _fn("global/language", 0, 1, 1, 0.0, _set_language)
 	language.choices = PackedStringArray(Lang.LANGUAGES)
 	# Language names stay in their own tongue, so they are not Lang keys.
@@ -160,7 +163,8 @@ func _build_params():
 
 	# Out of the auto-pilot's reach: tempo, glow and colour are decisions — the
 	# room, the track — rather than variations to be subjected to.
-	for slug in ["global/speed", "global/glow", "global/recall", "color/saturation",
+	for slug in ["global/speed", "global/glow", "global/recall", "global/panel",
+			"color/saturation",
 			"color/mode", "color/red", "color/green", "color/blue"]:
 		param(slug).randomizable = false
 
@@ -665,6 +669,16 @@ func _unhandled_input(event: InputEvent):
 		return
 
 	match event.keycode:
+		KEY_D:
+			# One key to duck the panel out of sight and back. A slider is fine for
+			# choosing how discreet, but not for getting there quickly.
+			#
+			# Comparing against the midpoint rather than against the dim level
+			# itself: the setting is snapped to its step, so the value never comes
+			# back bit-identical and `value > dim` stayed true forever.
+			var p := param("global/panel")
+			var midpoint := (discreet_brightness + 1.0) * 0.5
+			p.set_value(discreet_brightness if p.value > midpoint else 1.0)
 		KEY_SPACE:
 			circle.apply_glitch()
 		KEY_R:

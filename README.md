@@ -44,6 +44,7 @@ back on any key press or mouse move. `H` pins them on screen while you dial thin
 | `1` – `9` | Recall a preset (also on the numeric keypad) |
 | `Ctrl` + `1` – `9` | Store the current look into that slot |
 | `H` | Pin / unpin the panel (stops it fading) |
+| `D` | Duck the panel down to discreet, and back |
 | `F3` | FPS readout |
 | `F11` | Fullscreen |
 | `Esc` | Quit |
@@ -68,6 +69,7 @@ Labels below are the English ones.
 | `CHAOS` | 0 – 1 | Motion disorder. Does not touch `GLITCH`. See below. |
 | `RANDOMIZER` | 0 – 1 | Auto-pilot. 0 is off, 1 is about one change per second. |
 | `RECALL FADE` | 0 – 10 | Seconds a preset takes to crossfade in. 0 snaps. |
+| `PANEL` | 0.05 – 1 | Panel brightness. `D` toggles it. See below. |
 | `GLOW` | 0 – 2 | Halo. **0 by default**, see below. |
 | `LANGUAGE` | FRANÇAIS / ENGLISH | On-screen language. Affects nothing else. |
 
@@ -120,6 +122,21 @@ Labels below are the English ones.
 Adding a setting takes one line in `_build_params()` of `vj_controller.gd`: the
 section, the UI row, the slider, the number formatting, the keyboard handling and
 the OSC address all follow. Its label goes in `scripts/lang.gd`.
+
+### Working discreetly
+
+The panel is projected on the wall along with the visuals, so anything you do to it
+is on show. `PANEL` turns its brightness down: at the default **1** it looks as it
+always has, and `D` ducks it to **0.15**, where it stays perfectly readable at
+arm's length on the operator's screen while the room barely registers it through the
+haze. The slider covers everything between if 0.15 is too far.
+
+It is a preference, not part of a look, so it is left out of presets and out of the
+auto-pilot's reach — recalling a preset will not light the panel back up on the wall
+after you have deliberately dimmed it.
+
+`H` and `D` answer different problems and combine: `H` keeps the panel from fading
+away while you work, `D` makes that work invisible.
 
 ## Presets
 

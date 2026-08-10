@@ -22,6 +22,7 @@ const LABELS := {
 	"global/randomizer": ["RANDOMIZER", "RANDOMIZER"],
 	"global/glow": ["HALO", "GLOW"],
 	"global/recall": ["FONDU PRESET", "RECALL FADE"],
+	"global/panel": ["PANNEAU", "PANEL"],
 	"global/language": ["LANGUE", "LANGUAGE"],
 
 	"color/mode": ["MODE", "MODE"],
@@ -83,8 +84,8 @@ const TEXTS := {
 		"SPACE glitch    R colours    1-9 preset    Ctrl+1-9 store",
 	],
 	"help.keys": [
-		"H figer l'UI    F3 fps    F11 plein écran    ÉCHAP quitter",
-		"H pin UI    F3 fps    F11 fullscreen    ESC quit",
+		"H figer l'UI    D discrétion    F3 fps    F11 plein écran    ÉCHAP quitter",
+		"H pin UI    D dim    F3 fps    F11 fullscreen    ESC quit",
 	],
 	"help.pad": [
 		"manette : stick gauche vise    gâchettes taille    A glitch    LB/RB gel/boost",

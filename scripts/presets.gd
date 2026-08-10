@@ -16,9 +16,10 @@ signal slots_changed
 const SLOTS := 9
 const PATH := "user://presets.json"
 
-## The interface language is a preference, not part of a look: recalling a preset
-## must not flip the panel into another language mid-set.
-const EXCLUDED := ["global/language"]
+## Preferences rather than parts of a look. Recalling a preset must not flip the
+## panel into another language, nor light it back up on the wall after the operator
+## has deliberately dimmed it.
+const EXCLUDED := ["global/language", "global/panel"]
 
 @export var recall_time: float = 2.0
 

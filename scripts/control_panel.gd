@@ -32,6 +32,11 @@ var _help_labels: Array[Label] = []
 var _status: Label
 var _status_text: String = ""
 
+## Panel brightness. The panel is projected on the wall along with the visuals, so
+## turning it down lets the operator keep reading it at arm's length while the room
+## barely sees it. 1 is the ordinary look.
+var brightness: float = 1.0
+
 var _idle: float = 0.0
 var _fade: Tween
 
@@ -255,13 +260,22 @@ func select(index: int):
 # Auto-hide
 # --------------------------------------------------------------------------
 
+func set_brightness(value: float):
+	brightness = clampf(value, 0.0, 1.0)
+	fps_label.modulate.a = brightness
+	# Only touch the panel if it is actually up: mid-fade or hidden, the alpha
+	# belongs to the fade and writing to it would flash the panel back on.
+	if rows.visible and _fade == null:
+		rows.modulate.a = brightness
+
+
 func wake():
 	_idle = 0.0
 	if _fade:
 		_fade.kill()
 		_fade = null
 	rows.visible = true
-	rows.modulate.a = 1.0
+	rows.modulate.a = brightness
 
 
 func _fade_out():
