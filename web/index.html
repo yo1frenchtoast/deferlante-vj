@@ -102,6 +102,18 @@
     background: transparent; color: #4a4a52;
     /* An empty slot is dashed: somewhere to put a look, not a dead button. */
     border: 1px dashed var(--line); border-radius: .5rem;
+    /* Holding a button with a label in it can start a text selection or a drag,
+       and the browser then fires pointercancel — which was killing the very
+       long-press the hold is for. */
+    touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  /* Held long enough to count: the slot fills before the finger lifts, so the
+     save is confirmed by the gesture rather than only after it. */
+  .slots button.arming { background: var(--accent); color: #000; border-style: solid; }
+  .slots button.stored { animation: stored .5s ease-out; }
+  @keyframes stored {
+    from { background: var(--green); color: #000; }
+    to { background: var(--panel); }
   }
   .slots button.used {
     color: var(--text); background: var(--panel);
@@ -109,6 +121,13 @@
   }
   .slots button:active { background: var(--accent); color: #000; }
   .slots .hint { flex: 0 0 auto; font-size: .66rem; color: var(--dim); padding-left: .2rem; }
+  /* The way every lighting desk does it: arm STORE, then pick a slot. No timing,
+     no gesture to get right, and it works the same on a mouse and a thumb. */
+  .slots .store {
+    flex: 0 0 auto; padding: .5rem .8rem; font-size: .7rem; letter-spacing: .1em;
+    border-style: solid; color: var(--dim);
+  }
+  .slots .store.armed { background: var(--red); border-color: var(--red); color: #000; }
 
   .pads { flex: 1 1 auto; display: flex; gap: .6rem; min-height: 200px; }
   .pad {
@@ -283,36 +302,77 @@ function buildPresets(info) {
   label.textContent = "PRESETS";
   holder.appendChild(label);
 
+  // Arming STORE turns the next slot press into a save. A long press does the
+  // same thing for anyone who prefers it, but this needs no timing to get right
+  // and behaves identically under a mouse and under a thumb.
+  const store = document.createElement("button");
+  store.className = "store";
+  store.textContent = "STORE";
+  let armed = false;
+  const setArmed = (on) => { armed = on; store.classList.toggle("armed", on); };
+  store.addEventListener("click", () => setArmed(!armed));
+  holder.appendChild(store);
+
   for (let slot = 1; slot <= (info.count || 9); slot++) {
     const button = document.createElement("button");
     button.textContent = slot;
     if (used.has(slot)) button.classList.add("used");
 
     let timer = null, saved = false;
-    button.addEventListener("pointerdown", () => {
+
+    button.addEventListener("pointerdown", (event) => {
       saved = false;
+      // Capture the pointer so the press stays bound to this button: without it
+      // the smallest drift can hand the events elsewhere mid-hold.
+      if (button.setPointerCapture) {
+        try { button.setPointerCapture(event.pointerId); } catch (e) { /* not fatal */ }
+      }
+      event.preventDefault();
       timer = setTimeout(() => {
         saved = true;
         send({ type: "action", name: `preset:save:${slot}` });
-        button.classList.add("used");
-        used.add(slot);
         // A save is silent otherwise, and holding a button with no feedback
         // feels like nothing happened.
-        if (navigator.vibrate) navigator.vibrate(40);
+        markStored();
       }, 600);
+      button.classList.add("arming");
     });
-    button.addEventListener("pointerup", () => {
+
+    const markStored = () => {
+      button.classList.remove("arming");
+      button.classList.add("used", "stored");
+      setTimeout(() => button.classList.remove("stored"), 500);
+      used.add(slot);
+      if (navigator.vibrate) navigator.vibrate(40);
+    };
+
+    const release = () => {
       clearTimeout(timer);
-      if (!saved && used.has(slot)) send({ type: "action", name: `preset:recall:${slot}` });
+      button.classList.remove("arming");
+      if (!saved) {
+        if (armed) {
+          send({ type: "action", name: `preset:save:${slot}` });
+          markStored();
+          setArmed(false);
+        } else if (used.has(slot)) {
+          send({ type: "action", name: `preset:recall:${slot}` });
+        }
+      }
+      saved = false;
+    };
+    button.addEventListener("pointerup", release);
+    // Only a real cancel stops the hold now; pointerleave is deliberately not
+    // listened for, since the capture above keeps the pointer on the button.
+    button.addEventListener("pointercancel", () => {
+      clearTimeout(timer);
+      button.classList.remove("arming");
     });
-    button.addEventListener("pointercancel", () => clearTimeout(timer));
-    button.addEventListener("pointerleave", () => clearTimeout(timer));
     holder.appendChild(button);
   }
 
   const hint = document.createElement("span");
   hint.className = "hint";
-  hint.textContent = "tap recall · hold save";
+  hint.textContent = "tap recall · STORE then a slot to save";
   holder.appendChild(hint);
 }
 
