@@ -47,9 +47,6 @@ script = ExtResource("4_osc")
 
 [node name="WebServer" type="Node" parent="VJController"]
 script = ExtResource("8_web")
-http_port = 7431
-http_port = 7431
-http_port = 7431
 
 [node name="Presets" type="Node" parent="VJController"]
 script = ExtResource("10_presets")
