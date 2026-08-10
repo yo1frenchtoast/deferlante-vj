@@ -529,7 +529,7 @@
         }
       }
     },
-    "Audio Lasers \u2190 Bass": {
+    "Audio Lasers \u2190 Mid": {
       "menu": "Audio",
       "callback": "audioLasers",
       "parameters": {
@@ -537,13 +537,13 @@
           "type": "Float",
           "ui": "slider",
           "min": 0.0,
-          "max": 3.0,
-          "default": 1.0,
+          "max": 6.0,
+          "default": 1.5,
           "mappingIndex": 0
         }
       }
     },
-    "Audio Spot \u2190 Mid": {
+    "Audio Spot \u2190 Bass": {
       "menu": "Audio",
       "callback": "audioSpot",
       "parameters": {
@@ -551,8 +551,8 @@
           "type": "Float",
           "ui": "slider",
           "min": 0.0,
-          "max": 3.0,
-          "default": 1.0,
+          "max": 6.0,
+          "default": 1.5,
           "mappingIndex": 0
         }
       }
@@ -565,8 +565,8 @@
           "type": "Float",
           "ui": "slider",
           "min": 0.0,
-          "max": 3.0,
-          "default": 1.0,
+          "max": 6.0,
+          "default": 1.5,
           "mappingIndex": 0
         }
       }

@@ -58,8 +58,8 @@ const LABELS := {
 
 	"audio/reactivity": ["RÉACTIVITÉ", "REACTIVITY"],
 	"audio/punch": ["NERVOSITÉ", "PUNCH"],
-	"audio/lasers": ["LASERS ← GRAVES", "LASERS ← BASS"],
-	"audio/spot": ["POURSUITE ← MÉDIUMS", "SPOT ← MID"],
+	"audio/lasers": ["LASERS ← MÉDIUMS", "LASERS ← MID"],
+	"audio/spot": ["POURSUITE ← GRAVES", "SPOT ← BASS"],
 	"audio/sphere": ["SPHÈRE ← AIGUS", "SPHERE ← TREBLE"],
 
 	"sphere/count": ["CERCLES", "CIRCLES"],

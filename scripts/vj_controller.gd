@@ -40,6 +40,8 @@ var v_chaos: float = 0.0
 var v_laser_width: float = 5.0
 var v_spot_width: float = 3.0
 var v_sphere_width: float = 3.0
+var v_spot_radius: float = 200.0
+var v_sphere_size: float = 0.13
 var _audio_was_active: bool = false
 var _status_tick: float = 0.0
 var v_length: float = 1.0
@@ -165,7 +167,7 @@ func _build_params():
 
 	_section("section.spot")
 	# Settings that only write a property are declared, not coded.
-	_prop("spot/radius", 20, 600, 5, 200.0, circle, "base_radius")
+	_fn("spot/radius", 20, 600, 5, 200.0, func(v): v_spot_radius = v; circle.base_radius = v)
 	_prop("spot/pulse", 0, 300, 5, 25.0, circle, "fluctuation_range")
 	_fn("spot/width", 1, 24, 0.5, 3.0, func(v): v_spot_width = v; circle.set_line_width(v))
 	_prop("spot/speed", 0, 2, 0.05, 0.5, circle, "seek_speed")
@@ -183,13 +185,13 @@ func _build_params():
 	_section("section.audio")
 	_fn("audio/reactivity", 0, 1, 0.02, 0.0, _set_reactivity)
 	_prop("audio/punch", 0, 1, 0.02, 0.35, audio, "punch")
-	_fn("audio/lasers", 0, 3, 0.05, 1.0, func(v): _react_lasers = v)
-	_fn("audio/spot", 0, 3, 0.05, 1.0, func(v): _react_spot = v)
-	_fn("audio/sphere", 0, 3, 0.05, 1.0, func(v): _react_sphere = v)
+	_fn("audio/lasers", 0, 6, 0.05, 1.5, func(v): _react_lasers = v)
+	_fn("audio/spot", 0, 6, 0.05, 1.5, func(v): _react_spot = v)
+	_fn("audio/sphere", 0, 6, 0.05, 1.5, func(v): _react_sphere = v)
 
 	_section("section.sphere")
 	_prop("sphere/count", 0, 80, 1, 14.0, sphere, "circle_count")
-	_prop("sphere/size", 0.03, 0.8, 0.01, 0.13, sphere, "circle_size")
+	_fn("sphere/size", 0.03, 0.8, 0.01, 0.13, func(v): v_sphere_size = v; sphere.circle_size = v)
 	_prop("sphere/radius", 100, 800, 10, 400.0, sphere, "sphere_radius")
 	_prop("sphere/spin", -1, 1, 0.05, 0.6, sphere, "spin", true)
 	_prop("sphere/depth", 1.2, 10, 0.1, 2.0, sphere, "eye_distance")
@@ -401,8 +403,11 @@ func _spawn_lasers(count: int):
 ## gets saved into a preset or fights the operator for a slider.
 ##
 ## Each effect follows a different band on purpose. Three effects all breathing on
-## the same envelope reads as one thing pumping; on bass, mid and treble they pick
-## out different parts of the track and the picture comes apart into layers.
+## the same envelope reads as one thing pumping; on separate bands they pick out
+## different parts of the track and the picture comes apart into layers.
+##
+## The kick goes to the spotlight — the biggest shape on screen, so the thing that
+## carries the beat — and the mids to the lasers.
 func _set_reactivity(value: float):
 	_react = value
 
@@ -431,18 +436,34 @@ func _apply_audio():
 		return
 	_audio_was_active = true
 
-	var lasers_w: float = v_laser_width * (1.0 + _react * _react_lasers * audio.bass)
+	# Each effect gets its thickness *and* its size. Thickness alone tops out fast:
+	# a stroke twice as wide is still the same shape in the same place, while a
+	# spotlight that swells on the kick changes the whole picture. Size moves at a
+	# third of the amount, because a radius reads far more strongly than a width.
+	var mid_amount: float = _react * _react_lasers * audio.mid
+	var bass_amount: float = _react * _react_spot * audio.bass
+	var treble_amount: float = _react * _react_sphere * audio.treble
+
+	var lasers_w: float = v_laser_width * (1.0 + mid_amount)
 	for l in lasers:
 		l.width = lasers_w
-	circle.set_line_width(v_spot_width * (1.0 + _react * _react_spot * audio.mid))
-	sphere.line_width = v_sphere_width * (1.0 + _react * _react_sphere * audio.treble)
+		l.set_length_scale(v_length * (1.0 + mid_amount * 0.33))
+
+	circle.set_line_width(v_spot_width * (1.0 + bass_amount))
+	circle.base_radius = v_spot_radius * (1.0 + bass_amount * 0.33)
+
+	sphere.line_width = v_sphere_width * (1.0 + treble_amount)
+	sphere.circle_size = v_sphere_size * (1.0 + treble_amount * 0.33)
 
 
 func _restore_widths():
 	for l in lasers:
 		l.width = v_laser_width
+		l.set_length_scale(v_length)
 	circle.set_line_width(v_spot_width)
+	circle.base_radius = v_spot_radius
 	sphere.line_width = v_sphere_width
+	sphere.circle_size = v_sphere_size
 
 
 # --------------------------------------------------------------------------

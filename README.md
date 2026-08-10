@@ -116,9 +116,9 @@ Labels below are the English ones.
 | --- | --- | --- |
 | `REACTIVITY` | 0 – 1 | Master amount. **0 by default** — nothing moves until asked. |
 | `PUNCH` | 0 – 1 | Response curve. Higher pushes the middle down so only hits show. |
-| `LASERS ← BASS` | 0 – 3 | How much the bass thickens the laser strokes. |
-| `SPOT ← MID` | 0 – 3 | How much the mids thicken the spotlight. |
-| `SPHERE ← TREBLE` | 0 – 3 | How much the treble thickens the sphere. |
+| `LASERS ← MID` | 0 – 6 | Mids drive the laser strokes. |
+| `SPOT ← BASS` | 0 – 6 | The kick drives the spotlight. |
+| `SPHERE ← TREBLE` | 0 – 6 | Treble drives the sphere. |
 
 ### Sphere
 | Setting | Range | Effect |
@@ -534,10 +534,19 @@ restores the source you had.
 
 ### What the sound drives
 
-Three bands, and each effect follows a different one: **bass thickens the lasers,
-mids the spotlight, treble the sphere**. Three effects breathing on one envelope
-read as a single thing pumping; on separate bands they pick out different parts of
-the track and the picture comes apart into layers.
+Three bands, one per effect: **the kick drives the spotlight**, mids drive the
+lasers, treble the sphere. Three effects breathing on one envelope read as a single
+thing pumping; on separate bands they pick out different parts of the track and the
+picture comes apart into layers. The kick goes to the spotlight because it is the
+biggest shape on screen, so it is what carries the beat.
+
+Each amount moves both the **thickness and the size** of its effect — the stroke
+width, and the spotlight's radius, the sphere's circle size, the lasers' length.
+Thickness alone tops out quickly: a stroke twice as wide is still the same shape in
+the same place, while a spotlight that swells on the kick changes the whole picture.
+Size moves at a third of the amount, since a radius reads far more strongly than a
+width. Measured at the default 1.5: laser strokes 6.1–10.6 px, spotlight radius
+208–274 px, spotlight stroke 3.4–6.4 px.
 
 The sound **adds to** the widths rather than setting them. The sliders keep meaning
 what they say, turning `REACTIVITY` back to 0 restores exactly the look that was
