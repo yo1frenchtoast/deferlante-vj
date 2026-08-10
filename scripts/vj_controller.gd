@@ -21,6 +21,7 @@ extends Node2D
 @onready var osc: Node = $OscServer
 @onready var web: Node = $WebServer
 @onready var pad: Node = $Gamepad
+@onready var presets: Node = $Presets
 
 var lang := Lang.new()
 ## Shared colour state, held by reference by every effect.
@@ -76,6 +77,9 @@ func _ready():
 	# Switching language relabels the page too, so it is rebuilt from scratch.
 	lang.changed.connect(_send_schema)
 
+	presets.all_params = func(): return params
+	presets.slots_changed.connect(_send_schema)
+
 	pad.find_param = param
 	pad.aim.connect(circle.aim_by)
 	pad.aim_released.connect(circle.release_aim)
@@ -98,6 +102,7 @@ func _build_params():
 	_fn("global/chaos", 0, 1, 0.02, 0.0, _set_chaos)
 	_fn("global/randomizer", 0, 1, 0.02, 0.0, _set_randomizer).randomizable = false
 	_fn("global/glow", 0, 2, 0.05, default_glow, _set_glow)
+	_prop("global/recall", 0, 10, 0.1, 2.0, presets, "recall_time")
 	var language := _fn("global/language", 0, 1, 1, 0.0, _set_language)
 	language.choices = PackedStringArray(Lang.LANGUAGES)
 	# Language names stay in their own tongue, so they are not Lang keys.
@@ -151,7 +156,7 @@ func _build_params():
 
 	# Out of the auto-pilot's reach: tempo, glow and colour are decisions — the
 	# room, the track — rather than variations to be subjected to.
-	for slug in ["global/speed", "global/glow", "color/saturation",
+	for slug in ["global/speed", "global/glow", "global/recall", "color/saturation",
 			"color/mode", "color/red", "color/green", "color/blue"]:
 		param(slug).randomizable = false
 
@@ -349,6 +354,14 @@ func _on_osc_message(address: String, args: Array):
 		"/deferlante/randomize":
 			_randomize_all()
 			return
+		"/deferlante/preset/recall":
+			if not args.is_empty():
+				presets.recall(int(args[0]))
+			return
+		"/deferlante/preset/save":
+			if not args.is_empty():
+				presets.save_slot(int(args[0]))
+			return
 		"/deferlante/color/rgb":
 			# A colour picker sends its components in one go.
 			if args.size() >= 3:
@@ -415,7 +428,11 @@ func _send_schema():
 			"choices": choices,
 			"bidirectional": p.bidirectional,
 		})
-	web.broadcast({"type": "schema", "params": described})
+	web.broadcast({
+		"type": "schema",
+		"params": described,
+		"presets": {"used": presets.used_slots(), "count": presets.SLOTS},
+	})
 
 
 func _on_web_set(slug: String, value: float):
@@ -425,6 +442,13 @@ func _on_web_set(slug: String, value: float):
 
 
 func _on_web_action(name: String):
+	if name.begins_with("preset:"):
+		var bits := name.split(":")
+		if bits[1] == "save":
+			presets.save_slot(int(bits[2]))
+		else:
+			presets.recall(int(bits[2]))
+		return
 	match name:
 		"glitch":
 			circle.apply_glitch()
@@ -463,6 +487,27 @@ func _handle_api(method: String, path: String, body: String) -> Dictionary:
 			p.set_value(float(payload["value"]))
 			return {"code": 200, "body": _describe(p)}
 		return {"code": 405, "body": {"error": "use GET or PUT"}}
+
+	if path == "/api/presets":
+		return {"code": 200, "body": {"slots": presets.used_slots(), "count": presets.SLOTS}}
+
+	if path.begins_with("/api/presets/"):
+		var rest := path.substr("/api/presets/".length()).split("/")
+		var slot: int = int(rest[0])
+		var verb: String = rest[1] if rest.size() > 1 else ""
+		if method != "POST":
+			return {"code": 405, "body": {"error": "use POST"}}
+		match verb:
+			"recall":
+				if not presets.recall(slot):
+					return {"code": 404, "body": {"error": "empty slot", "slot": slot}}
+				return {"code": 200, "body": {"recalled": slot}}
+			"save", "":
+				if not presets.save_slot(slot):
+					return {"code": 400, "body": {"error": "slot out of range", "slot": slot}}
+				return {"code": 200, "body": {"saved": slot}}
+			_:
+				return {"code": 404, "body": {"error": "use /save or /recall"}}
 
 	if path.begins_with("/api/actions/"):
 		if method != "POST":
@@ -571,6 +616,16 @@ func _unhandled_input(event: InputEvent):
 		get_tree().quit()
 	if not (event is InputEventKey and event.pressed):
 		return
+	# Number keys: recall a preset, or save into it with Ctrl held. Ctrl rather
+	# than Shift because Shift is already the fine-adjust modifier on the arrows.
+	if event.keycode >= KEY_1 and event.keycode <= KEY_9:
+		var slot: int = event.keycode - KEY_0
+		if event.ctrl_pressed:
+			presets.save_slot(slot)
+		else:
+			presets.recall(slot)
+		return
+
 	match event.keycode:
 		KEY_SPACE:
 			circle.apply_glitch()

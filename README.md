@@ -15,7 +15,7 @@ though it had seen something, then it leaves. It never lands on anyone. Everythi
 else — the lasers, the sphere, the glitches — happens around that deferral: a room
 swept by a light that is always about to arrive, and never does.
 
-**Getting started** — [Run](#run) · [Drive it](#drive-it) · [Settings](#settings)
+**Getting started** — [Run](#run) · [Drive it](#drive-it) · [Settings](#settings) · [Presets](#presets)
 **External control** — [Gamepad](#gamepad) · [Web surface](#web-control-surface) · [REST API](#rest-api) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
 **The effects** — [Spotlight](#the-spotlight) · [Sphere](#the-sphere-effect) · [Kaleidoscope](#the-kaleidoscope) · [Chaos](#chaos) · [Auto-pilot](#the-auto-pilot) · [Colour](#the-two-colour-modes)
 **In the room** — [What starts off](#what-starts-switched-off) · [Glow](#the-glow) · [Projection notes](#projection-notes) · [Performance](#measuring-performance-f3)
@@ -60,6 +60,7 @@ Labels below are the English ones.
 | `SPEED` | -3 – 3 | Global speed. 1 is normal, 0 freezes, negative runs everything backwards. |
 | `CHAOS` | 0 – 1 | Motion disorder. Does not touch `GLITCH`. See below. |
 | `RANDOMIZER` | 0 – 1 | Auto-pilot. 0 is off, 1 is about one change per second. |
+| `RECALL FADE` | 0 – 10 | Seconds a preset takes to crossfade in. 0 snaps. |
 | `GLOW` | 0 – 2 | Halo. **0 by default**, see below. |
 | `LANGUAGE` | FRANÇAIS / ENGLISH | On-screen language. Affects nothing else. |
 
@@ -112,6 +113,40 @@ Labels below are the English ones.
 Adding a setting takes one line in `_build_params()` of `vj_controller.gd`: the
 section, the UI row, the slider, the number formatting, the keyboard handling and
 the OSC address all follow. Its label goes in `scripts/lang.gd`.
+
+## Presets
+
+Nine slots hold a snapshot of every setting, saved to disk and recalled live.
+
+| Where | Recall | Save |
+| --- | --- | --- |
+| Keyboard | `1` – `9` | `Ctrl` + `1` – `9` |
+| Phone | tap a slot | hold it |
+| OSC | `/deferlante/preset/recall` *(int)* | `/deferlante/preset/save` *(int)* |
+| API | `POST /api/presets/{n}/recall` | `POST /api/presets/{n}/save` |
+| Chataigne | `Presets › Recall Preset` | `Presets › Save Preset` |
+
+### A recall is a crossfade
+
+Every setting slides from where it is to where the preset wants it, over
+`RECALL FADE` seconds. That is the difference between a preset being a scene change
+and a preset being an edit: at 4 seconds the room moves from one look to another and
+nobody sees a cut. Set it to **0** to snap, which is what you want for a stab.
+
+The curve is a smoothstep, not linear — a linear crossfade starts and stops abruptly,
+and on a slow move that beginning is exactly what gives it away.
+
+### What is and is not saved
+
+Every setting except `LANGUAGE`, which is a preference rather than part of a look:
+recalling a preset must not flip the panel into another language mid-set.
+
+A preset saved before a setting existed simply leaves that setting alone, so old
+presets keep working after the project gains new ones.
+
+Slots live in `user://presets.json` — on Linux,
+`~/.local/share/godot/app_userdata/Déferlante/`. They belong to the machine, not to
+the project, so they survive a rebuild and are not committed.
 
 ## Gamepad
 

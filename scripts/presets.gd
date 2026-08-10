@@ -1,0 +1,150 @@
+extends Node
+
+## Named snapshots of every setting, saved to disk and recalled live.
+##
+## A recall is a **crossfade**, not a jump: every setting slides from where it is
+## to where the preset wants it, over `recall_time`. That is the difference between
+## a preset being a scene change and a preset being an edit — at 4 seconds the room
+## moves from one look to another and the audience never sees a cut. Set the time
+## to 0 and it snaps, which is what you want for a stab.
+##
+## Slots are saved to `user://presets.json`, so they survive a restart and travel
+## with the machine rather than with the project.
+
+signal slots_changed
+
+const SLOTS := 9
+const PATH := "user://presets.json"
+
+## The interface language is a preference, not part of a look: recalling a preset
+## must not flip the panel into another language mid-set.
+const EXCLUDED := ["global/language"]
+
+@export var recall_time: float = 2.0
+
+## Set by the controller: called as () -> Array[VJParam].
+var all_params: Callable
+
+var _slots: Dictionary = {}
+var _from: Dictionary = {}
+var _to: Dictionary = {}
+var _fade: float = -1.0
+var _fade_length: float = 1.0
+
+
+func _ready():
+	_load()
+
+
+func has_slot(slot: int) -> bool:
+	return _slots.has(str(slot))
+
+
+func used_slots() -> Array:
+	var used: Array = []
+	for i in range(1, SLOTS + 1):
+		if has_slot(i):
+			used.append(i)
+	return used
+
+
+# --------------------------------------------------------------------------
+# Saving
+# --------------------------------------------------------------------------
+
+func save_slot(slot: int) -> bool:
+	if slot < 1 or slot > SLOTS or not all_params.is_valid():
+		return false
+	var snapshot := {}
+	for p in all_params.call():
+		if not EXCLUDED.has(p.slug):
+			snapshot[p.slug] = p.value
+	_slots[str(slot)] = snapshot
+	_write()
+	slots_changed.emit()
+	print("Preset %d saved (%d settings)" % [slot, snapshot.size()])
+	return true
+
+
+func clear_slot(slot: int) -> bool:
+	if not has_slot(slot):
+		return false
+	_slots.erase(str(slot))
+	_write()
+	slots_changed.emit()
+	return true
+
+
+# --------------------------------------------------------------------------
+# Recalling
+# --------------------------------------------------------------------------
+
+func recall(slot: int) -> bool:
+	if not has_slot(slot) or not all_params.is_valid():
+		return false
+
+	var target: Dictionary = _slots[str(slot)]
+	_from.clear()
+	_to.clear()
+	for p in all_params.call():
+		# A setting saved before this one existed is simply left alone, so an old
+		# preset keeps working after new settings are added.
+		if target.has(p.slug):
+			_from[p.slug] = p.value
+			_to[p.slug] = float(target[p.slug])
+
+	if recall_time <= 0.0:
+		_apply(1.0)
+		_fade = -1.0
+	else:
+		_fade = 0.0
+		_fade_length = recall_time
+	return true
+
+
+func is_fading() -> bool:
+	return _fade >= 0.0
+
+
+func _process(delta: float):
+	if _fade < 0.0:
+		return
+	_fade += delta
+	var t := clampf(_fade / _fade_length, 0.0, 1.0)
+	# Smoothstep rather than linear: a linear crossfade starts and stops abruptly,
+	# and on a slow move that beginning is exactly what gives the cut away.
+	_apply(t * t * (3.0 - 2.0 * t))
+	if t >= 1.0:
+		_fade = -1.0
+
+
+func _apply(t: float):
+	if not all_params.is_valid():
+		return
+	for p in all_params.call():
+		if _to.has(p.slug):
+			p.set_value(lerpf(_from[p.slug], _to[p.slug], t))
+
+
+# --------------------------------------------------------------------------
+# Disk
+# --------------------------------------------------------------------------
+
+func _write():
+	var file := FileAccess.open(PATH, FileAccess.WRITE)
+	if file == null:
+		push_warning("Presets: cannot write %s" % PATH)
+		return
+	file.store_string(JSON.stringify(_slots, "\t"))
+
+
+func _load():
+	if not FileAccess.file_exists(PATH):
+		return
+	var file := FileAccess.open(PATH, FileAccess.READ)
+	if file == null:
+		return
+	var parsed = JSON.parse_string(file.get_as_text())
+	if typeof(parsed) == TYPE_DICTIONARY:
+		_slots = parsed
+		print("Presets: %d loaded from %s" % [_slots.size(), PATH])

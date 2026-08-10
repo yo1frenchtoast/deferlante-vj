@@ -208,4 +208,3 @@ func _unhandled_input(event: InputEvent):
 		JOY_BUTTON_BACK:
 			# Hand the spotlight back without waiting to let go of the stick.
 			aim_released.emit()
-

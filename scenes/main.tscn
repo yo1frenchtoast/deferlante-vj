@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/osc_server.gd" id="4_osc"]
 [ext_resource type="Script" path="res://scripts/web_server.gd" id="8_web"]
 [ext_resource type="Script" path="res://scripts/gamepad.gd" id="9_pad"]
+[ext_resource type="Script" path="res://scripts/presets.gd" id="10_presets"]
 [ext_resource type="Script" path="res://scripts/control_panel.gd" id="5_panel"]
 [ext_resource type="Script" path="res://scripts/kaleidoscope.gd" id="6_kaleido"]
 [ext_resource type="Shader" path="res://shaders/kaleidoscope.gdshader" id="7_shader"]
@@ -46,6 +47,9 @@ script = ExtResource("4_osc")
 
 [node name="WebServer" type="Node" parent="VJController"]
 script = ExtResource("8_web")
+
+[node name="Presets" type="Node" parent="VJController"]
+script = ExtResource("10_presets")
 
 [node name="Gamepad" type="Node" parent="VJController"]
 script = ExtResource("9_pad")

@@ -81,6 +81,20 @@
         }
       }
     },
+    "Global Recall Fade": {
+      "menu": "Global",
+      "callback": "globalRecall",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 10.0,
+          "default": 2.0,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Global Language": {
       "menu": "Global",
       "callback": "globalLanguage",
@@ -541,6 +555,32 @@
             0.1,
             1
           ],
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Recall Preset": {
+      "menu": "Presets",
+      "callback": "recallPreset",
+      "parameters": {
+        "Slot": {
+          "type": "Integer",
+          "min": 1,
+          "max": 9,
+          "default": 1,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Save Preset": {
+      "menu": "Presets",
+      "callback": "savePreset",
+      "parameters": {
+        "Slot": {
+          "type": "Integer",
+          "min": 1,
+          "max": 9,
+          "default": 1,
           "mappingIndex": 0
         }
       }

@@ -21,6 +21,7 @@ const LABELS := {
 	"global/chaos": ["CHAOS", "CHAOS"],
 	"global/randomizer": ["RANDOMIZER", "RANDOMIZER"],
 	"global/glow": ["HALO", "GLOW"],
+	"global/recall": ["FONDU PRESET", "RECALL FADE"],
 	"global/language": ["LANGUE", "LANGUAGE"],
 
 	"color/mode": ["MODE", "MODE"],

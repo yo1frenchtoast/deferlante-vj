@@ -21,6 +21,10 @@ function globalGlow(value) {
 	local.send("/deferlante/global/glow", value);
 }
 
+function globalRecall(value) {
+	local.send("/deferlante/global/recall", value);
+}
+
 function globalLanguage(value) {
 	local.send("/deferlante/global/language", value);
 }
@@ -147,6 +151,14 @@ function sphereWidth(value) {
 
 function sphereGlass(value) {
 	local.send("/deferlante/sphere/glass", value);
+}
+
+function recallPreset(slot) {
+	local.send("/deferlante/preset/recall", slot);
+}
+
+function savePreset(slot) {
+	local.send("/deferlante/preset/save", slot);
 }
 
 // The colour picker arrives as an array [r, g, b, a].

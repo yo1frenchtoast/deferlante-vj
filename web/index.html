@@ -36,6 +36,17 @@
   }
   .actions button:active { background: var(--accent); color: #000; }
 
+  .presets { display: flex; gap: .4rem; padding: .8rem .9rem 0; }
+  .presets button {
+    flex: 1; aspect-ratio: 1 / 1; font-size: .95rem; font-variant-numeric: tabular-nums;
+    background: var(--panel); color: var(--dim);
+    border: 1px solid var(--line); border-radius: .5rem;
+  }
+  /* A filled slot is legible at a glance; an empty one is somewhere to put a look. */
+  .presets button.used { color: var(--text); border-color: var(--accent); }
+  .presets button:active { background: var(--accent); color: #000; }
+  .presets .hint { flex: 0 0 100%; font-size: .7rem; color: var(--dim); padding-top: .1rem; }
+
   .pads { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; padding: .8rem .9rem 0; }
   @media (max-width: 520px) { .pads { grid-template-columns: 1fr; } }
   .pad { background: var(--panel); border: 1px solid var(--line); border-radius: .6rem; padding: .5rem; }
@@ -93,6 +104,7 @@
   <button data-action="randomize">COLORS</button>
 </div>
 
+<div class="presets" id="presets"></div>
 <div class="pads" id="pads"></div>
 <div id="sections"></div>
 
@@ -183,6 +195,7 @@ function build(schema) {
   }
 
   buildPads(schema.params);
+  buildPresets(schema.presets);
   statusEl.textContent = "live"; statusEl.className = "on";
 }
 
@@ -194,6 +207,48 @@ function apply(slug, value) {
   row.slider.value = value;
   row.val.textContent = format(row.p, value);
   for (const pad of pads) pad.refresh();
+}
+
+// Preset slots. A tap recalls, a long press saves — the same gesture a hardware
+// desk uses, and it needs no second button in a row that is already tight.
+function buildPresets(info) {
+  if (!info) return;
+  const holder = document.getElementById("presets");
+  holder.innerHTML = "";
+  const used = new Set(info.used || []);
+
+  for (let slot = 1; slot <= (info.count || 9); slot++) {
+    const button = document.createElement("button");
+    button.textContent = slot;
+    if (used.has(slot)) button.classList.add("used");
+
+    let timer = null, saved = false;
+    const start = () => {
+      saved = false;
+      timer = setTimeout(() => {
+        saved = true;
+        send({ type: "action", name: `preset:save:${slot}` });
+        button.classList.add("used");
+        // A save is silent otherwise, and holding a button with no feedback
+        // feels like nothing happened.
+        if (navigator.vibrate) navigator.vibrate(40);
+      }, 600);
+    };
+    const end = () => {
+      clearTimeout(timer);
+      if (!saved && used.has(slot)) send({ type: "action", name: `preset:recall:${slot}` });
+    };
+    button.addEventListener("pointerdown", start);
+    button.addEventListener("pointerup", end);
+    button.addEventListener("pointercancel", () => clearTimeout(timer));
+    button.addEventListener("pointerleave", () => clearTimeout(timer));
+    holder.appendChild(button);
+  }
+
+  const hint = document.createElement("span");
+  hint.className = "hint";
+  hint.textContent = "tap to recall · hold to save";
+  holder.appendChild(hint);
 }
 
 // Two XY pads. Each axis is assignable, because which pair is worth playing with

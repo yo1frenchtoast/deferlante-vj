@@ -141,6 +141,24 @@ def build(settings, labels):
         ]
     )
 
+    # Presets take a slot number rather than a trigger, so they are declared apart.
+    for name, function in (("Recall Preset", "recallPreset"), ("Save Preset", "savePreset")):
+        commands[name] = collections.OrderedDict(
+            [
+                ("menu", "Presets"),
+                ("callback", function),
+                (
+                    "parameters",
+                    {
+                        "Slot": collections.OrderedDict(
+                            [("type", "Integer"), ("min", 1), ("max", 9),
+                             ("default", 1), ("mappingIndex", 0)]
+                        )
+                    },
+                ),
+            ]
+        )
+
     for name, function in (("Trigger Glitch", "triggerGlitch"), ("Randomize Colors", "randomizeColors")):
         commands[name] = collections.OrderedDict(
             [
@@ -212,6 +230,14 @@ def build(settings, labels):
             "",
         ]
     lines += [
+        "function recallPreset(slot) {",
+        '\tlocal.send("/deferlante/preset/recall", slot);',
+        "}",
+        "",
+        "function savePreset(slot) {",
+        '\tlocal.send("/deferlante/preset/save", slot);',
+        "}",
+        "",
         "// The colour picker arrives as an array [r, g, b, a].",
         "function colorRgb(color) {",
         '\tlocal.send("/deferlante/color/rgb", color[0], color[1], color[2]);',
