@@ -135,12 +135,18 @@ jobs:
           test "$code" = "200" || { echo "swagger page missing (HTTP $code)"; exit 1; }
           echo "swagger page served"
 
+      # Kept a week, not the default ninety days. Three builds of ninety megabytes
+      # a run fill the storage quota in about thirty pushes, and a full quota fails
+      # the upload — a green build reported as red. What is worth keeping is tagged
+      # and attached to a release below; the rest is a build one looks at the same
+      # afternoon or never.
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: deferlante-linux
           path: build/linux/
           if-no-files-found: warn
+          retention-days: 7
 
       - uses: actions/upload-artifact@v7
         if: always()
@@ -148,6 +154,7 @@ jobs:
           name: deferlante-windows
           path: build/windows/
           if-no-files-found: warn
+          retention-days: 7
 
       - uses: actions/upload-artifact@v7
         if: always()
@@ -155,6 +162,7 @@ jobs:
           name: deferlante-android
           path: build/android/
           if-no-files-found: warn
+          retention-days: 7
 
       - name: Attach to the release
         if: startsWith(github.ref, 'refs/tags/v')
