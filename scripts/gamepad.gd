@@ -36,6 +36,9 @@ signal connection_changed
 ## Held-button overrides on the global speed. Released, the previous value returns.
 @export var freeze_speed: float = 0.0
 @export var boost_speed: float = 2.5
+## One D-pad tap on the global speed. Coarser than the slider's own step: a tap
+## should be audible against the music, not a hair's width.
+@export var speed_step: float = 0.25
 
 ## Set by the controller: called as (slug) -> VJParam.
 var find_param: Callable
@@ -181,6 +184,23 @@ func _read_speed_holds():
 		_write("global/speed", _speed_before_hold)
 
 
+## Taps the global speed. While a shoulder is held the live value belongs to the
+## freeze or the boost, so the tap goes to the value that comes back on release —
+## otherwise letting go would undo it.
+func _nudge_speed(amount: float):
+	if _holding_speed:
+		_speed_before_hold = _clamped_speed(_speed_before_hold + amount)
+	else:
+		_shift("global/speed", amount)
+
+
+func _clamped_speed(value: float) -> float:
+	if not find_param.is_valid():
+		return value
+	var p: VJParam = find_param.call("global/speed")
+	return clampf(value, p.min_value, p.max_value) if p else value
+
+
 # --------------------------------------------------------------------------
 # Buttons
 # --------------------------------------------------------------------------
@@ -207,9 +227,9 @@ func _unhandled_input(event: InputEvent):
 		JOY_BUTTON_DPAD_DOWN:
 			_shift("lasers/count", -1)
 		JOY_BUTTON_DPAD_RIGHT:
-			_shift("mirror/segments", 1)
+			_nudge_speed(speed_step)
 		JOY_BUTTON_DPAD_LEFT:
-			_shift("mirror/segments", -1)
+			_nudge_speed(-speed_step)
 		JOY_BUTTON_START:
 			panel_toggled.emit()
 		JOY_BUTTON_BACK:

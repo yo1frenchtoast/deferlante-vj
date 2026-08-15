@@ -228,7 +228,7 @@ the only surface that can **take the spotlight off auto-pilot and aim it by hand
 | **Right stick** ←→ | Laser spin |
 | **Right stick** ↑↓ | Chaos |
 | **D-pad** ↑↓ | Laser count |
-| **D-pad** ←→ | Mirror segments |
+| **D-pad** ←→ | Global speed, a quarter-step per tap |
 | **Start** | Pin / unpin the panel |
 | **Back** | Hand the spotlight back to auto now |
 
