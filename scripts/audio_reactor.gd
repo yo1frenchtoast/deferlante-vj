@@ -28,10 +28,13 @@ signal levels(bass: float, mid: float, treble: float)
 @export var mid_range := Vector2(250, 2000)
 @export var treble_range := Vector2(2000, 8000)
 
-## Rise instantly, fall slowly: a level that fell as fast as it rose would flicker
-## on every kick rather than pulse with it.
-@export var attack: float = 0.06
-@export var release: float = 0.9
+## Rise instantly, fall quickly but not instantly: a level that fell as fast as it
+## rose would flicker on every kick rather than pulse with it, and one that sagged
+## the way this used to would still be coming down when the next kick landed. The
+## fall is what separates two hits into two, so it is set just long enough to read
+## as a decay and no longer.
+@export var attack: float = 0.03
+@export var release: float = 0.3
 ## How fast the running peak forgets a loud moment, in decibels per second.
 @export var peak_fall: float = 6.0
 ## The reading is not clipped: measured on a techno set, bass lives around -35 dB
@@ -44,10 +47,28 @@ signal levels(bass: float, mid: float, treble: float)
 ## The narrowest window the band is allowed to stretch across, in decibels. Below
 ## this the range is treated as noise rather than dynamics, so a steady tone does
 ## not get expanded into a full-scale flicker.
-@export var min_range_db: float = 9.0
+##
+## This is the ceiling on the automatic gain, and it was set too cautiously. A bass
+## line is nearly continuous: its loud moments sit a few decibels above its quiet
+## ones, well inside the old 9 dB floor, so the whole band was divided by a range it
+## never used and the kick topped out around 0.45 — measured, on the original
+## settings, with the spotlight it drives barely moving. At 5 dB the same passage
+## reaches 0.99 and spends 22 % of its time low instead of 63 %.
+##
+## Not lowered further than that. 3 dB was measured too and gains almost nothing on
+## top (0.99 against 1.00), while every decibel here also expands whatever hum is in
+## the room when nothing is playing. `silence_db` gates real silence; this is the
+## guard for the quiet-but-not-silent case, and it is worth keeping some.
+@export var min_range_db: float = 5.0
 ## Seconds the running average looks back over. This is the reference the level is
 ## measured *against*, so it wants to be a few bars: short enough to follow a build,
 ## long enough that a single bar does not become the new normal.
+##
+## Shortening it to 2 s was tried while sharpening the envelope, on the theory that a
+## reference following the track more closely would show more. It showed *less*:
+## measured back to back, every band moved less than at 4 s, because a reference that
+## chases the signal rises to meet it and flattens exactly what it was meant to
+## reveal. Left alone. The nervousness comes from `release`, not from here.
 @export var average_window: float = 4.0
 ## The running peak never falls below this many dB. It has to sit under the
 ## quietest band's real peak — the treble's — or that band never leaves the floor.
@@ -57,6 +78,12 @@ signal levels(bass: float, mid: float, treble: float)
 ## so only the hits show. Adaptive scaling gets the range right but still leaves a
 ## busy track sitting high on average, and how much of that reads as "pulsing"
 ## rather than "loud" is a taste call, not a measurement.
+##
+## Left where it was when the envelope was sharpened. Raising it to 0.5 alongside
+## the faster release compounded: the shorter decay already lowers the average, and
+## squaring that on top left the bass reading 0.09 with 89 % of its time on the
+## floor — the kick, which drives the biggest shape on screen, stopped registering
+## at all. The nervousness wanted here comes from the envelope, not from the curve.
 var punch: float = 0.35
 
 var bass: float = 0.0
@@ -67,6 +94,16 @@ var level: float = 0.0
 
 var capturing: bool = false
 var device_name: String = ""
+## Seconds every band has spent below `silence_db` without interruption.
+##
+## A capture pointed at the wrong source reads exactly this: open, healthy, and
+## carrying nothing at all. It is the failure mode with no symptom — the bars simply
+## never move — so it is worth counting rather than leaving to be discovered.
+var silent_for: float = 0.0
+
+## How long that has to last before it is reported. Longer than any gap in a set,
+## shorter than the time it takes to start wondering why nothing is moving.
+const SILENCE_GRACE := 10.0
 
 const BUS := "DeferlanteCapture"
 
@@ -168,6 +205,11 @@ func _process(delta: float):
 		_read(treble_range),
 	]
 
+	if raw[0] <= silence_db and raw[1] <= silence_db and raw[2] <= silence_db:
+		silent_for += delta
+	else:
+		silent_for = 0.0
+
 	# Primed on the first frame that actually carries sound, not the first frame
 	# full stop. The analyser has no data yet when _process first runs, so priming
 	# there set the reference to -130 dB and left it crawling upwards for a minute
@@ -213,6 +255,13 @@ func _process(delta: float):
 
 	level = maxf(bass, maxf(mid, treble))
 	levels.emit(bass, mid, treble)
+
+
+## Listening, and hearing nothing whatsoever. Distinct from `capturing`, which only
+## says the analyser exists, and from a level of zero, which is what a quiet bar
+## between two kicks reads as well.
+func is_silent() -> bool:
+	return capturing and silent_for >= SILENCE_GRACE
 
 
 func _read(band: Vector2) -> float:

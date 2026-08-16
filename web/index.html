@@ -61,11 +61,15 @@
      and "you have not turned it up" are different problems and must look it. */
   .meter.idle .bar i { background: var(--dim); }
   .meter.deaf .bar { background: #3a2222; }
+  /* Capturing, and nothing at all coming in — almost always the wrong source.
+     A third state, because it looks identical to a quiet passage otherwise. */
+  .meter.silent .bar { background: #3a3222; }
   .meter .amount {
     font-size: .7rem; color: var(--dim); margin-left: .3rem;
     font-variant-numeric: tabular-nums;
   }
   .meter.deaf .amount { color: var(--red); }
+  .meter.silent .amount { color: var(--accent); }
 
   main { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; }
   .view { display: none; height: 100%; }
@@ -340,14 +344,20 @@ const fills = {
 function meter(msg) {
   meterEl.hidden = false;
   const deaf = !msg.capturing;
+  // Three failures that look alike on flat bars: no capture at all, a capture
+  // carrying nothing, and a capture nobody has turned up. Each says which.
+  const silent = !deaf && msg.silent === true;
   const react = msg.reactivity || 0;
   meterEl.classList.toggle("deaf", deaf);
+  meterEl.classList.toggle("silent", silent);
   meterEl.classList.toggle("idle", react <= 0);
   for (const band of ["bass", "mid", "treble"]) {
     const level = deaf ? 0 : Math.min(1, Math.max(0, msg[band] || 0));
     fills[band].style.height = (level * 100) + "%";
   }
-  amountEl.textContent = deaf ? "sourd" : Math.round(react * 100) + "%";
+  amountEl.textContent = deaf ? "sourd"
+    : silent ? "silence"
+    : Math.round(react * 100) + "%";
 }
 
 // Preset slots. A tap recalls, a long press saves — the same gesture a hardware

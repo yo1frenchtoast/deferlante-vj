@@ -107,6 +107,7 @@ const TEXTS := {
 	"status.audio": ["son", "audio"],
 	"status.listening": ["à l'écoute", "listening"],
 	"status.deaf": ["pas de capture", "no capture"],
+	"status.silent": ["silence — rien n'entre", "silence — nothing coming in"],
 	"status.nopad": ["aucune manette", "no pad"],
 	"fps.screen": ["écran %.0f Hz", "screen %.0f Hz"],
 

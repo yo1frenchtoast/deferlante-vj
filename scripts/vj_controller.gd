@@ -54,7 +54,7 @@ var _scroll_phase: float = 0.0
 
 # Audio reactivity. The master is zero by default, so nothing moves until asked.
 var _react: float = 0.0
-var _amounts := {"lasers": 1.5, "spot": 1.5, "sphere": 1.5}
+var _amounts := {"lasers": 2.5, "spot": 2.5, "sphere": 2.5}
 var _modulations: Array = []
 
 enum { BASS, MID, TREBLE }
@@ -192,9 +192,14 @@ func _build_params():
 	# Written out one by one rather than looped over: this list is read back by
 	# `tools/build_chataigne_module.py`, which parses the declarations as text, and
 	# a slug built at runtime is a slug the tooling cannot see.
-	_fn("audio/lasers", 0, 6, 0.05, 1.5, func(v): _amounts["lasers"] = v)
-	_fn("audio/spot", 0, 6, 0.05, 1.5, func(v): _amounts["spot"] = v)
-	_fn("audio/sphere", 0, 6, 0.05, 1.5, func(v): _amounts["sphere"] = v)
+	# Ranges deliberately past the point of good taste. The envelope now pulses
+	# rather than swells, which makes each hit shorter as well as sharper, and a
+	# ceiling that stopped at something reasonable meant the top of the slider was
+	# merely brisk. The top of a slider should be too much; the middle is where the
+	# set lives.
+	_fn("audio/lasers", 0, 12, 0.05, 2.5, func(v): _amounts["lasers"] = v)
+	_fn("audio/spot", 0, 12, 0.05, 2.5, func(v): _amounts["spot"] = v)
+	_fn("audio/sphere", 0, 12, 0.05, 2.5, func(v): _amounts["sphere"] = v)
 
 	_section("section.sphere")
 	_prop("sphere/count", 0, 80, 1, 14.0, sphere, "circle_count")
@@ -415,6 +420,10 @@ func _audio_meter() -> String:
 	var label: String = lang.text("status.audio")
 	if not audio.capturing:
 		return "%s %s" % [label, lang.text("status.deaf")]
+	# Told apart from a quiet passage on purpose: this one means the capture is open
+	# on something that carries nothing, which is almost always the wrong source.
+	if audio.is_silent():
+		return "%s %s" % [label, lang.text("status.silent")]
 	var glyphs := ["▁", "▂", "▃", "▄", "▅", "█"]
 	var bars := ""
 	for value in [audio.bass, audio.mid, audio.treble]:
@@ -440,6 +449,7 @@ func _broadcast_levels():
 		"bass": audio.bass,
 		"mid": audio.mid,
 		"treble": audio.treble,
+		"silent": audio.is_silent(),
 		"reactivity": _react,
 	})
 

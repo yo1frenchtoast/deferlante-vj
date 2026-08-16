@@ -158,9 +158,12 @@ Labels below are the English ones.
 | --- | --- | --- |
 | `REACTIVITY` | 0 – 1 | Master amount. **0 by default** — nothing moves until asked. |
 | `PUNCH` | 0 – 1 | Response curve. Higher pushes the middle down so only hits show. |
-| `LASERS ← MID` | 0 – 6 | Mids drive the laser strokes. |
-| `SPOT ← BASS` | 0 – 6 | The kick drives the spotlight. |
-| `SPHERE ← TREBLE` | 0 – 6 | Treble drives the sphere. |
+| `LASERS ← MID` | 0 – 12 | Mids drive the laser strokes. |
+| `SPOT ← BASS` | 0 – 12 | The kick drives the spotlight. |
+| `SPHERE ← TREBLE` | 0 – 12 | Treble drives the sphere. |
+
+The top of those three is deliberately past the point of good taste — see
+[how nervous it is](#how-nervous-it-is). The middle is where a set lives.
 
 ### Sphere
 | Setting | Range | Effect |
@@ -560,9 +563,20 @@ exactly zero. If the levels are dead, restart Déferlante.
 **Run it again after every reboot.** `pactl load-module` lasts as long as the sound
 server does, and no longer. When it goes, the default source falls back to whatever
 it was before — often a physical input with nothing plugged into it, which reads as
-perfect silence rather than as an error. Everything looks healthy: the app says it is
-capturing, the bars simply never move. This is the single most likely reason for
+perfect silence rather than as an error. This is the single most likely reason for
 "the sound stopped working".
+
+The status line now says so rather than leaving it to be discovered. Three states
+that used to look alike on flat bars, and each says which:
+
+| on screen | meaning |
+| --- | --- |
+| `son  pas de capture` | no analyser at all — the capture never opened |
+| `son  silence — rien n'entre` | open, and carrying nothing for ten seconds straight |
+| `son ▁▂▃ 0%` | hearing it perfectly well; `REACTIVITY` is simply at zero |
+
+Ten seconds is longer than any gap in a set and shorter than the time it takes to
+start wondering. The web surface shows the same three states in its vu-mètre.
 
 It taps the output; it does not reroute it, so playback is untouched.
 
@@ -652,6 +666,35 @@ frame after frame and collapses every band to zero within a second.
 
 `PUNCH` is the taste control on top. Adaptive scaling gets the *range* right, but how
 much of a busy track should read as "pulsing" rather than "loud" is a judgement.
+
+### How nervous it is
+
+Sharpened deliberately, and every step of it measured off the app's own level
+broadcast — mean level, peak, and the average change from one packet to the next,
+which is the number that says "nervous".
+
+- **`release` 0.9 → 0.3 s.** This is where the nervousness comes from. A long decay
+  is still coming down when the next kick lands, so hits merge into a swell; a short
+  one separates them. On its own it took the average change per sample from 0.021 to
+  0.044 on the bass and from 0.073 to 0.174 on the treble. `attack` went 0.06 → 0.03
+  to match.
+- **`min_range_db` 9 → 5 dB.** The bigger surprise, and the one that fixed the kick.
+  This is the ceiling on the automatic gain: a band whose loud and quiet moments sit
+  closer together than this is divided by a range it never uses. A bass line is
+  nearly continuous, so it lived entirely inside the old floor and topped out around
+  **0.45** — the spotlight it drives barely moved, on the *original* settings. At
+  5 dB the same passage reaches 0.99, and spends 22 % of its time low instead of
+  63 %. 3 dB was measured too and adds almost nothing (1.00 against 0.99) while
+  expanding more of whatever hum is in the room, so 5 it is.
+- **The two changes that did not survive measurement.** Shortening `average_window`
+  to 2 s, on the theory that a reference following the track more closely would show
+  more, showed *less* — a reference that chases the signal rises to meet it and
+  flattens what it was meant to reveal. And `PUNCH` at 0.5 compounded with the
+  shorter decay: the bass fell to 0.09 with 89 % of its time on the floor, so the
+  kick stopped registering entirely. Both were put back.
+
+End to end, all three bands now reach full scale and move three to five times as
+much per sample as they did.
 Measured on a techno set: at 0 the bass swings 0.39–0.87, at 0.5 it swings 0.12–0.40.
 
 ## The two colour modes
