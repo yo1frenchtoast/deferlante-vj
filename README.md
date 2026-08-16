@@ -15,21 +15,23 @@ though it had seen something, then it leaves. It never lands on anyone. Everythi
 else — the lasers, the sphere, the glitches — happens around that deferral: a room
 swept by a light that is always about to arrive, and never does.
 
-**Getting started** — [Run](#run) · [Launcher](#the-launcher) · [Drive it](#drive-it) · [Settings](#settings) · [Presets](#presets)
-**External control** — [Sound](#audio-reactivity) · [Gamepad](#gamepad) · [Web surface](#web-control-surface) · [REST API](#rest-api) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
-**The effects** — [Spotlight](#the-spotlight) · [Sphere](#the-sphere-effect) · [Kaleidoscope](#the-kaleidoscope) · [Chaos](#chaos) · [Auto-pilot](#the-auto-pilot) · [Colour](#the-two-colour-modes)
-**In the room** — [What starts off](#what-starts-switched-off) · [Halo](#the-halo) · [Projection notes](#projection-notes) · [Performance](#measuring-performance-f3)
-**The code** — [Structure](#structure) · [Builds](#builds) · [Renderer](#a-note-on-the-renderer)
+**[Getting started](#getting-started)** — [Run](#run) · [Launcher](#the-launcher) · [Drive it](#drive-it) · [Settings](#settings) · [Presets](#presets)
+**[External control](#external-control)** — [Gamepad](#gamepad) · [Web surface](#web-control-surface) · [REST API](#rest-api) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
+**[The effects](#the-effects)** — [Spotlight](#the-spotlight) · [Sphere](#the-sphere-effect) · [Kaleidoscope](#the-kaleidoscope) · [Scanlines](#scanlines) · [Chaos](#chaos) · [Two-way speeds](#two-way-speeds) · [Colour](#the-two-colour-modes) · [Auto-pilot](#the-auto-pilot)
+**[In the room](#in-the-room)** — [A calm start](#a-calm-starting-point) · [What starts off](#what-starts-switched-off) · [Halo](#the-halo) · [Projection notes](#projection-notes) · [Performance](#measuring-performance-f3)
+**[The code](#the-code)** — [Structure](#structure) · [Builds](#builds) · [Renderer](#a-note-on-the-renderer)
 
 The on-screen interface speaks French or English — picked at the [launcher](#the-launcher),
 before the show. Everything else (code, OSC addresses, this document) stays in English.
 
-## Run
+## Getting started
+
+### Run
 
 Open the project in Godot 4.7+ and press F5. The main scene is `scenes/launcher.tscn`,
 which asks a handful of questions and then hands over to `scenes/main.tscn`.
 
-## The launcher
+### The launcher
 
 Almost everything in this project is adjustable live, on purpose: a setting you
 cannot reach mid-set may as well not exist. The launcher holds the exceptions — the
@@ -54,7 +56,7 @@ on the desk; they are decisions about the room and about who is standing in fron
 the machine, so they moved here — which also means `LANGUAGE` no longer has an OSC
 address.
 
-### Why the renderer restarts the app
+#### Why the renderer restarts the app
 
 Godot fixes the renderer before a single script runs, so it cannot be swapped in
 place. Choosing the other one launches the process again with
@@ -62,7 +64,7 @@ place. Choosing the other one launches the process again with
 show starts anyway on the renderer already running and says so in the console —
 a black screen ten minutes before doors is worse than the wrong renderer.
 
-### Skipping it
+#### Skipping it
 
 `-- --skip-launcher` goes straight to the show on the saved settings. The bare `--`
 matters: Godot treats anything it does not recognise before that point as a fatal
@@ -71,7 +73,7 @@ argument error, and hands everything after it to the project.
 A `--headless` run skips it too, without being asked — there is nobody there to
 answer. That is what keeps [the CI check](#the-one-thing-ci-actually-checks) working.
 
-## Drive it
+### Drive it
 
 The panel sits in the bottom-left corner, in one or more columns depending on how many
 settings there are. The sliders **fade out on their own after 4 s of inactivity** (over 0.7 s) and come
@@ -100,12 +102,12 @@ OSC port, and which pad is plugged in — followed by the shortcuts. The address
 something you look up rather than remember, so it belongs on screen and not only in
 the console, where it scrolls away long before anyone needs it.
 
-## Settings
+### Settings
 
 The panel is arranged in six sections, the same as the Chataigne module's menus.
 Labels below are the English ones.
 
-### Global
+#### Global
 | Setting | Range | Effect |
 | --- | --- | --- |
 | `SPEED` | -3 – 3 | Global speed. 1 is normal, 0 freezes, negative runs everything backwards. |
@@ -116,21 +118,21 @@ Labels below are the English ones.
 | `AUTO DIM` | OFF / ON | Duck the panel automatically when something else takes over. |
 | `GLOW` | 0 – 2 | Halo, drawn by the strokes themselves. **0 by default**, see below. |
 
-### Colour
+#### Colour
 | Setting | Range | Effect |
 | --- | --- | --- |
 | `MODE` | RANDOM / MANUAL | Each element its own hue, or the chosen colour for all. |
 | `SATURATION` | 0 – 1 | 0 is pure white, 1 a full colour. Works in both modes. |
 | `RED` `GREEN` `BLUE` | 0 – 1 | The manual colour. Touching one switches to manual. |
 
-### Mirror
+#### Mirror
 | Setting | Range | Effect |
 | --- | --- | --- |
 | `EFFECT` | 0 – 1 | Kaleidoscope fold. 0 is off, and the pass is not paid for. |
 | `SEGMENTS` | 2 – 16 | Number of wedges. 6 gives the classic star. |
 | `ROTATION` | -1 – 1 | Turns the mirrors. ← left, → right. |
 
-### Lasers
+#### Lasers
 | Setting | Range | Effect |
 | --- | --- | --- |
 | `COUNT` | 0 – 40 | Number of strokes. Added and removed live. Starts at 3. |
@@ -140,7 +142,7 @@ Labels below are the English ones.
 | `PARALLEL` | 0 – 1 | 0 a scatter, 1 an evenly spaced fan. See below. |
 | `SCROLL` | -1 – 1 | Walks that fan sideways. ← one way, → the other. |
 
-### Spotlight
+#### Spotlight
 | Setting | Range | Effect |
 | --- | --- | --- |
 | `RADIUS` | 20 – 600 | Radius of the pool. |
@@ -153,7 +155,7 @@ Labels below are the English ones.
 | `SPREAD` | 0 – 1 | How much the pool grows when aiming off-centre. See below. |
 | `GLITCH` | 0 – 0.05 | Glitch chance per frame. **0 by default.** Independent of `CHAOS`. 0.005 ≈ one every 3 s. |
 
-### Audio
+#### Audio
 | Setting | Range | Effect |
 | --- | --- | --- |
 | `REACTIVITY` | 0 – 1 | Master amount. **0 by default** — nothing moves until asked. |
@@ -165,7 +167,7 @@ Labels below are the English ones.
 The top of those three is deliberately past the point of good taste — see
 [how nervous it is](#how-nervous-it-is). The middle is where a set lives.
 
-### Sphere
+#### Sphere
 | Setting | Range | Effect |
 | --- | --- | --- |
 | `CIRCLES` | 0 – 80 | Number of circles. 0 switches the effect off. Starts at 14. |
@@ -180,7 +182,7 @@ Adding a setting takes one line in `_build_params()` of `vj_controller.gd`: the
 section, the UI row, the slider, the number formatting, the keyboard handling and
 the OSC address all follow. Its label goes in `scripts/lang.gd`.
 
-### Working discreetly
+#### Working discreetly
 
 The panel is projected on the wall along with the visuals, so anything you do to it
 is on show. `PANEL` turns its brightness down: at the default **1** it looks as it
@@ -195,7 +197,7 @@ after you have deliberately dimmed it.
 `H` and `F2` answer different problems and combine: `H` keeps the panel from fading
 away while you work, `F2` makes that work invisible.
 
-### Getting out of the way on its own
+#### Getting out of the way on its own
 
 With `AUTO DIM` on — it is, by default — the panel ducks to discreet the moment
 **anything else moves a setting**: the phone, the gamepad, OSC, an API call. Any
@@ -216,7 +218,7 @@ whatever sits under the pointer.
 The `PANEL` setting keeps reading the brightness *you* chose while this is going on:
 the auto-dim is a temporary override, not a change to your preference.
 
-## Presets
+### Presets
 
 Nine slots hold a snapshot of every setting, saved to disk and recalled live.
 
@@ -228,7 +230,7 @@ Nine slots hold a snapshot of every setting, saved to disk and recalled live.
 | API | `POST /api/presets/{n}/recall` | `POST /api/presets/{n}/save` |
 | Chataigne | `Presets › Recall Preset` | `Presets › Save Preset` |
 
-### A recall is a crossfade
+#### A recall is a crossfade
 
 Every setting slides from where it is to where the preset wants it, over
 `RECALL FADE` seconds. That is the difference between a preset being a scene change
@@ -243,7 +245,7 @@ so the top row works the same on AZERTY, QWERTY or Dvorak. (Read as characters, 
 AZERTY top row gives `& é " ' ( - è _ ç`, and only the three non-ASCII ones happened
 to fall through to a digit — six slots out of nine were unreachable.)
 
-### What is and is not saved
+#### What is and is not saved
 
 Every setting except `PANEL`, which is a preference rather than part of a look:
 recalling a preset must not light the panel back up on the wall after the operator
@@ -256,7 +258,9 @@ Slots live in `user://presets.json` — on Linux,
 `~/.local/share/godot/app_userdata/Déferlante/`. They belong to the machine, not to
 the project, so they survive a rebuild and are not committed.
 
-## Gamepad
+## External control
+
+### Gamepad
 
 An Xbox pad is picked up automatically when plugged in — nothing to configure. It is
 the only surface that can **take the spotlight off auto-pilot and aim it by hand**.
@@ -278,7 +282,7 @@ the only surface that can **take the spotlight off auto-pilot and aim it by hand
 | **Start** | Pin / unpin the panel |
 | **Back** | Hand the spotlight back to auto now |
 
-### It is a handle, not a pointer
+#### It is a handle, not a pointer
 
 The stick sets a **rate**: push and the beam travels, stop pushing and it stays exactly
 where you stopped. That is how a real followspot works, and it is the only way to walk
@@ -292,7 +296,7 @@ deflection: too slow and you lose your actor, too fast and you cannot hold him.
 Aiming works even at `SPEED` 0. Freezing the show must not take the handle out of the
 operator's hands.
 
-### Handing back, progressively
+#### Handing back, progressively
 
 Stop pushing and the beam stays put for `HAND BACK` seconds — 30 by default, long on
 purpose: an actor stops moving, the operator stops pushing, and the beam must not
@@ -311,14 +315,14 @@ where it was last left — so it never teleports.
 `STICK` and the beam is yours until you say otherwise. `Back` forces the hand-back
 without waiting out the delay, and it is still progressive — it does not cut.
 
-### Why the shoulders are momentary
+#### Why the shoulders are momentary
 
 `LB` and `RB` are held, not latched. In a set you lean on a button for four bars and
 want it to let go by itself — a latch is one more thing to remember to undo. Both
 remember the speed you were at and put it back on release, so they can be used over
 any tempo rather than only from 1.0.
 
-### Two deliberate choices
+#### Two deliberate choices
 
 **The pad does not wake the on-screen panel**, unlike the keyboard. It is a
 performance surface like OSC: holding a stick for a whole track would otherwise leave
@@ -329,7 +333,7 @@ them.
 as the sliders, OSC and the web page. Squeeze a trigger and the radius moves on the
 panel, on every connected phone, and in any console reading back over the API.
 
-## Web control surface
+### Web control surface
 
 Godot serves a control page on port **7331**. Open `http://<machine-ip>:7331` from a
 phone or tablet on the same network — the address is printed at startup.
@@ -375,7 +379,7 @@ A sleeping phone drops the socket; the page reconnects on its own without a relo
 ⚠️ There is **no authentication**: anyone on the network can drive the visuals. That
 is fine on a private Wi-Fi and a bad idea on a public one.
 
-## REST API
+### REST API
 
 The same HTTP server that carries the control page also exposes the settings as a
 REST API, described by an OpenAPI 3.0 specification.
@@ -416,12 +420,12 @@ entirely by Déferlante. Without internet, `/docs` says so and points at
 
 As with everything else on this server, **there is no authentication**.
 
-## External control over OSC
+### External control over OSC
 
 Godot listens for OSC on port **9000** (UDP), on every interface. Every setting can
 be driven remotely from Chataigne, TouchOSC, a sequencer, or any script at all.
 
-### How an address is built
+#### How an address is built
 
 `/deferlante/<section>/<setting>` — the section is part of the path because three
 sections have a `WIDTH` and two have a `ROTATION`; without it the addresses would
@@ -431,7 +435,7 @@ The address and the label are **decoupled** in the code: `slug` carries the addr
 `Lang` carries what is displayed. Rewording a label, or switching the interface to
 French, can never break a console already wired to an address.
 
-### Arguments
+#### Arguments
 
 One argument, a **float** or an **int**; anything else is ignored. The value is
 clamped to the setting's bounds and snapped to its step, so a console sending `999`
@@ -441,7 +445,7 @@ lands on the maximum rather than breaking anything.
 frame. The timetag is deliberately ignored and the contents applied at once: when
 VJing you want the value now, not at a scheduled time.
 
-### Two forms, and why
+#### Two forms, and why
 
 | Form | Argument |
 | --- | --- |
@@ -451,7 +455,7 @@ VJing you want the value now, not at a scheduled time.
 The `norm` form is for surfaces that can only send 0 → 1 — MIDI faders, TouchOSC —
 and have no business knowing that `spot/radius` runs from 20 to 600.
 
-### Actions
+#### Actions
 
 | Address | Effect |
 | --- | --- |
@@ -459,7 +463,7 @@ and have no business knowing that `spot/radius` runs from 20 to 600.
 | `/deferlante/randomize` | redraws colours and trajectories, and returns colour to random mode |
 | `/deferlante/color/rgb` | three floats 0 → 1: the whole colour in one message, and switches to manual |
 
-### Every address
+#### Every address
 
 Generated from the settings themselves, so this table cannot drift:
 
@@ -501,7 +505,7 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/sphere/width` | 1 – 24 | 3 | SPHERE › WIDTH |
 | `/deferlante/sphere/glass` | 0 – 1 | 0 | SPHERE › GLASS |
 
-### What it does not do
+#### What it does not do
 
 **Nothing comes back.** Godot never sends OSC out, so a motorised console will not
 follow a change made on the keyboard or by the auto-pilot. The web surface does get
@@ -510,7 +514,7 @@ to add.
 
 There is also **no OSCQuery**: the table above is the discovery mechanism.
 
-### Trying it without a console
+#### Trying it without a console
 
 ```
 oscsend 127.0.0.1 9000 /deferlante/global/chaos f 0.8
@@ -542,12 +546,12 @@ A ready-made Chataigne module ships in `chataigne/Deferlante/`, with its own ins
 notes. It is a convenience only: Chataigne's generic OSC module drives the same
 addresses.
 
-## Audio reactivity
+### Audio reactivity
 
 Déferlante listens to **what is coming out of the machine**, not to a microphone, so
 it follows the track being played rather than the room.
 
-### Setting it up
+#### Setting it up
 
 ```
 tools/listen-to-output.sh          # start listening
@@ -584,7 +588,7 @@ If your sound arrives through an interface instead — a Focusrite, a desk — y
 not need the script at all: that is already an input, and Déferlante reads the
 default one.
 
-### Why a script is needed at all
+#### Why a script is needed at all
 
 Godot captures an *input*, and music is an *output*. PipeWire does publish the
 output's monitor as a source, but **Godot's PulseAudio backend filters monitors out
@@ -614,7 +618,7 @@ Both look exactly like a broken capture. Any audio check has to run windowed, an
 not under `--write-movie` either, which takes the audio driver over to write its
 `.wav`.
 
-### What the sound drives
+#### What the sound drives
 
 Three bands, one per effect: **the kick drives the spotlight**, mids drive the
 lasers, treble the sphere. Three effects breathing on one envelope read as a single
@@ -635,7 +639,7 @@ what they say, turning `REACTIVITY` back to 0 restores exactly the look that was
 there, and nothing the sound does is written to a setting — so it never lands in a
 preset and never fights you for a slider.
 
-### Levels, not volume
+#### Levels, not volume
 
 Everything is done in decibels, against a **running peak** per band rather than a
 fixed gain. A fixed gain that suits one track sits flat or clips on the next; and
@@ -667,7 +671,7 @@ frame after frame and collapses every band to zero within a second.
 `PUNCH` is the taste control on top. Adaptive scaling gets the *range* right, but how
 much of a busy track should read as "pulsing" rather than "loud" is a judgement.
 
-### How nervous it is
+#### How nervous it is
 
 Sharpened deliberately, and every step of it measured off the app's own level
 broadcast — mean level, peak, and the average change from one packet to the next,
@@ -697,120 +701,9 @@ End to end, all three bands now reach full scale and move three to five times as
 much per sample as they did.
 Measured on a techno set: at 0 the bass swings 0.39–0.87, at 0.5 it swings 0.12–0.40.
 
-## The two colour modes
+## The effects
 
-**RANDOM** (the default) — every laser, every sphere circle and the spotlight draw
-their own hue. `R` redraws them.
-
-**MANUAL** — everyone takes the colour set by `RED` / `GREEN` / `BLUE`.
-
-Three things make going back and forth painless:
-
-- **Touching a colour switches to manual** automatically. Without it, moving `RED`
-  in random mode would do nothing and the slider would look broken.
-- **The random hues survive the trip into manual.** Going back to `RANDOM` finds
-  them exactly as they were — manual mode hides them, it does not destroy them.
-- **`R` returns to random** *and* draws fresh hues. It is the escape hatch you find
-  without thinking mid-set.
-
-`SATURATION` stays useful in both modes: it pulls the colour towards white. When
-projecting into haze a near-white beam cuts through better than a saturated one —
-drop it to 0.4–0.5 if the picture lacks bite.
-
-## The auto-pilot
-
-`RANDOMIZER` makes the visuals evolve by themselves: every 1 to 12 seconds depending
-on its value, it picks one or two settings and puts them down somewhere else. One
-time in four it also redraws the colours, but only if they are in random mode —
-otherwise it would trample a manual choice.
-
-Three precautions make it usable for real:
-
-- **One or two settings at a time.** Beyond that it stops reading as a gesture and
-  starts reading as a malfunction.
-- **Values cluster towards the middle** of each range (the average of two draws),
-  which avoids the extremes that either empty or saturate the screen.
-- **Six settings are out of its reach**: `SPEED`, `GLOW`, `SATURATION` and the three
-  colours. Those are decisions — the tempo of the track, the contrast of the room —
-  not variations to be subjected to.
-
-## The kaleidoscope
-
-`EFFECT` folds the image into symmetrical wedges around the centre, like the mirrors
-of a kaleidoscope. The fold works on the **already-drawn frame**, not by duplicating
-geometry: the cost is one full-screen pass whether you have 5 strokes or 40.
-
-The layer sits above the visuals but **below the settings panel** — otherwise the
-sliders would end up multiplied across the screen too.
-
-Like the halo, at 0 the pass is genuinely switched off rather than left running as
-an identity transform.
-
-## Scanlines
-
-`PARALLEL` does not tune the scatter, it crossfades between two different
-behaviours. At **0** every stroke drifts and spins on its own, bouncing off the
-edges — the original look. At **1** they all take a shared angle and an evenly
-spaced place in a fan. In between the two are simply mixed, so it can be opened and
-closed like any other effect.
-
-`SCROLL` then walks that fan sideways, perpendicular to the shared angle, wrapping
-around. That is what turns a set of parallel lines into scanlines: they have to be
-*moving through* the frame, not just pointing the same way.
-
-Two details do most of the work:
-
-- **The spacing is reassigned whenever the count changes**, so the strokes are
-  always evenly spread rather than keeping the random gaps they had as a scatter.
-  Without that they read as lines that happen to be parallel, not as a raster.
-- **The wrap happens off screen.** The fan spans the screen diagonal, so a stroke
-  has completely left the frame before it reappears on the other side, whatever
-  angle it is at — measured at 1101 px of travel against a 1101 px half-diagonal.
-
-`SPIN` still turns the whole fan while it scrolls, which gives a raster slowly
-rotating through the room.
-
-## Chaos
-
-`CHAOS` is a macro setting that **layers on top of** the others without overwriting
-them: at 0 the picture is exactly what you dialled in, at 1 everything comes loose.
-Its progression is deliberately uneven — discreet at first, then runaway.
-
-What it does, effect by effect:
-
-- **Lasers** — each stroke gradually recovers its own heading. This is the disorder
-  that the `SPIN` direction setting removed, brought back through the side door: at
-  1 the strokes cross in opposite directions again. Random swerves are added on top,
-  making the paths zigzag.
-- **Spotlight** — the head can no longer stay put (pauses eight times shorter),
-  sweeps three times faster and trembles seven times harder. It does **not** touch
-  the glitches: chaos unsettles *motion*, `GLITCH` keeps its own setting. A panicked
-  head with no glitch, and a composed head that erupts now and then, are two
-  different pictures.
-- **Sphere** — each circle slides along its longitude at its own pace and its size
-  starts to throb. The sphere stays legible, but its surface is no longer of a piece.
-
-## Two-way speeds
-
-`SPEED` runs from **-3 to 3**, both `SPIN` settings and the mirror's `ROTATION` from
-**-1 to 1**. In every case the middle of the slider is a standstill and 1 is normal
-speed — `SPEED` therefore keeps headroom above for passages that need to take off.
-
-The sign gives the direction of rotation, the magnitude the speed. The screen shows
-an arrow rather than a minus sign (`← 0.60`, `→ 0.60`, `·  0.00`): in the dark an
-arrow reads at a glance.
-
-For "leftwards / rightwards" to mean anything, each laser now draws the **magnitude**
-of its spin at random, but no longer its direction: that comes from the global
-setting. Before, half the strokes turned the other way and no single control could
-have made them agree.
-
-Signs combine: `SPEED` at -1 with `SPIN` at +1 turns the strokes leftwards —
-reversing global time reverses rotation too. The spotlight's `SPEED` on the other
-hand stays a positive rate: a followspot does not "un-search", it keeps sweeping
-forwards even when everything else runs backwards.
-
-## The spotlight
+### The spotlight
 
 The main circle does not drift: it moves like a moving head hunting for someone in
 the room. Three things produce that reading:
@@ -834,7 +727,7 @@ freezes everything.
 On top of that sits the motor profile: brisk start, long braking, and a slight damped
 overshoot at the end of travel as the head settles.
 
-### Why the pool changes size
+#### Why the pool changes size
 
 A real followspot's pool grows as it aims away from centre — the beam travels further
 and lands at an angle. Taken literally that is **+61 % at the edge of the pan range and
@@ -851,7 +744,7 @@ continuous sweep with no stops; pushed to 3, a head that lingers on each target.
 Travel range, throw distance (and therefore the curvature of the arcs) and the
 frequency of small corrections are `@export`s in the inspector.
 
-## The sphere effect
+### The sphere effect
 
 Circles are laid on a virtual sphere (Fibonacci distribution, so no clustering at
 the poles) and projected onto the screen. The centre of the screen is the point
@@ -875,7 +768,122 @@ sphere, busier but stranger.
 Measured cost: **+0.32 ms** at 40 circles (the default), **+0.77 ms** at 80. Circles
 past the horizon are neither computed nor drawn.
 
-## A calm starting point
+### The kaleidoscope
+
+`EFFECT` folds the image into symmetrical wedges around the centre, like the mirrors
+of a kaleidoscope. The fold works on the **already-drawn frame**, not by duplicating
+geometry: the cost is one full-screen pass whether you have 5 strokes or 40.
+
+The layer sits above the visuals but **below the settings panel** — otherwise the
+sliders would end up multiplied across the screen too.
+
+Like the halo, at 0 the pass is genuinely switched off rather than left running as
+an identity transform.
+
+### Scanlines
+
+`PARALLEL` does not tune the scatter, it crossfades between two different
+behaviours. At **0** every stroke drifts and spins on its own, bouncing off the
+edges — the original look. At **1** they all take a shared angle and an evenly
+spaced place in a fan. In between the two are simply mixed, so it can be opened and
+closed like any other effect.
+
+`SCROLL` then walks that fan sideways, perpendicular to the shared angle, wrapping
+around. That is what turns a set of parallel lines into scanlines: they have to be
+*moving through* the frame, not just pointing the same way.
+
+Two details do most of the work:
+
+- **The spacing is reassigned whenever the count changes**, so the strokes are
+  always evenly spread rather than keeping the random gaps they had as a scatter.
+  Without that they read as lines that happen to be parallel, not as a raster.
+- **The wrap happens off screen.** The fan spans the screen diagonal, so a stroke
+  has completely left the frame before it reappears on the other side, whatever
+  angle it is at — measured at 1101 px of travel against a 1101 px half-diagonal.
+
+`SPIN` still turns the whole fan while it scrolls, which gives a raster slowly
+rotating through the room.
+
+### Chaos
+
+`CHAOS` is a macro setting that **layers on top of** the others without overwriting
+them: at 0 the picture is exactly what you dialled in, at 1 everything comes loose.
+Its progression is deliberately uneven — discreet at first, then runaway.
+
+What it does, effect by effect:
+
+- **Lasers** — each stroke gradually recovers its own heading. This is the disorder
+  that the `SPIN` direction setting removed, brought back through the side door: at
+  1 the strokes cross in opposite directions again. Random swerves are added on top,
+  making the paths zigzag.
+- **Spotlight** — the head can no longer stay put (pauses eight times shorter),
+  sweeps three times faster and trembles seven times harder. It does **not** touch
+  the glitches: chaos unsettles *motion*, `GLITCH` keeps its own setting. A panicked
+  head with no glitch, and a composed head that erupts now and then, are two
+  different pictures.
+- **Sphere** — each circle slides along its longitude at its own pace and its size
+  starts to throb. The sphere stays legible, but its surface is no longer of a piece.
+
+### Two-way speeds
+
+`SPEED` runs from **-3 to 3**, both `SPIN` settings and the mirror's `ROTATION` from
+**-1 to 1**. In every case the middle of the slider is a standstill and 1 is normal
+speed — `SPEED` therefore keeps headroom above for passages that need to take off.
+
+The sign gives the direction of rotation, the magnitude the speed. The screen shows
+an arrow rather than a minus sign (`← 0.60`, `→ 0.60`, `·  0.00`): in the dark an
+arrow reads at a glance.
+
+For "leftwards / rightwards" to mean anything, each laser now draws the **magnitude**
+of its spin at random, but no longer its direction: that comes from the global
+setting. Before, half the strokes turned the other way and no single control could
+have made them agree.
+
+Signs combine: `SPEED` at -1 with `SPIN` at +1 turns the strokes leftwards —
+reversing global time reverses rotation too. The spotlight's `SPEED` on the other
+hand stays a positive rate: a followspot does not "un-search", it keeps sweeping
+forwards even when everything else runs backwards.
+
+### The two colour modes
+
+**RANDOM** (the default) — every laser, every sphere circle and the spotlight draw
+their own hue. `R` redraws them.
+
+**MANUAL** — everyone takes the colour set by `RED` / `GREEN` / `BLUE`.
+
+Three things make going back and forth painless:
+
+- **Touching a colour switches to manual** automatically. Without it, moving `RED`
+  in random mode would do nothing and the slider would look broken.
+- **The random hues survive the trip into manual.** Going back to `RANDOM` finds
+  them exactly as they were — manual mode hides them, it does not destroy them.
+- **`R` returns to random** *and* draws fresh hues. It is the escape hatch you find
+  without thinking mid-set.
+
+`SATURATION` stays useful in both modes: it pulls the colour towards white. When
+projecting into haze a near-white beam cuts through better than a saturated one —
+drop it to 0.4–0.5 if the picture lacks bite.
+
+### The auto-pilot
+
+`RANDOMIZER` makes the visuals evolve by themselves: every 1 to 12 seconds depending
+on its value, it picks one or two settings and puts them down somewhere else. One
+time in four it also redraws the colours, but only if they are in random mode —
+otherwise it would trample a manual choice.
+
+Three precautions make it usable for real:
+
+- **One or two settings at a time.** Beyond that it stops reading as a gesture and
+  starts reading as a malfunction.
+- **Values cluster towards the middle** of each range (the average of two draws),
+  which avoids the extremes that either empty or saturate the screen.
+- **Six settings are out of its reach**: `SPEED`, `GLOW`, `SATURATION` and the three
+  colours. Those are decisions — the tempo of the track, the contrast of the room —
+  not variations to be subjected to.
+
+## In the room
+
+### A calm starting point
 
 The defaults are deliberately quiet: three lasers, fourteen sphere circles, and a
 spotlight that sweeps at half speed with long pauses and only a slight tremor —
@@ -885,7 +893,7 @@ That is a setting to build up from and a setting you can debug in: with a busy s
 it is hard to tell which effect a change belongs to, and the panel itself is hard to
 read over the top of it. Everything is one slider away from where it was.
 
-## What starts switched off
+### What starts switched off
 
 `GLOW` and `GLITCH` start at 0, and both are genuinely off rather than set to zero
 intensity. Same for the mirror's `EFFECT` and for `RANDOMIZER`.
@@ -894,7 +902,7 @@ It is a stance: effects that make a statement are switched on when wanted, at th
 chosen moment, rather than running in the background. A scene that starts sober
 leaves room to build; a scene that starts saturated has nowhere to go.
 
-## The halo
+### The halo
 
 With a haze machine the beam is diffused **physically** in the air. A software halo
 then does the same job twice: it softens the edges and takes the bite out of the
@@ -929,7 +937,7 @@ On a GPU none of this was ever visible: the glow cost ~0.30 ms at 1080p on an
 RTX 3060, which is why it stood unquestioned for so long. The setting keeps its
 name, its 0–2 range and its OSC address — what changed is who does the work.
 
-## Projection notes
+### Projection notes
 
 A projector has far lower contrast than a monitor. If the beams lack bite in the
 haze, bring `SATURATION` down towards 0.4–0.5: a near-white beam cuts through haze
@@ -938,7 +946,7 @@ better than a heavily saturated colour.
 Remember `H`, then let the panel fade, before the audience arrives — the sliders live
 in a `CanvasLayer`, so they are projected on the wall along with everything else.
 
-## Measuring performance (F3)
+### Measuring performance (F3)
 
 The readout shows `FPS`, the **milliseconds per frame**, and the detected screen
 refresh rate. It is the millisecond figure that matters, not the FPS: at 1200 fps,
@@ -952,7 +960,9 @@ per frame with the halo on, because gradients compress badly). The window then l
 like it is struggling, and `Tween`-driven animations — the UI fade, for instance —
 appear to stutter, when everything is perfectly steady in a normal run.
 
-## Structure
+## The code
+
+### Structure
 
 ```
 tools/
@@ -1009,7 +1019,7 @@ needing logic get their own function. `VJParam` is the single point every change
 through — slider, keyboard and OSC alike — which spares the rest of the code from
 having to know where a change came from.
 
-## Builds
+### Builds
 
 Every push to `main` builds for **Linux, Windows and Android** on GitHub Actions and
 uploads the three as artifacts. Pushing a tag like `v1.0` attaches them to a release.
@@ -1025,7 +1035,7 @@ export paths are relative (`build/linux/…`) so nothing machine-specific leaks.
 export locally to somewhere else, change the path in the editor and take care not to
 commit it back.
 
-### Android specifics
+#### Android specifics
 
 The APK is signed with a **throwaway key generated during the build**. That is enough
 to sideload onto a tablet and it keeps the build properly optimised — a release export
@@ -1041,7 +1051,7 @@ run the visuals while a phone drives them.
 renderer draws no 2D glow. It works now — the halo is ordinary geometry, and the
 desktop runs the same renderer as the tablet.
 
-### The one thing CI actually checks
+#### The one thing CI actually checks
 
 Beyond "the export succeeded", the workflow launches the Linux build and fetches
 `http://127.0.0.1:7331/`. The control page ships through the export *filter*, not
@@ -1049,7 +1059,7 @@ through the code, so it is the one piece that can silently go missing while ever
 build still passes. If the page is absent, or the built-in "Page missing" fallback
 comes back instead, the build fails.
 
-## A note on the renderer
+### A note on the renderer
 
 The project ships **Compatibility** (`gl_compatibility`) and offers Forward+ at the
 [launcher](#the-launcher). It is a per-machine decision, not a project-wide one: the
@@ -1075,7 +1085,7 @@ for the pipeline regardless. The one thing it did give — 2D glow — now comes
 Everything else survives the switch unchanged; the kaleidoscope's screen texture was
 the one thing worth checking and it folds identically.
 
-### Antialiasing
+#### Antialiasing
 
 There is no cheap antialiasing here, and it is worth writing down exactly how that
 was established, because two of the options *look* free and are free only because
@@ -1104,7 +1114,7 @@ Note that even MSAA 4× only *softens* the staircase. The strokes are long shall
 diagonals, where a single step spans several pixels; no amount of edge sampling
 turns that into a smooth line.
 
-### What is *not* worth optimising
+#### What is *not* worth optimising
 
 Measured on the same setup, so nobody repeats the search:
 
