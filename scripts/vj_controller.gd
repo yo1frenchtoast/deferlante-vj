@@ -42,6 +42,7 @@ var v_chaos: float = 0.0
 var v_laser_width: float = 5.0
 var _audio_was_active: bool = false
 var _status_tick: float = 0.0
+var _meter_tick: float = 0.0
 var v_length: float = 1.0
 var v_spin: float = 1.0
 var v_align: float = 0.0
@@ -427,6 +428,26 @@ func _audio_meter() -> String:
 	return "%s %s %.0f%%" % [label, bars, _react * 100.0]
 
 
+## The same three levels the status line draws, sent to the browsers.
+##
+## On a clock rather than from the `levels` signal: that one fires every frame, and
+## sixty packets a second per phone is a lot of radio for a bar nobody can read
+## faster than about twenty. The reactivity rides along so the page can make the
+## same distinction the status line does — hearing nothing and not being turned up
+## look identical otherwise.
+func _broadcast_levels():
+	if not web.has_clients():
+		return
+	web.broadcast({
+		"type": "audio",
+		"capturing": audio.capturing,
+		"bass": audio.bass,
+		"mid": audio.mid,
+		"treble": audio.treble,
+		"reactivity": _react,
+	})
+
+
 ## What the sound moves, one line per target.
 ##
 ## Each entry names the setting that holds the *base* value, the band that drives
@@ -501,6 +522,14 @@ func _process(delta: float):
 		_status_tick = 0.0
 		if audio.capturing:
 			_refresh_status()
+
+	# Same reasoning for the phones, on their own clock: twenty a second while there
+	# is something to watch, one a second when there is not — a page that just
+	# connected still has to be told the machine is deaf.
+	_meter_tick += delta
+	if _meter_tick > (0.05 if audio.capturing else 1.0):
+		_meter_tick = 0.0
+		_broadcast_levels()
 
 	# The fan turns and scrolls once per frame, and every stroke reads the same
 	# two numbers — that is what keeps them parallel and evenly spaced.

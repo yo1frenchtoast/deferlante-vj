@@ -39,6 +39,34 @@
   #status.on { color: var(--green); }
   #status.off { color: var(--red); }
 
+  /* Vu-mètre: three bands, read at a glance and never touched, so it takes the
+     smallest corner of the header rather than a row of its own. Hidden until the
+     first packet arrives — an older Godot build simply never sends one. */
+  .meter { display: flex; align-items: flex-end; gap: 3px; margin-left: .7rem; }
+  .meter[hidden] { display: none; }
+  .meter .bar {
+    position: relative; width: 7px; height: 20px; overflow: hidden;
+    background: var(--line); border-radius: 2px;
+  }
+  .meter .bar i {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 0;
+    /* The levels land twenty times a second; the fill glides between them so the
+       bar reads as a level rather than as a strobe. */
+    transition: height .07s linear;
+  }
+  .meter .bass i { background: var(--red); }
+  .meter .mid i { background: var(--accent); }
+  .meter .treble i { background: var(--blue); }
+  /* Turned all the way down: the bars still move, greyed. "It cannot hear you"
+     and "you have not turned it up" are different problems and must look it. */
+  .meter.idle .bar i { background: var(--dim); }
+  .meter.deaf .bar { background: #3a2222; }
+  .meter .amount {
+    font-size: .7rem; color: var(--dim); margin-left: .3rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .meter.deaf .amount { color: var(--red); }
+
   main { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; }
   .view { display: none; height: 100%; }
   .view.on { display: block; }
@@ -163,6 +191,12 @@
     <button data-view="surfaces">SURFACES</button>
   </div>
   <span id="status">connecting…</span>
+  <div class="meter" id="meter" hidden title="Vu-mètre : basses · médiums · aigus">
+    <div class="bar bass"><i></i></div>
+    <div class="bar mid"><i></i></div>
+    <div class="bar treble"><i></i></div>
+    <span class="amount" id="amount">0%</span>
+  </div>
 </header>
 
 <!-- Presets live above the tabs, not inside one: they are the control reached for
@@ -200,6 +234,9 @@ function connect() {
   socket.onopen = () => { statusEl.textContent = "live"; statusEl.className = "on"; };
   socket.onclose = () => {
     statusEl.textContent = "reconnecting…"; statusEl.className = "off";
+    // A frozen bar looks exactly like a live one, so the levels drop with the
+    // socket rather than sitting there lying about the sound.
+    if (!meterEl.hidden) meter({ capturing: false, reactivity: 0 });
     // A phone that sleeps drops the socket; coming back should not need a reload.
     setTimeout(connect, 1200);
   };
@@ -207,6 +244,7 @@ function connect() {
     const msg = JSON.parse(event.data);
     if (msg.type === "schema") build(msg);
     else if (msg.type === "value") apply(msg.slug, msg.value);
+    else if (msg.type === "audio") meter(msg);
   };
 }
 
@@ -287,6 +325,29 @@ function apply(slug, value) {
   row.slider.value = value;
   row.val.textContent = format(row.p, value);
   for (const pad of pads) pad.refresh();
+}
+
+// The vu-mètre. Godot has already done the smoothing and the scaling, so all this
+// does is draw: three fills and the reactivity next to them.
+const meterEl = document.getElementById("meter");
+const amountEl = document.getElementById("amount");
+const fills = {
+  bass: meterEl.querySelector(".bass i"),
+  mid: meterEl.querySelector(".mid i"),
+  treble: meterEl.querySelector(".treble i"),
+};
+
+function meter(msg) {
+  meterEl.hidden = false;
+  const deaf = !msg.capturing;
+  const react = msg.reactivity || 0;
+  meterEl.classList.toggle("deaf", deaf);
+  meterEl.classList.toggle("idle", react <= 0);
+  for (const band of ["bass", "mid", "treble"]) {
+    const level = deaf ? 0 : Math.min(1, Math.max(0, msg[band] || 0));
+    fills[band].style.height = (level * 100) + "%";
+  }
+  amountEl.textContent = deaf ? "sourd" : Math.round(react * 100) + "%";
 }
 
 // Preset slots. A tap recalls, a long press saves — the same gesture a hardware
