@@ -73,10 +73,15 @@ const ROW_HEIGHT := 27
 const HEADER_HEIGHT := 30
 const HELP_HEIGHT := 0
 
+## Narrowest a column may be, so a panel of short labels does not look cramped. The
+## grid widens past these on its own when the text asks for it.
+const MIN_NAME_WIDTH := 130.0
+const MIN_VALUE_WIDTH := 100.0
+
 ## Pixels kept clear at the top and bottom of the screen.
 @export var vertical_margin: float = 48.0
 
-var _column: VBoxContainer
+var _column: GridContainer
 
 ## Chosen at the launcher: the panel is never shown at all, whatever anyone presses.
 ## For a machine that only projects, where the sliders would be on the wall and the
@@ -164,38 +169,62 @@ func _group_by_section() -> Array:
 	return groups
 
 
-func _new_column(parent: HBoxContainer) -> VBoxContainer:
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 2)
-	column.alignment = BoxContainer.ALIGNMENT_END
-	parent.add_child(column)
-	return column
+## One screen column: a three-column grid, so the name, the slider and the value line
+## up across every row in it by construction — section headers included, since they
+## simply take a row of their own.
+##
+## Column alignment is the engine's job here, and it was this file's first. That did
+## not hold. A glyph coming from the **fallback** font — every arrow in this panel:
+## the `←` in "SPHERE ← TREBLE", the `→` on two-way values — measures about twenty
+## pixels narrower than it is drawn, until it has been drawn once. Asked from
+## `build()`, "LASERS ← MID" answered 111 px against a real 131; asked a frame later,
+## still short; right only after some tens of frames. Any number of frames to wait
+## would have been a guess that happened to work here. A container has no such
+## problem: when the metric settles, the minimum size changes and the layout follows
+## it, that frame and every frame after.
+##
+## The bottom alignment lives on a box wrapped around the grid: a GridContainer has
+## no alignment of its own, and the panel has always grown upwards from the bottom
+## edge of the screen.
+func _new_column(parent: HBoxContainer) -> GridContainer:
+	var wrapper := VBoxContainer.new()
+	wrapper.alignment = BoxContainer.ALIGNMENT_END
+	parent.add_child(wrapper)
+
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 2)
+	wrapper.add_child(grid)
+	return grid
 
 
 func _build_section_header(key: String, spaced: bool):
 	if spaced:
-		var spacer := Control.new()
-		spacer.custom_minimum_size.y = 10
-		_column.add_child(spacer)
+		for i in 3:
+			var spacer := Control.new()
+			spacer.custom_minimum_size.y = 10
+			_column.add_child(spacer)
 
 	var header := Label.new()
 	header.text = _lang.text(key)
 	header.add_theme_font_size_override("font_size", 13)
 	header.add_theme_color_override("font_color", SECTION_COLOR)
 	_column.add_child(header)
+	# The two cells the header does not use. A grid row is three cells wide whether
+	# or not anything is in them.
+	_column.add_child(Control.new())
+	_column.add_child(Control.new())
 	_section_labels.append(header)
 	_section_keys.append(key)
 
 
 func _build_row(p: VJParam, index: int):
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-
 	var name_label := Label.new()
-	name_label.custom_minimum_size.x = 130
+	name_label.custom_minimum_size.x = MIN_NAME_WIDTH
 	if p.tint.a > 0.0:
 		name_label.add_theme_color_override("font_color", p.tint)
-	row.add_child(name_label)
+	_column.add_child(name_label)
 
 	var slider := HSlider.new()
 	slider.min_value = p.min_value
@@ -207,14 +236,13 @@ func _build_row(p: VJParam, index: int):
 	# Without this the sliders swallow the arrow keys and break navigation.
 	slider.focus_mode = Control.FOCUS_NONE
 	slider.value_changed.connect(_on_slider_moved.bind(index))
-	row.add_child(slider)
+	_column.add_child(slider)
 
 	var value_label := Label.new()
-	value_label.custom_minimum_size.x = 100
+	value_label.custom_minimum_size.x = MIN_VALUE_WIDTH
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	row.add_child(value_label)
+	_column.add_child(value_label)
 
-	_column.add_child(row)
 	_name_labels.append(name_label)
 	_sliders.append(slider)
 	_value_labels.append(value_label)
