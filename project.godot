@@ -15,13 +15,13 @@ run/main_scene="res://scenes/launcher.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
-[autoload]
-
-Launch="*res://scripts/launch_config.gd"
-
 [audio]
 
 driver/enable_input=true
+
+[autoload]
+
+Launch="*res://scripts/launch_config.gd"
 
 [display]
 
