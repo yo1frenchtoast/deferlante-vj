@@ -54,6 +54,8 @@ var _language: OptionButton
 var _restart_note: Label
 
 var _audio_devices: PackedStringArray
+## Guards against handing over twice. See `_go()`.
+var _going: bool = false
 
 
 func _ready():
@@ -341,6 +343,15 @@ func _unhandled_input(event: InputEvent):
 
 
 func _go():
+	# Enter arrives here twice: the focused button emits `pressed` on the key
+	# *release*, so the press itself goes unhandled and reaches `_unhandled_input`
+	# first. `get_tree().quit()` only takes effect at the end of the frame, which
+	# left the second call time to start a second process — measured on an exported
+	# build: two shows racing for the same ports, one losing and warning about it.
+	# Handing over is a one-way door, so it is latched like one.
+	if _going:
+		return
+	_going = true
 	_collect()
 	Launch.save()
 	if Launch.rendering_method != RenderingServer.get_current_rendering_method():
