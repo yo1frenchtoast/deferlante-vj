@@ -18,7 +18,7 @@ swept by a light that is always about to arrive, and never does.
 **Getting started** — [Run](#run) · [Drive it](#drive-it) · [Settings](#settings) · [Presets](#presets)
 **External control** — [Sound](#audio-reactivity) · [Gamepad](#gamepad) · [Web surface](#web-control-surface) · [REST API](#rest-api) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
 **The effects** — [Spotlight](#the-spotlight) · [Sphere](#the-sphere-effect) · [Kaleidoscope](#the-kaleidoscope) · [Chaos](#chaos) · [Auto-pilot](#the-auto-pilot) · [Colour](#the-two-colour-modes)
-**In the room** — [What starts off](#what-starts-switched-off) · [Glow](#the-glow) · [Projection notes](#projection-notes) · [Performance](#measuring-performance-f3)
+**In the room** — [What starts off](#what-starts-switched-off) · [Halo](#the-halo) · [Projection notes](#projection-notes) · [Performance](#measuring-performance-f3)
 **The code** — [Structure](#structure) · [Builds](#builds) · [Renderer](#a-note-on-the-renderer)
 
 The on-screen interface speaks French or English — see `LANGUAGE` in the Global
@@ -71,7 +71,7 @@ Labels below are the English ones.
 | `RECALL FADE` | 0 – 10 | Seconds a preset takes to crossfade in. 0 snaps. |
 | `PANEL` | 0.05 – 1 | Panel brightness. `F2` toggles it. See below. |
 | `AUTO DIM` | OFF / ON | Duck the panel automatically when something else takes over. |
-| `GLOW` | 0 – 2 | Halo. **0 by default**, see below. |
+| `GLOW` | 0 – 2 | Halo, drawn by the strokes themselves. **0 by default**, see below. |
 | `LANGUAGE` | FRANÇAIS / ENGLISH | On-screen language. Affects nothing else. |
 
 ### Colour
@@ -632,7 +632,7 @@ geometry: the cost is one full-screen pass whether you have 5 strokes or 40.
 The layer sits above the visuals but **below the settings panel** — otherwise the
 sliders would end up multiplied across the screen too.
 
-Like the glow, at 0 the pass is genuinely switched off rather than left running as
+Like the halo, at 0 the pass is genuinely switched off rather than left running as
 an identity transform.
 
 ## Scanlines
@@ -783,16 +783,40 @@ It is a stance: effects that make a statement are switched on when wanted, at th
 chosen moment, rather than running in the background. A scene that starts sober
 leaves room to build; a scene that starts saturated has nowhere to go.
 
-## The glow
+## The halo
 
-With a haze machine the beam is diffused **physically** in the air. Software glow
+With a haze machine the beam is diffused **physically** in the air. A software halo
 then does the same job twice: it softens the edges and takes the bite out of the
-stroke. So it is 0 by default, and at 0 the post-process pass is genuinely off
-(`glow_enabled = false`) rather than merely set to zero intensity.
+stroke. So it is 0 by default, and at 0 nothing is drawn for it at all rather than
+drawn at zero intensity.
 
-Measured cost (RTX 3060, vsync off): **~0.30 ms per frame at 1080p**, ~0.68 ms at 4K.
-In raw FPS that looks enormous (1884 → 1203 fps) but it is only 1.8 % of a frame's
-budget at 60 Hz. It is not a performance problem, it is an aesthetic choice.
+`GLOW` is no longer the post-process glow. Each stroke draws **two extra copies of
+itself**, wider and much fainter, additively (`scripts/halo.gd`). In additive
+blending they sum where they overlap, so the core saturates towards white and the
+light steps down towards the edges. It is two steps, not a Gaussian curve — against
+a beam in haze, nobody can tell.
+
+The spread is in **pixels, not multiples of the stroke's width**: light bleeds a
+distance into the haze, it does not bleed proportionally to how thick the beam is.
+The multiplicative version was tried first and a 10 px laser grew a 70 px slab with
+a hard edge, which read as a second, wider line rather than as spill.
+
+Why it changed, measured on a machine with **no GPU** (llvmpipe, 1080p, a busy show
+— 20 strokes at 10 px, mirror on, 40 circles on the sphere):
+
+| | post-process glow | two-ring halo |
+| --- | --- | --- |
+| Forward+ | 34.2 ms · 29 fps | — |
+| Compatibility | not drawn at all | **10.7 ms · 93 fps** |
+
+The old glow cost **21 ms per frame** on its own — two thirds of the whole frame,
+and by a wide margin the most expensive control on the desk. The halo costs 3.3 ms
+for a comparable look, and unlike the glow it is drawn by *every* renderer, so it
+works on the tablet build too.
+
+On a GPU none of this was ever visible: the glow cost ~0.30 ms at 1080p on an
+RTX 3060, which is why it stood unquestioned for so long. The setting keeps its
+name, its 0–2 range and its OSC address — what changed is who does the work.
 
 ## Projection notes
 
@@ -813,7 +837,7 @@ projector?* (16.7 ms at 60 Hz, 13.3 ms at 75 Hz.)
 
 ⚠️ Never judge the project's behaviour from a `--write-movie` recording: that mode
 writes one PNG per frame to disk and blocks rendering during the encode (up to 110 ms
-per frame with the glow on, because gradients compress badly). The window then looks
+per frame with the halo on, because gradients compress badly). The window then looks
 like it is struggling, and `Tween`-driven animations — the UI fade, for instance —
 appear to stutter, when everything is perfectly steady in a normal run.
 
@@ -841,6 +865,7 @@ scripts/
   control_panel.gd  Panel: rows, keyboard, auto-hide, FPS readout
   glitch_circle.gd  The followspot circle (a head that searches) + random glitches
   laser_line.gd     A stroke that spins and bounces off the edges
+  halo.gd           The wide additive echoes that stand in for the glow
   osc_server.gd     OSC receiver (UDP), messages and bundles
   web_server.gd     Serves the page and the WebSocket control channel
   rest_api.gd       The /api endpoints and the OpenAPI document
@@ -894,12 +919,13 @@ refuses to run without a release key, and falling back to a debug build would co
 performance where it is least affordable. It is *not* suitable for a store listing:
 that needs a key you own, added as a repository secret.
 
-Two things to expect on a tablet, neither of them tested on a device:
+One thing to expect on a tablet, not tested on a device: the **web control surface
+and OSC still work** (`INTERNET` permission is set in the preset), so a tablet can
+run the visuals while a phone drives them.
 
-- **`GLOW` does nothing.** The mobile renderer is `gl_compatibility`, and 2D glow is
-  not rendered there — the same limitation documented below for the desktop.
-- The **web control surface and OSC still work** (`INTERNET` permission is set in the
-  preset), so a tablet can run the visuals while a phone drives them.
+`GLOW` used to be listed here as doing nothing on a tablet, because the mobile
+renderer draws no 2D glow. It works now — the halo is ordinary geometry, and the
+desktop runs the same renderer as the tablet.
 
 ### The one thing CI actually checks
 
@@ -911,5 +937,39 @@ comes back instead, the build fails.
 
 ## A note on the renderer
 
-The project uses **Forward+**. 2D glow is not rendered by the Compatibility renderer:
-switching back to it would leave `GLOW` with no effect at all.
+The project uses **Compatibility** (`gl_compatibility`), on desktop as on the tablet.
+
+It used to be Forward+, for one reason: 2D glow is not drawn by the Compatibility
+renderer. That was worth it for as long as the show only ever ran on a machine with
+a GPU. It stopped being worth it the day it had to run on one without.
+
+Measured on llvmpipe at 1080p — a GPU-less machine, in other words — same project,
+same show:
+
+| | Forward+ | Compatibility |
+| --- | --- | --- |
+| at launch | 9.1 ms · 110 fps | **6.8 ms · 147 fps** |
+| a busy show, halo off | 13.3 ms · 75 fps | **7.3 ms · 136 fps** |
+
+A factor of two, for a project that draws nothing but lines. Forward+ is a clustered
+renderer built for 3D lighting; none of that is ever asked of it here, and it charges
+for the pipeline regardless. The one thing it did give — 2D glow — now comes from
+`scripts/halo.gd` instead, cheaper and on every platform.
+
+Everything else survives the switch unchanged; the kaleidoscope's screen texture was
+the one thing worth checking and it folds identically.
+
+### What is *not* worth optimising
+
+Measured on the same setup, so nobody repeats the search:
+
+- **Geometry is free.** Going from 3 strokes to 20, or from 14 circles on the sphere
+  to 40, costs **nothing measurable** in software rendering. Rebuilding the `Line2D`
+  point arrays wholesale instead of point by point — the obvious first instinct —
+  buys nothing, because that was never where the time went.
+- **No script is hot.** Audio analysis, the web server, OSC, the settings panel and
+  the gamepad were each disabled in turn: not one of them moved the frame time.
+- **Resolution barely matters.** 720p instead of 1080p saved 0.5 ms. The cost is not
+  fill rate.
+- **Dropping the `WorldEnvironment` makes it *slower*** (8.7 ms against 7.3 ms),
+  which is the opposite of what you would expect. It stays.

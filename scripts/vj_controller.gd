@@ -11,11 +11,10 @@ extends Node2D
 @export var laser_count: int = 3
 ## Where the D key ducks the panel to: readable up close, all but gone on a wall.
 @export_range(0.05, 1.0, 0.05) var discreet_brightness: float = 0.15
-## Glow off by default: with a haze machine the beam is diffused physically, and
-## the software glow only softens the edges.
+## Halo off by default: with a haze machine the beam is diffused physically, and
+## adding a software halo on top only softens the edges.
 @export_range(0.0, 2.0, 0.01) var default_glow: float = 0.0
 
-@onready var world_env: WorldEnvironment = get_parent()
 @onready var circle: Line2D = $GlitchCircle
 @onready var sphere: Node2D = $SphereCircles
 @onready var kaleido: CanvasLayer = $Kaleidoscope
@@ -40,6 +39,7 @@ var osc_routes: Dictionary = {}
 var v_speed: float = 1.0
 var v_chaos: float = 0.0
 var v_laser_width: float = 5.0
+var v_halo: float = 0.0
 var _audio_was_active: bool = false
 var _status_tick: float = 0.0
 var _meter_tick: float = 0.0
@@ -313,12 +313,15 @@ func _set_chaos(value: float):
 		l.chaos = value
 
 
+## HALO. No longer the post-process glow: each stroke draws its own wide, faint
+## echo (see `halo.gd`). The setting keeps its name, its range and its OSC address —
+## what changed is who does the work, not what the operator reaches for.
 func _set_glow(value: float):
-	var env: Environment = world_env.environment
-	# At 0 the glow pass is genuinely switched off rather than left running at
-	# zero intensity: that saves about 0.3 ms per frame.
-	env.glow_enabled = value > 0.0
-	env.glow_intensity = value
+	v_halo = value
+	circle.set_halo(value)
+	sphere.halo_amount = value
+	for l in lasers:
+		l.set_halo(value)
 
 
 func _set_laser_count(value: float):
@@ -401,6 +404,7 @@ func _spawn_lasers(count: int):
 		laser.use_palette(palette)
 		laser.set_length_scale(v_length)
 		laser.align = v_align
+		laser.set_halo(v_halo)
 		lasers.append(laser)
 
 

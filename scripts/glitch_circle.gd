@@ -92,11 +92,18 @@ var _pan_to: float = 0.0
 var _tilt_to: float = 0.0
 var _wobble_time: float = 0.0
 
+var _halo: Halo
+
 
 func _ready():
+	_halo = Halo.attach(self)
 	randomize_look()
 	_pick_target()
 	generate_circle_points(base_radius, segments)
+
+
+func set_halo(value: float):
+	_halo.amount = value
 
 
 func randomize_look():
