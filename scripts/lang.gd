@@ -134,6 +134,10 @@ const TEXTS := {
 	"launch.maxfps.free": ["illimité", "uncapped"],
 	"launch.audio": ["ENTRÉE AUDIO", "AUDIO INPUT"],
 	"launch.audio.auto": ["choix automatique", "picked automatically"],
+	"launch.audio.blind": [
+		"Godot ne voit aucune source ici — voir tools/listen-to-output.sh",
+		"Godot sees no source here — see tools/listen-to-output.sh",
+	],
 	"launch.panel": ["PANNEAU", "PANEL"],
 	"launch.panel.hidden": ["masqué pour tout le set", "hidden for the whole set"],
 	"launch.webport": ["PORT WEB", "WEB PORT"],

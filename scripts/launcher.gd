@@ -132,6 +132,13 @@ func _build():
 	_max_fps = _option(grid, "launch.maxfps", _max_fps_choices())
 
 	_audio = _option(grid, "launch.audio", _audio_choices())
+	# On Linux, Godot's PulseAudio backend enumerates nothing at all — the list comes
+	# back as `["Default"]` before capture, after capture, and every moment in
+	# between (measured). A picker that cannot pick has to say so rather than sit
+	# there looking operational; the helper script is the real mechanism, and it
+	# works by making the source Godot gets anyway the right one.
+	if _audio_devices.size() <= 1:
+		_note(grid).text = lang.text("launch.audio.blind")
 	_hide_panel = _check(grid, "launch.panel", "launch.panel.hidden")
 	_web_port = _spin(grid, "launch.webport", 1024, 65534)
 	_osc_port = _spin(grid, "launch.oscport", 1024, 65535)

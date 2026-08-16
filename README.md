@@ -44,7 +44,7 @@ handful of things the engine will not let you change once the show is running.
 | `FULLSCREEN` | | `F11` still toggles it during the show. |
 | `VSYNC` | | |
 | `MAX FPS` | uncapped, or a refresh rate | Frames past the projector's refresh cost the same to draw and nobody sees them. |
-| `AUDIO INPUT` | automatic, or a named source | See [audio reactivity](#audio-reactivity) — the capture cannot be re-opened later. |
+| `AUDIO INPUT` | automatic, or a named source | Bound once and never re-opened. On Linux Godot lists no source to choose from, and the row says so — see [audio reactivity](#audio-reactivity). |
 | `PANEL` | hidden for the whole set | For a machine that only projects, driven from a phone. `F3` still works. |
 | `WEB PORT` · `OSC PORT` | | Bound at start-up, so they cannot be moved later. |
 
@@ -557,6 +557,13 @@ and the app stays deaf, with nothing on screen to say so. Stopping and restartin
 capture stream does not recover it either; measured, that leaves the analyser reading
 exactly zero. If the levels are dead, restart Déferlante.
 
+**Run it again after every reboot.** `pactl load-module` lasts as long as the sound
+server does, and no longer. When it goes, the default source falls back to whatever
+it was before — often a physical input with nothing plugged into it, which reads as
+perfect silence rather than as an error. Everything looks healthy: the app says it is
+capturing, the bars simply never move. This is the single most likely reason for
+"the sound stopped working".
+
 It taps the output; it does not reroute it, so playback is untouched.
 
 If your sound arrives through an interface instead — a Focusrite, a desk — you do
@@ -574,6 +581,12 @@ Worse, `AudioServer.input_device` does not hold in this build: assigned during
 capture follows neither. So the script wraps the monitor in an ordinary source *and
 makes it the default* — pointing Godot at it by giving it no choice. `--stop`
 restores the source you had.
+
+There is nothing to pick from either: on Linux `AudioServer.get_input_device_list()`
+returns `["Default"]` and nothing else — measured before the capture is created,
+after it, and after `play()`. That is why the launcher's `AUDIO INPUT` row says so
+instead of pretending to offer a choice, and why `preferred_device` in
+`audio_reactor.gd` is best-effort rather than the mechanism.
 
 ### What the sound drives
 
