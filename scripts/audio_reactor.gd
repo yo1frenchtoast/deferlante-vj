@@ -136,7 +136,13 @@ func _start_capture():
 
 ## Prefers the monitor wrapper if the helper script has been run, and says nothing
 ## if it has not — capturing an interface's input is a perfectly good setup too.
+##
+## A source named at the launcher wins outright. That is the point of naming it: the
+## automatic pick is a good guess about a machine nobody has configured, and a bad
+## one about a machine where somebody has.
 func _pick_device() -> String:
+	if Launch.audio_device != "":
+		return Launch.audio_device
 	for device in AudioServer.get_input_device_list():
 		if preferred_device.to_lower() in device.to_lower():
 			return device

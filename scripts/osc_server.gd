@@ -20,6 +20,10 @@ func _ready():
 		set_process(false)
 		return
 
+	# Chosen at the launcher, because a port has to be settled before anything can
+	# bind it. The exported value stays as the default the launcher opens on.
+	port = Launch.osc_port
+
 	var err := _udp.bind(port)
 	if err != OK:
 		push_warning("OSC: cannot listen on port %d (error %d)" % [port, err])

@@ -16,10 +16,9 @@ signal slots_changed
 const SLOTS := 9
 const PATH := "user://presets.json"
 
-## Preferences rather than parts of a look. Recalling a preset must not flip the
-## panel into another language, nor light it back up on the wall after the operator
-## has deliberately dimmed it.
-const EXCLUDED := ["global/language", "global/panel"]
+## A preference rather than part of a look. Recalling a preset must not light the
+## panel back up on the wall after the operator has deliberately dimmed it.
+const EXCLUDED := ["global/panel"]
 
 @export var recall_time: float = 2.0
 

@@ -70,6 +70,10 @@ var _current_section: String = ""
 
 
 func _ready():
+	# Settled at the launcher and fixed for the run. It was a setting on the panel
+	# once; it is a decision about who is standing in front of the machine, made
+	# before the show rather than during it.
+	lang.set_language(Launch.language)
 	_build_params()
 	for p in params:
 		p.use_language(lang)
@@ -104,11 +108,8 @@ func _ready():
 	# A phone must see what the keyboard, OSC or the auto-pilot just did.
 	for p in params:
 		p.changed.connect(func(v): web.broadcast({"type": "value", "slug": p.slug, "value": v}))
-	# Switching language relabels the page too, so it is rebuilt from scratch.
-	lang.changed.connect(_send_schema)
 
 	_refresh_status()
-	lang.changed.connect(_refresh_status)
 
 	# A deliberate click hands the panel back, exactly like a keypress does.
 	panel.mouse_reclaimed.connect(func(): panel.set_external_control(false, discreet_brightness))
@@ -146,11 +147,6 @@ func _build_params():
 	var autodim := _fn("global/autodim", 0, 1, 1, 1.0, _set_autodim)
 	autodim.choices = PackedStringArray(["mode.off", "mode.on"])
 	autodim.randomizable = false
-	var language := _fn("global/language", 0, 1, 1, 0.0, _set_language)
-	language.choices = PackedStringArray(Lang.LANGUAGES)
-	# Language names stay in their own tongue, so they are not Lang keys.
-	language.translate_choices = false
-	language.randomizable = false
 
 	_section("section.color")
 	_mode_param = _fn("color/mode", 0, 1, 1, 0.0, _set_color_mode)
@@ -264,7 +260,7 @@ func _refresh_status():
 	if url != "":
 		bits.append("%s  %s" % [lang.text("status.web"), url])
 	if osc.is_listening():
-		bits.append("OSC %d" % osc.port)
+		bits.append("osc %d" % osc.port)
 	var meter: String = _audio_meter()
 	if meter != "":
 		bits.append(meter)
@@ -290,10 +286,6 @@ func _external_touch():
 
 func _set_manual_lock(value: float):
 	circle.manual_lock = value >= 0.5
-
-
-func _set_language(value: float):
-	lang.set_language(int(value))
 
 
 func _set_speed(value: float):

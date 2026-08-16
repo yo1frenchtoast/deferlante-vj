@@ -15,18 +15,61 @@ though it had seen something, then it leaves. It never lands on anyone. Everythi
 else — the lasers, the sphere, the glitches — happens around that deferral: a room
 swept by a light that is always about to arrive, and never does.
 
-**Getting started** — [Run](#run) · [Drive it](#drive-it) · [Settings](#settings) · [Presets](#presets)
+**Getting started** — [Run](#run) · [Launcher](#the-launcher) · [Drive it](#drive-it) · [Settings](#settings) · [Presets](#presets)
 **External control** — [Sound](#audio-reactivity) · [Gamepad](#gamepad) · [Web surface](#web-control-surface) · [REST API](#rest-api) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
 **The effects** — [Spotlight](#the-spotlight) · [Sphere](#the-sphere-effect) · [Kaleidoscope](#the-kaleidoscope) · [Chaos](#chaos) · [Auto-pilot](#the-auto-pilot) · [Colour](#the-two-colour-modes)
 **In the room** — [What starts off](#what-starts-switched-off) · [Halo](#the-halo) · [Projection notes](#projection-notes) · [Performance](#measuring-performance-f3)
 **The code** — [Structure](#structure) · [Builds](#builds) · [Renderer](#a-note-on-the-renderer)
 
-The on-screen interface speaks French or English — see `LANGUAGE` in the Global
-section. Everything else (code, OSC addresses, this document) stays in English.
+The on-screen interface speaks French or English — picked at the [launcher](#the-launcher),
+before the show. Everything else (code, OSC addresses, this document) stays in English.
 
 ## Run
 
-Open the project in Godot 4.7+ and press F5. The main scene is `scenes/main.tscn`.
+Open the project in Godot 4.7+ and press F5. The main scene is `scenes/launcher.tscn`,
+which asks a handful of questions and then hands over to `scenes/main.tscn`.
+
+## The launcher
+
+Almost everything in this project is adjustable live, on purpose: a setting you
+cannot reach mid-set may as well not exist. The launcher holds the exceptions — the
+handful of things the engine will not let you change once the show is running.
+
+| | | |
+| --- | --- | --- |
+| `LANGUAGE` | FRANÇAIS / ENGLISH | First, because it decides what every other row says. |
+| `RENDERER` | Compatibility / Forward+ | Compatibility is twice as fast; Forward+ is the only one that antialiases. **Restarts the app.** |
+| `ANTIALIASING` | none / MSAA 2× 4× 8× | Forward+ only — the Compatibility renderer ignores 2D MSAA entirely. |
+| `RESOLUTION` | the screen's own, or a fixed size | |
+| `FULLSCREEN` | | `F11` still toggles it during the show. |
+| `VSYNC` | | |
+| `MAX FPS` | uncapped, or a refresh rate | Frames past the projector's refresh cost the same to draw and nobody sees them. |
+| `AUDIO INPUT` | automatic, or a named source | See [audio reactivity](#audio-reactivity) — the capture cannot be re-opened later. |
+| `PANEL` | hidden for the whole set | For a machine that only projects, driven from a phone. `F3` still works. |
+| `WEB PORT` · `OSC PORT` | | Bound at start-up, so they cannot be moved later. |
+
+Answers are kept in `user://launch.cfg`, so the screen opens on last night's and
+`LANCER` is usually the only key. The `PANEL` and `LANGUAGE` rows used to be settings
+on the desk; they are decisions about the room and about who is standing in front of
+the machine, so they moved here — which also means `LANGUAGE` no longer has an OSC
+address.
+
+### Why the renderer restarts the app
+
+Godot fixes the renderer before a single script runs, so it cannot be swapped in
+place. Choosing the other one launches the process again with
+`--rendering-method`, and the new one skips this screen. If that relaunch fails, the
+show starts anyway on the renderer already running and says so in the console —
+a black screen ten minutes before doors is worse than the wrong renderer.
+
+### Skipping it
+
+`-- --skip-launcher` goes straight to the show on the saved settings. The bare `--`
+matters: Godot treats anything it does not recognise before that point as a fatal
+argument error, and hands everything after it to the project.
+
+A `--headless` run skips it too, without being asked — there is nobody there to
+answer. That is what keeps [the CI check](#the-one-thing-ci-actually-checks) working.
 
 ## Drive it
 
@@ -72,7 +115,6 @@ Labels below are the English ones.
 | `PANEL` | 0.05 – 1 | Panel brightness. `F2` toggles it. See below. |
 | `AUTO DIM` | OFF / ON | Duck the panel automatically when something else takes over. |
 | `GLOW` | 0 – 2 | Halo, drawn by the strokes themselves. **0 by default**, see below. |
-| `LANGUAGE` | FRANÇAIS / ENGLISH | On-screen language. Affects nothing else. |
 
 ### Colour
 | Setting | Range | Effect |
@@ -200,8 +242,9 @@ to fall through to a digit — six slots out of nine were unreachable.)
 
 ### What is and is not saved
 
-Every setting except `LANGUAGE`, which is a preference rather than part of a look:
-recalling a preset must not flip the panel into another language mid-set.
+Every setting except `PANEL`, which is a preference rather than part of a look:
+recalling a preset must not light the panel back up on the wall after the operator
+has deliberately dimmed it.
 
 A preset saved before a setting existed simply leaves that setting alone, so old
 presets keep working after the project gains new ones.
@@ -316,7 +359,8 @@ the auto-pilot or from the gamepad moves on the phone too, and vice versa.
 
 The page **builds itself from a schema** Godot sends on connect. It holds no list of
 settings of its own, so adding one in `_build_params()` makes it appear on the phone
-with no change to the HTML. Switching the interface language relabels it as well.
+with no change to the HTML. It arrives in whichever language the launcher was set
+to.
 
 Two ports rather than one, deliberately: the page is served over HTTP on 7331 and
 the control channel is a WebSocket on **7332**. `WebSocketPeer.accept_stream()` does
@@ -426,7 +470,6 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/global/chaos` | 0 – 1 | 0 | GLOBAL › CHAOS |
 | `/deferlante/global/randomizer` | 0 – 1 | 0 | GLOBAL › RANDOMIZER |
 | `/deferlante/global/glow` | 0 – 2 | 0 | GLOBAL › GLOW |
-| `/deferlante/global/language` | 0 – 1 | 0 | GLOBAL › LANGUAGE |
 | `/deferlante/color/mode` | 0 – 1 | 0 | COLOR › MODE |
 | `/deferlante/color/saturation` | 0 – 1 | 0.7 | COLOR › SATURATION |
 | `/deferlante/color/red` | 0 – 1 | 1 | COLOR › RED |
@@ -619,9 +662,9 @@ Three precautions make it usable for real:
   starts reading as a malfunction.
 - **Values cluster towards the middle** of each range (the average of two draws),
   which avoids the extremes that either empty or saturate the screen.
-- **Seven settings are out of its reach**: `SPEED`, `GLOW`, `SATURATION`, the three
-  colours and `LANGUAGE`. Those are decisions — the tempo of the track, the contrast
-  of the room — not variations to be subjected to.
+- **Six settings are out of its reach**: `SPEED`, `GLOW`, `SATURATION` and the three
+  colours. Those are decisions — the tempo of the track, the contrast of the room —
+  not variations to be subjected to.
 
 ## The kaleidoscope
 
@@ -847,7 +890,8 @@ appear to stutter, when everything is perfectly steady in a normal run.
 tools/
   build_chataigne_module.py   Regenerates the Chataigne module from the settings
 scenes/
-  main.tscn      Main scene: WorldEnvironment + controller + UI
+  launcher.tscn  Start-up settings, then hands over to main.tscn
+  main.tscn      The show: WorldEnvironment + controller + UI
   laser.tscn     One stroke, instanced N times by the controller
 chataigne/
   Deferlante/    Chataigne module, ready to install
@@ -856,6 +900,8 @@ web/
 shaders/
   kaleidoscope.gdshader   Polar fold into symmetrical wedges
 scripts/
+  launcher.gd       The start-up screen, and the relaunch that changes renderer
+  launch_config.gd  The `Launch` autoload: user://launch.cfg, read by whoever needs it
   gamepad.gd        Xbox pad: aims the spotlight, drives the rest through VJParam
   lang.gd           On-screen translations, keyed by OSC address
   kaleidoscope.gd   Drives the mirror's full-screen pass
@@ -937,11 +983,13 @@ comes back instead, the build fails.
 
 ## A note on the renderer
 
-The project uses **Compatibility** (`gl_compatibility`), on desktop as on the tablet.
+The project ships **Compatibility** (`gl_compatibility`) and offers Forward+ at the
+[launcher](#the-launcher). It is a per-machine decision, not a project-wide one: the
+laptop with a graphics card and the one without want different answers.
 
-It used to be Forward+, for one reason: 2D glow is not drawn by the Compatibility
-renderer. That was worth it for as long as the show only ever ran on a machine with
-a GPU. It stopped being worth it the day it had to run on one without.
+It used to be Forward+ for everyone, for one reason: 2D glow is not drawn by the
+Compatibility renderer. That was worth it for as long as the show only ever ran on a
+machine with a GPU. It stopped being worth it the day it had to run on one without.
 
 Measured on llvmpipe at 1080p — a GPU-less machine, in other words — same project,
 same show:
@@ -958,6 +1006,35 @@ for the pipeline regardless. The one thing it did give — 2D glow — now comes
 
 Everything else survives the switch unchanged; the kaleidoscope's screen texture was
 the one thing worth checking and it folds identically.
+
+### Antialiasing
+
+There is no cheap antialiasing here, and it is worth writing down exactly how that
+was established, because two of the options *look* free and are free only because
+they do nothing at all.
+
+Each was measured against the same seeded frame, so the comparison is the same image
+with and without — comparing two random frames is what made MSAA look like it was
+working when it was not.
+
+| | cost, busy show at 1080p in software | what it actually changes |
+| --- | --- | --- |
+| nothing | 10.3 ms · 97 fps | — |
+| `Line2D.antialiased` | free | **0.00 % of pixels** — a no-op under Compatibility |
+| MSAA 2D under Compatibility | free | **0.00 % of pixels** — not applied either |
+| a permanent faint outline on every stroke | +1.2 ms | staircase unchanged, merely brighter |
+| Forward+ with MSAA 2× | 20.0 ms · 50 fps | softened |
+| Forward+ with MSAA 4× | 24.0 ms · 42 fps | softened, not removed |
+| rendering at 2× and downscaling | 23.3 ms · 43 fps | the cleanest of the lot |
+
+So antialiasing costs somewhere between two and two-and-a-half times the whole
+frame budget — exactly what the switch to Compatibility had just won back. On a
+machine with a GPU it costs nothing worth counting, which is why the choice belongs
+at the launcher rather than in this file.
+
+Note that even MSAA 4× only *softens* the staircase. The strokes are long shallow
+diagonals, where a single step spans several pixels; no amount of edge sampling
+turns that into a smooth line.
 
 ### What is *not* worth optimising
 

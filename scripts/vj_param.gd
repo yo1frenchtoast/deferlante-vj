@@ -26,7 +26,7 @@ var value: float
 ## than a minus sign — in the dark an arrow reads at a glance.
 var bidirectional: bool
 ## Enumerated display: shows names instead of 0 / 1. Holds Lang keys, or raw
-## strings when the choices are language names that stay in their own tongue.
+## strings for anything that reads the same in every language.
 var choices: PackedStringArray = []
 ## Whether the choices above are Lang keys needing translation.
 var translate_choices: bool = true

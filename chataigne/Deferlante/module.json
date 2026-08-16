@@ -123,20 +123,6 @@
         }
       }
     },
-    "Global Language": {
-      "menu": "Global",
-      "callback": "globalLanguage",
-      "parameters": {
-        "Value": {
-          "type": "Integer",
-          "ui": "slider",
-          "min": 0.0,
-          "max": 1.0,
-          "default": 0.0,
-          "mappingIndex": 0
-        }
-      }
-    },
     "Color Mode": {
       "menu": "Color",
       "callback": "colorMode",
