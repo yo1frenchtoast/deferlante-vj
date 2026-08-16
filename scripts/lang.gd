@@ -135,8 +135,8 @@ const TEXTS := {
 	"launch.audio": ["ENTRÉE AUDIO", "AUDIO INPUT"],
 	"launch.audio.auto": ["choix automatique", "picked automatically"],
 	"launch.audio.blind": [
-		"Godot ne voit aucune source ici — voir tools/listen-to-output.sh",
-		"Godot sees no source here — see tools/listen-to-output.sh",
+		"ce Godot ignore ce choix — voir tools/listen-to-output.sh",
+		"this Godot build ignores the choice — see tools/listen-to-output.sh",
 	],
 	"launch.panel": ["PANNEAU", "PANEL"],
 	"launch.panel.hidden": ["masqué pour tout le set", "hidden for the whole set"],

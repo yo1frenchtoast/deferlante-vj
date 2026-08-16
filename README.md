@@ -44,7 +44,7 @@ handful of things the engine will not let you change once the show is running.
 | `FULLSCREEN` | | `F11` still toggles it during the show. |
 | `VSYNC` | | |
 | `MAX FPS` | uncapped, or a refresh rate | Frames past the projector's refresh cost the same to draw and nobody sees them. |
-| `AUDIO INPUT` | automatic, or a named source | Bound once and never re-opened. On Linux Godot lists no source to choose from, and the row says so — see [audio reactivity](#audio-reactivity). |
+| `AUDIO INPUT` | automatic, or a named source | Bound once and never re-opened. Greyed out where Godot ignores the choice, which is every PulseAudio build — see [audio reactivity](#audio-reactivity). |
 | `PANEL` | hidden for the whole set | For a machine that only projects, driven from a phone. `F3` still works. |
 | `WEB PORT` · `OSC PORT` | | Bound at start-up, so they cannot be moved later. |
 
@@ -582,11 +582,23 @@ capture follows neither. So the script wraps the monitor in an ordinary source *
 makes it the default* — pointing Godot at it by giving it no choice. `--stop`
 restores the source you had.
 
-There is nothing to pick from either: on Linux `AudioServer.get_input_device_list()`
-returns `["Default"]` and nothing else — measured before the capture is created,
-after it, and after `play()`. That is why the launcher's `AUDIO INPUT` row says so
-instead of pretending to offer a choice, and why `preferred_device` in
-`audio_reactor.gd` is best-effort rather than the mechanism.
+Measured again since, and precisely. `AudioServer.get_input_device_list()` does
+enumerate properly — every source on the machine, monitors excepted. It is the
+*setter* that goes nowhere: pointed at a source measured at a peak of exactly zero,
+Godot still read the music off the system default, at -55 dB, with a second and a
+half to settle in between. The assignment reads back empty, then `"Default"`.
+
+So the launcher's `AUDIO INPUT` row lists the real sources but is greyed out, with
+the reason on screen. It is not hardcoded to Linux: the launcher assigns a device,
+reads it back and disables the row only if it did not stick, which is safe there
+because no capture is open yet. Same story for `preferred_device` in
+`audio_reactor.gd` — best-effort, not the mechanism.
+
+⚠️ Audio cannot be measured under `--headless`: that mode loads the dummy audio
+driver, where the device list really *is* `["Default"]` and every band reads `-inf`.
+Both look exactly like a broken capture. Any audio check has to run windowed, and
+not under `--write-movie` either, which takes the audio driver over to write its
+`.wav`.
 
 ### What the sound drives
 

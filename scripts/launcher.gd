@@ -132,12 +132,10 @@ func _build():
 	_max_fps = _option(grid, "launch.maxfps", _max_fps_choices())
 
 	_audio = _option(grid, "launch.audio", _audio_choices())
-	# On Linux, Godot's PulseAudio backend enumerates nothing at all — the list comes
-	# back as `["Default"]` before capture, after capture, and every moment in
-	# between (measured). A picker that cannot pick has to say so rather than sit
-	# there looking operational; the helper script is the real mechanism, and it
-	# works by making the source Godot gets anyway the right one.
-	if _audio_devices.size() <= 1:
+	# A picker that cannot pick has to say so rather than sit there looking
+	# operational. Whether it can is probed, not assumed — see `_input_honoured()`.
+	if not _input_honoured():
+		_audio.disabled = true
 		_note(grid).text = lang.text("launch.audio.blind")
 	_hide_panel = _check(grid, "launch.panel", "launch.panel.hidden")
 	_web_port = _spin(grid, "launch.webport", 1024, 65534)
@@ -233,10 +231,36 @@ func _max_fps_choices() -> PackedStringArray:
 
 
 func _audio_choices() -> PackedStringArray:
-	_audio_devices = AudioServer.get_input_device_list()
+	_audio_devices = PackedStringArray()
+	for device in AudioServer.get_input_device_list():
+		# Godot's own "Default" is what the first entry already means, spelled in the
+		# operator's language. Listing both would offer the same thing twice.
+		if device != "Default":
+			_audio_devices.append(device)
 	var out := PackedStringArray([lang.text("launch.audio.auto")])
 	out.append_array(_audio_devices)
 	return out
+
+
+## Does this build actually follow a chosen input?
+##
+## Godot's PulseAudio backend does not. Assigning `AudioServer.input_device` reads
+## back empty, and the capture keeps following the system default — measured by
+## pointing it at a source known to hold nothing but silence and still reading the
+## music. Other backends do honour it, so this assigns a real device and checks
+## whether it stuck, rather than hardcoding a platform.
+##
+## Safe here and nowhere else: the launcher has no capture open, so the assignment
+## and its undo cost nothing. Once `audio_reactor.gd` has started, touching this
+## kills the capture outright.
+func _input_honoured() -> bool:
+	if _audio_devices.is_empty():
+		return false
+	var before := AudioServer.input_device
+	AudioServer.input_device = _audio_devices[0]
+	var held := AudioServer.input_device == _audio_devices[0]
+	AudioServer.input_device = before
+	return held
 
 
 # --------------------------------------------------------------------------
@@ -265,7 +289,10 @@ func _collect():
 	Launch.fullscreen = _fullscreen.button_pressed
 	Launch.vsync = _vsync.button_pressed
 	Launch.max_fps = MAX_FPS[_max_fps.selected]
-	Launch.audio_device = "" if _audio.selected == 0 else _audio_devices[_audio.selected - 1]
+	# A disabled picker means this build ignores the choice; saving one would leave a
+	# setting in the file that quietly does nothing on the next launch.
+	Launch.audio_device = ("" if _audio.disabled or _audio.selected == 0
+		else _audio_devices[_audio.selected - 1])
 	Launch.hide_panel = _hide_panel.button_pressed
 	Launch.web_port = int(_web_port.value)
 	Launch.osc_port = int(_osc_port.value)
