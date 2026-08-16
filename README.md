@@ -15,18 +15,61 @@ though it had seen something, then it leaves. It never lands on anyone. Everythi
 else — the lasers, the sphere, the glitches — happens around that deferral: a room
 swept by a light that is always about to arrive, and never does.
 
-**Getting started** — [Run](#run) · [Drive it](#drive-it) · [Settings](#settings) · [Presets](#presets)
+**Getting started** — [Run](#run) · [Launcher](#the-launcher) · [Drive it](#drive-it) · [Settings](#settings) · [Presets](#presets)
 **External control** — [Sound](#audio-reactivity) · [Gamepad](#gamepad) · [Web surface](#web-control-surface) · [REST API](#rest-api) · [OSC](#external-control-over-osc) · [Audio reactivity](#audio-reactivity)
 **The effects** — [Spotlight](#the-spotlight) · [Sphere](#the-sphere-effect) · [Kaleidoscope](#the-kaleidoscope) · [Chaos](#chaos) · [Auto-pilot](#the-auto-pilot) · [Colour](#the-two-colour-modes)
-**In the room** — [What starts off](#what-starts-switched-off) · [Glow](#the-glow) · [Projection notes](#projection-notes) · [Performance](#measuring-performance-f3)
+**In the room** — [What starts off](#what-starts-switched-off) · [Halo](#the-halo) · [Projection notes](#projection-notes) · [Performance](#measuring-performance-f3)
 **The code** — [Structure](#structure) · [Builds](#builds) · [Renderer](#a-note-on-the-renderer)
 
-The on-screen interface speaks French or English — see `LANGUAGE` in the Global
-section. Everything else (code, OSC addresses, this document) stays in English.
+The on-screen interface speaks French or English — picked at the [launcher](#the-launcher),
+before the show. Everything else (code, OSC addresses, this document) stays in English.
 
 ## Run
 
-Open the project in Godot 4.7+ and press F5. The main scene is `scenes/main.tscn`.
+Open the project in Godot 4.7+ and press F5. The main scene is `scenes/launcher.tscn`,
+which asks a handful of questions and then hands over to `scenes/main.tscn`.
+
+## The launcher
+
+Almost everything in this project is adjustable live, on purpose: a setting you
+cannot reach mid-set may as well not exist. The launcher holds the exceptions — the
+handful of things the engine will not let you change once the show is running.
+
+| | | |
+| --- | --- | --- |
+| `LANGUAGE` | FRANÇAIS / ENGLISH | First, because it decides what every other row says. |
+| `RENDERER` | Compatibility / Forward+ | Compatibility is twice as fast; Forward+ is the only one that antialiases. **Restarts the app.** |
+| `ANTIALIASING` | none / MSAA 2× 4× 8× | Forward+ only — the Compatibility renderer ignores 2D MSAA entirely. |
+| `RESOLUTION` | the screen's own, or a fixed size | |
+| `FULLSCREEN` | | `F11` still toggles it during the show. |
+| `VSYNC` | | |
+| `MAX FPS` | uncapped, or a refresh rate | Frames past the projector's refresh cost the same to draw and nobody sees them. |
+| `AUDIO INPUT` | automatic, or a named source | Bound once and never re-opened. Greyed out where Godot ignores the choice, which is every PulseAudio build — see [audio reactivity](#audio-reactivity). |
+| `PANEL` | hidden for the whole set | For a machine that only projects, driven from a phone. `F3` still works. |
+| `WEB PORT` · `OSC PORT` | | Bound at start-up, so they cannot be moved later. |
+
+Answers are kept in `user://launch.cfg`, so the screen opens on last night's and
+`LANCER` is usually the only key. The `PANEL` and `LANGUAGE` rows used to be settings
+on the desk; they are decisions about the room and about who is standing in front of
+the machine, so they moved here — which also means `LANGUAGE` no longer has an OSC
+address.
+
+### Why the renderer restarts the app
+
+Godot fixes the renderer before a single script runs, so it cannot be swapped in
+place. Choosing the other one launches the process again with
+`--rendering-method`, and the new one skips this screen. If that relaunch fails, the
+show starts anyway on the renderer already running and says so in the console —
+a black screen ten minutes before doors is worse than the wrong renderer.
+
+### Skipping it
+
+`-- --skip-launcher` goes straight to the show on the saved settings. The bare `--`
+matters: Godot treats anything it does not recognise before that point as a fatal
+argument error, and hands everything after it to the project.
+
+A `--headless` run skips it too, without being asked — there is nobody there to
+answer. That is what keeps [the CI check](#the-one-thing-ci-actually-checks) working.
 
 ## Drive it
 
@@ -71,8 +114,7 @@ Labels below are the English ones.
 | `RECALL FADE` | 0 – 10 | Seconds a preset takes to crossfade in. 0 snaps. |
 | `PANEL` | 0.05 – 1 | Panel brightness. `F2` toggles it. See below. |
 | `AUTO DIM` | OFF / ON | Duck the panel automatically when something else takes over. |
-| `GLOW` | 0 – 2 | Halo. **0 by default**, see below. |
-| `LANGUAGE` | FRANÇAIS / ENGLISH | On-screen language. Affects nothing else. |
+| `GLOW` | 0 – 2 | Halo, drawn by the strokes themselves. **0 by default**, see below. |
 
 ### Colour
 | Setting | Range | Effect |
@@ -116,9 +158,12 @@ Labels below are the English ones.
 | --- | --- | --- |
 | `REACTIVITY` | 0 – 1 | Master amount. **0 by default** — nothing moves until asked. |
 | `PUNCH` | 0 – 1 | Response curve. Higher pushes the middle down so only hits show. |
-| `LASERS ← MID` | 0 – 6 | Mids drive the laser strokes. |
-| `SPOT ← BASS` | 0 – 6 | The kick drives the spotlight. |
-| `SPHERE ← TREBLE` | 0 – 6 | Treble drives the sphere. |
+| `LASERS ← MID` | 0 – 12 | Mids drive the laser strokes. |
+| `SPOT ← BASS` | 0 – 12 | The kick drives the spotlight. |
+| `SPHERE ← TREBLE` | 0 – 12 | Treble drives the sphere. |
+
+The top of those three is deliberately past the point of good taste — see
+[how nervous it is](#how-nervous-it-is). The middle is where a set lives.
 
 ### Sphere
 | Setting | Range | Effect |
@@ -200,8 +245,9 @@ to fall through to a digit — six slots out of nine were unreachable.)
 
 ### What is and is not saved
 
-Every setting except `LANGUAGE`, which is a preference rather than part of a look:
-recalling a preset must not flip the panel into another language mid-set.
+Every setting except `PANEL`, which is a preference rather than part of a look:
+recalling a preset must not light the panel back up on the wall after the operator
+has deliberately dimmed it.
 
 A preset saved before a setting existed simply leaves that setting alone, so old
 presets keep working after the project gains new ones.
@@ -316,7 +362,8 @@ the auto-pilot or from the gamepad moves on the phone too, and vice versa.
 
 The page **builds itself from a schema** Godot sends on connect. It holds no list of
 settings of its own, so adding one in `_build_params()` makes it appear on the phone
-with no change to the HTML. Switching the interface language relabels it as well.
+with no change to the HTML. It arrives in whichever language the launcher was set
+to.
 
 Two ports rather than one, deliberately: the page is served over HTTP on 7331 and
 the control channel is a WebSocket on **7332**. `WebSocketPeer.accept_stream()` does
@@ -426,7 +473,6 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/global/chaos` | 0 – 1 | 0 | GLOBAL › CHAOS |
 | `/deferlante/global/randomizer` | 0 – 1 | 0 | GLOBAL › RANDOMIZER |
 | `/deferlante/global/glow` | 0 – 2 | 0 | GLOBAL › GLOW |
-| `/deferlante/global/language` | 0 – 1 | 0 | GLOBAL › LANGUAGE |
 | `/deferlante/color/mode` | 0 – 1 | 0 | COLOR › MODE |
 | `/deferlante/color/saturation` | 0 – 1 | 0.7 | COLOR › SATURATION |
 | `/deferlante/color/red` | 0 – 1 | 1 | COLOR › RED |
@@ -514,6 +560,24 @@ and the app stays deaf, with nothing on screen to say so. Stopping and restartin
 capture stream does not recover it either; measured, that leaves the analyser reading
 exactly zero. If the levels are dead, restart Déferlante.
 
+**Run it again after every reboot.** `pactl load-module` lasts as long as the sound
+server does, and no longer. When it goes, the default source falls back to whatever
+it was before — often a physical input with nothing plugged into it, which reads as
+perfect silence rather than as an error. This is the single most likely reason for
+"the sound stopped working".
+
+The status line now says so rather than leaving it to be discovered. Three states
+that used to look alike on flat bars, and each says which:
+
+| on screen | meaning |
+| --- | --- |
+| `son  pas de capture` | no analyser at all — the capture never opened |
+| `son  silence — rien n'entre` | open, and carrying nothing for ten seconds straight |
+| `son ▁▂▃ 0%` | hearing it perfectly well; `REACTIVITY` is simply at zero |
+
+Ten seconds is longer than any gap in a set and shorter than the time it takes to
+start wondering. The web surface shows the same three states in its vu-mètre.
+
 It taps the output; it does not reroute it, so playback is untouched.
 
 If your sound arrives through an interface instead — a Focusrite, a desk — you do
@@ -531,6 +595,24 @@ Worse, `AudioServer.input_device` does not hold in this build: assigned during
 capture follows neither. So the script wraps the monitor in an ordinary source *and
 makes it the default* — pointing Godot at it by giving it no choice. `--stop`
 restores the source you had.
+
+Measured again since, and precisely. `AudioServer.get_input_device_list()` does
+enumerate properly — every source on the machine, monitors excepted. It is the
+*setter* that goes nowhere: pointed at a source measured at a peak of exactly zero,
+Godot still read the music off the system default, at -55 dB, with a second and a
+half to settle in between. The assignment reads back empty, then `"Default"`.
+
+So the launcher's `AUDIO INPUT` row lists the real sources but is greyed out, with
+the reason on screen. It is not hardcoded to Linux: the launcher assigns a device,
+reads it back and disables the row only if it did not stick, which is safe there
+because no capture is open yet. Same story for `preferred_device` in
+`audio_reactor.gd` — best-effort, not the mechanism.
+
+⚠️ Audio cannot be measured under `--headless`: that mode loads the dummy audio
+driver, where the device list really *is* `["Default"]` and every band reads `-inf`.
+Both look exactly like a broken capture. Any audio check has to run windowed, and
+not under `--write-movie` either, which takes the audio driver over to write its
+`.wav`.
 
 ### What the sound drives
 
@@ -584,6 +666,35 @@ frame after frame and collapses every band to zero within a second.
 
 `PUNCH` is the taste control on top. Adaptive scaling gets the *range* right, but how
 much of a busy track should read as "pulsing" rather than "loud" is a judgement.
+
+### How nervous it is
+
+Sharpened deliberately, and every step of it measured off the app's own level
+broadcast — mean level, peak, and the average change from one packet to the next,
+which is the number that says "nervous".
+
+- **`release` 0.9 → 0.3 s.** This is where the nervousness comes from. A long decay
+  is still coming down when the next kick lands, so hits merge into a swell; a short
+  one separates them. On its own it took the average change per sample from 0.021 to
+  0.044 on the bass and from 0.073 to 0.174 on the treble. `attack` went 0.06 → 0.03
+  to match.
+- **`min_range_db` 9 → 5 dB.** The bigger surprise, and the one that fixed the kick.
+  This is the ceiling on the automatic gain: a band whose loud and quiet moments sit
+  closer together than this is divided by a range it never uses. A bass line is
+  nearly continuous, so it lived entirely inside the old floor and topped out around
+  **0.45** — the spotlight it drives barely moved, on the *original* settings. At
+  5 dB the same passage reaches 0.99, and spends 22 % of its time low instead of
+  63 %. 3 dB was measured too and adds almost nothing (1.00 against 0.99) while
+  expanding more of whatever hum is in the room, so 5 it is.
+- **The two changes that did not survive measurement.** Shortening `average_window`
+  to 2 s, on the theory that a reference following the track more closely would show
+  more, showed *less* — a reference that chases the signal rises to meet it and
+  flattens what it was meant to reveal. And `PUNCH` at 0.5 compounded with the
+  shorter decay: the bass fell to 0.09 with 89 % of its time on the floor, so the
+  kick stopped registering entirely. Both were put back.
+
+End to end, all three bands now reach full scale and move three to five times as
+much per sample as they did.
 Measured on a techno set: at 0 the bass swings 0.39–0.87, at 0.5 it swings 0.12–0.40.
 
 ## The two colour modes
@@ -619,9 +730,9 @@ Three precautions make it usable for real:
   starts reading as a malfunction.
 - **Values cluster towards the middle** of each range (the average of two draws),
   which avoids the extremes that either empty or saturate the screen.
-- **Seven settings are out of its reach**: `SPEED`, `GLOW`, `SATURATION`, the three
-  colours and `LANGUAGE`. Those are decisions — the tempo of the track, the contrast
-  of the room — not variations to be subjected to.
+- **Six settings are out of its reach**: `SPEED`, `GLOW`, `SATURATION` and the three
+  colours. Those are decisions — the tempo of the track, the contrast of the room —
+  not variations to be subjected to.
 
 ## The kaleidoscope
 
@@ -632,7 +743,7 @@ geometry: the cost is one full-screen pass whether you have 5 strokes or 40.
 The layer sits above the visuals but **below the settings panel** — otherwise the
 sliders would end up multiplied across the screen too.
 
-Like the glow, at 0 the pass is genuinely switched off rather than left running as
+Like the halo, at 0 the pass is genuinely switched off rather than left running as
 an identity transform.
 
 ## Scanlines
@@ -783,16 +894,40 @@ It is a stance: effects that make a statement are switched on when wanted, at th
 chosen moment, rather than running in the background. A scene that starts sober
 leaves room to build; a scene that starts saturated has nowhere to go.
 
-## The glow
+## The halo
 
-With a haze machine the beam is diffused **physically** in the air. Software glow
+With a haze machine the beam is diffused **physically** in the air. A software halo
 then does the same job twice: it softens the edges and takes the bite out of the
-stroke. So it is 0 by default, and at 0 the post-process pass is genuinely off
-(`glow_enabled = false`) rather than merely set to zero intensity.
+stroke. So it is 0 by default, and at 0 nothing is drawn for it at all rather than
+drawn at zero intensity.
 
-Measured cost (RTX 3060, vsync off): **~0.30 ms per frame at 1080p**, ~0.68 ms at 4K.
-In raw FPS that looks enormous (1884 → 1203 fps) but it is only 1.8 % of a frame's
-budget at 60 Hz. It is not a performance problem, it is an aesthetic choice.
+`GLOW` is no longer the post-process glow. Each stroke draws **two extra copies of
+itself**, wider and much fainter, additively (`scripts/halo.gd`). In additive
+blending they sum where they overlap, so the core saturates towards white and the
+light steps down towards the edges. It is two steps, not a Gaussian curve — against
+a beam in haze, nobody can tell.
+
+The spread is in **pixels, not multiples of the stroke's width**: light bleeds a
+distance into the haze, it does not bleed proportionally to how thick the beam is.
+The multiplicative version was tried first and a 10 px laser grew a 70 px slab with
+a hard edge, which read as a second, wider line rather than as spill.
+
+Why it changed, measured on a machine with **no GPU** (llvmpipe, 1080p, a busy show
+— 20 strokes at 10 px, mirror on, 40 circles on the sphere):
+
+| | post-process glow | two-ring halo |
+| --- | --- | --- |
+| Forward+ | 34.2 ms · 29 fps | — |
+| Compatibility | not drawn at all | **10.7 ms · 93 fps** |
+
+The old glow cost **21 ms per frame** on its own — two thirds of the whole frame,
+and by a wide margin the most expensive control on the desk. The halo costs 3.3 ms
+for a comparable look, and unlike the glow it is drawn by *every* renderer, so it
+works on the tablet build too.
+
+On a GPU none of this was ever visible: the glow cost ~0.30 ms at 1080p on an
+RTX 3060, which is why it stood unquestioned for so long. The setting keeps its
+name, its 0–2 range and its OSC address — what changed is who does the work.
 
 ## Projection notes
 
@@ -813,7 +948,7 @@ projector?* (16.7 ms at 60 Hz, 13.3 ms at 75 Hz.)
 
 ⚠️ Never judge the project's behaviour from a `--write-movie` recording: that mode
 writes one PNG per frame to disk and blocks rendering during the encode (up to 110 ms
-per frame with the glow on, because gradients compress badly). The window then looks
+per frame with the halo on, because gradients compress badly). The window then looks
 like it is struggling, and `Tween`-driven animations — the UI fade, for instance —
 appear to stutter, when everything is perfectly steady in a normal run.
 
@@ -823,7 +958,8 @@ appear to stutter, when everything is perfectly steady in a normal run.
 tools/
   build_chataigne_module.py   Regenerates the Chataigne module from the settings
 scenes/
-  main.tscn      Main scene: WorldEnvironment + controller + UI
+  launcher.tscn  Start-up settings, then hands over to main.tscn
+  main.tscn      The show: WorldEnvironment + controller + UI
   laser.tscn     One stroke, instanced N times by the controller
 chataigne/
   Deferlante/    Chataigne module, ready to install
@@ -832,6 +968,8 @@ web/
 shaders/
   kaleidoscope.gdshader   Polar fold into symmetrical wedges
 scripts/
+  launcher.gd       The start-up screen, and the relaunch that changes renderer
+  launch_config.gd  The `Launch` autoload: user://launch.cfg, read by whoever needs it
   gamepad.gd        Xbox pad: aims the spotlight, drives the rest through VJParam
   lang.gd           On-screen translations, keyed by OSC address
   kaleidoscope.gd   Drives the mirror's full-screen pass
@@ -841,6 +979,7 @@ scripts/
   control_panel.gd  Panel: rows, keyboard, auto-hide, FPS readout
   glitch_circle.gd  The followspot circle (a head that searches) + random glitches
   laser_line.gd     A stroke that spins and bounces off the edges
+  halo.gd           The wide additive echoes that stand in for the glow
   osc_server.gd     OSC receiver (UDP), messages and bundles
   web_server.gd     Serves the page and the WebSocket control channel
   rest_api.gd       The /api endpoints and the OpenAPI document
@@ -894,12 +1033,13 @@ refuses to run without a release key, and falling back to a debug build would co
 performance where it is least affordable. It is *not* suitable for a store listing:
 that needs a key you own, added as a repository secret.
 
-Two things to expect on a tablet, neither of them tested on a device:
+One thing to expect on a tablet, not tested on a device: the **web control surface
+and OSC still work** (`INTERNET` permission is set in the preset), so a tablet can
+run the visuals while a phone drives them.
 
-- **`GLOW` does nothing.** The mobile renderer is `gl_compatibility`, and 2D glow is
-  not rendered there — the same limitation documented below for the desktop.
-- The **web control surface and OSC still work** (`INTERNET` permission is set in the
-  preset), so a tablet can run the visuals while a phone drives them.
+`GLOW` used to be listed here as doing nothing on a tablet, because the mobile
+renderer draws no 2D glow. It works now — the halo is ordinary geometry, and the
+desktop runs the same renderer as the tablet.
 
 ### The one thing CI actually checks
 
@@ -911,5 +1051,70 @@ comes back instead, the build fails.
 
 ## A note on the renderer
 
-The project uses **Forward+**. 2D glow is not rendered by the Compatibility renderer:
-switching back to it would leave `GLOW` with no effect at all.
+The project ships **Compatibility** (`gl_compatibility`) and offers Forward+ at the
+[launcher](#the-launcher). It is a per-machine decision, not a project-wide one: the
+laptop with a graphics card and the one without want different answers.
+
+It used to be Forward+ for everyone, for one reason: 2D glow is not drawn by the
+Compatibility renderer. That was worth it for as long as the show only ever ran on a
+machine with a GPU. It stopped being worth it the day it had to run on one without.
+
+Measured on llvmpipe at 1080p — a GPU-less machine, in other words — same project,
+same show:
+
+| | Forward+ | Compatibility |
+| --- | --- | --- |
+| at launch | 9.1 ms · 110 fps | **6.8 ms · 147 fps** |
+| a busy show, halo off | 13.3 ms · 75 fps | **7.3 ms · 136 fps** |
+
+A factor of two, for a project that draws nothing but lines. Forward+ is a clustered
+renderer built for 3D lighting; none of that is ever asked of it here, and it charges
+for the pipeline regardless. The one thing it did give — 2D glow — now comes from
+`scripts/halo.gd` instead, cheaper and on every platform.
+
+Everything else survives the switch unchanged; the kaleidoscope's screen texture was
+the one thing worth checking and it folds identically.
+
+### Antialiasing
+
+There is no cheap antialiasing here, and it is worth writing down exactly how that
+was established, because two of the options *look* free and are free only because
+they do nothing at all.
+
+Each was measured against the same seeded frame, so the comparison is the same image
+with and without — comparing two random frames is what made MSAA look like it was
+working when it was not.
+
+| | cost, busy show at 1080p in software | what it actually changes |
+| --- | --- | --- |
+| nothing | 10.3 ms · 97 fps | — |
+| `Line2D.antialiased` | free | **0.00 % of pixels** — a no-op under Compatibility |
+| MSAA 2D under Compatibility | free | **0.00 % of pixels** — not applied either |
+| a permanent faint outline on every stroke | +1.2 ms | staircase unchanged, merely brighter |
+| Forward+ with MSAA 2× | 20.0 ms · 50 fps | softened |
+| Forward+ with MSAA 4× | 24.0 ms · 42 fps | softened, not removed |
+| rendering at 2× and downscaling | 23.3 ms · 43 fps | the cleanest of the lot |
+
+So antialiasing costs somewhere between two and two-and-a-half times the whole
+frame budget — exactly what the switch to Compatibility had just won back. On a
+machine with a GPU it costs nothing worth counting, which is why the choice belongs
+at the launcher rather than in this file.
+
+Note that even MSAA 4× only *softens* the staircase. The strokes are long shallow
+diagonals, where a single step spans several pixels; no amount of edge sampling
+turns that into a smooth line.
+
+### What is *not* worth optimising
+
+Measured on the same setup, so nobody repeats the search:
+
+- **Geometry is free.** Going from 3 strokes to 20, or from 14 circles on the sphere
+  to 40, costs **nothing measurable** in software rendering. Rebuilding the `Line2D`
+  point arrays wholesale instead of point by point — the obvious first instinct —
+  buys nothing, because that was never where the time went.
+- **No script is hot.** Audio analysis, the web server, OSC, the settings panel and
+  the gamepad were each disabled in turn: not one of them moved the frame time.
+- **Resolution barely matters.** 720p instead of 1080p saved 0.5 ms. The cost is not
+  fill rate.
+- **Dropping the `WorldEnvironment` makes it *slower*** (8.7 ms against 7.3 ms),
+  which is the opposite of what you would expect. It stays.

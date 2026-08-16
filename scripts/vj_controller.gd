@@ -11,11 +11,10 @@ extends Node2D
 @export var laser_count: int = 3
 ## Where the D key ducks the panel to: readable up close, all but gone on a wall.
 @export_range(0.05, 1.0, 0.05) var discreet_brightness: float = 0.15
-## Glow off by default: with a haze machine the beam is diffused physically, and
-## the software glow only softens the edges.
+## Halo off by default: with a haze machine the beam is diffused physically, and
+## adding a software halo on top only softens the edges.
 @export_range(0.0, 2.0, 0.01) var default_glow: float = 0.0
 
-@onready var world_env: WorldEnvironment = get_parent()
 @onready var circle: Line2D = $GlitchCircle
 @onready var sphere: Node2D = $SphereCircles
 @onready var kaleido: CanvasLayer = $Kaleidoscope
@@ -40,6 +39,7 @@ var osc_routes: Dictionary = {}
 var v_speed: float = 1.0
 var v_chaos: float = 0.0
 var v_laser_width: float = 5.0
+var v_halo: float = 0.0
 var _audio_was_active: bool = false
 var _status_tick: float = 0.0
 var _meter_tick: float = 0.0
@@ -54,7 +54,7 @@ var _scroll_phase: float = 0.0
 
 # Audio reactivity. The master is zero by default, so nothing moves until asked.
 var _react: float = 0.0
-var _amounts := {"lasers": 1.5, "spot": 1.5, "sphere": 1.5}
+var _amounts := {"lasers": 2.5, "spot": 2.5, "sphere": 2.5}
 var _modulations: Array = []
 
 enum { BASS, MID, TREBLE }
@@ -70,6 +70,10 @@ var _current_section: String = ""
 
 
 func _ready():
+	# Settled at the launcher and fixed for the run. It was a setting on the panel
+	# once; it is a decision about who is standing in front of the machine, made
+	# before the show rather than during it.
+	lang.set_language(Launch.language)
 	_build_params()
 	for p in params:
 		p.use_language(lang)
@@ -104,11 +108,8 @@ func _ready():
 	# A phone must see what the keyboard, OSC or the auto-pilot just did.
 	for p in params:
 		p.changed.connect(func(v): web.broadcast({"type": "value", "slug": p.slug, "value": v}))
-	# Switching language relabels the page too, so it is rebuilt from scratch.
-	lang.changed.connect(_send_schema)
 
 	_refresh_status()
-	lang.changed.connect(_refresh_status)
 
 	# A deliberate click hands the panel back, exactly like a keypress does.
 	panel.mouse_reclaimed.connect(func(): panel.set_external_control(false, discreet_brightness))
@@ -146,11 +147,6 @@ func _build_params():
 	var autodim := _fn("global/autodim", 0, 1, 1, 1.0, _set_autodim)
 	autodim.choices = PackedStringArray(["mode.off", "mode.on"])
 	autodim.randomizable = false
-	var language := _fn("global/language", 0, 1, 1, 0.0, _set_language)
-	language.choices = PackedStringArray(Lang.LANGUAGES)
-	# Language names stay in their own tongue, so they are not Lang keys.
-	language.translate_choices = false
-	language.randomizable = false
 
 	_section("section.color")
 	_mode_param = _fn("color/mode", 0, 1, 1, 0.0, _set_color_mode)
@@ -196,9 +192,14 @@ func _build_params():
 	# Written out one by one rather than looped over: this list is read back by
 	# `tools/build_chataigne_module.py`, which parses the declarations as text, and
 	# a slug built at runtime is a slug the tooling cannot see.
-	_fn("audio/lasers", 0, 6, 0.05, 1.5, func(v): _amounts["lasers"] = v)
-	_fn("audio/spot", 0, 6, 0.05, 1.5, func(v): _amounts["spot"] = v)
-	_fn("audio/sphere", 0, 6, 0.05, 1.5, func(v): _amounts["sphere"] = v)
+	# Ranges deliberately past the point of good taste. The envelope now pulses
+	# rather than swells, which makes each hit shorter as well as sharper, and a
+	# ceiling that stopped at something reasonable meant the top of the slider was
+	# merely brisk. The top of a slider should be too much; the middle is where the
+	# set lives.
+	_fn("audio/lasers", 0, 12, 0.05, 2.5, func(v): _amounts["lasers"] = v)
+	_fn("audio/spot", 0, 12, 0.05, 2.5, func(v): _amounts["spot"] = v)
+	_fn("audio/sphere", 0, 12, 0.05, 2.5, func(v): _amounts["sphere"] = v)
 
 	_section("section.sphere")
 	_prop("sphere/count", 0, 80, 1, 14.0, sphere, "circle_count")
@@ -264,7 +265,7 @@ func _refresh_status():
 	if url != "":
 		bits.append("%s  %s" % [lang.text("status.web"), url])
 	if osc.is_listening():
-		bits.append("OSC %d" % osc.port)
+		bits.append("osc %d" % osc.port)
 	var meter: String = _audio_meter()
 	if meter != "":
 		bits.append(meter)
@@ -292,10 +293,6 @@ func _set_manual_lock(value: float):
 	circle.manual_lock = value >= 0.5
 
 
-func _set_language(value: float):
-	lang.set_language(int(value))
-
-
 func _set_speed(value: float):
 	v_speed = value
 	circle.speed_scale = value
@@ -313,12 +310,15 @@ func _set_chaos(value: float):
 		l.chaos = value
 
 
+## HALO. No longer the post-process glow: each stroke draws its own wide, faint
+## echo (see `halo.gd`). The setting keeps its name, its range and its OSC address —
+## what changed is who does the work, not what the operator reaches for.
 func _set_glow(value: float):
-	var env: Environment = world_env.environment
-	# At 0 the glow pass is genuinely switched off rather than left running at
-	# zero intensity: that saves about 0.3 ms per frame.
-	env.glow_enabled = value > 0.0
-	env.glow_intensity = value
+	v_halo = value
+	circle.set_halo(value)
+	sphere.halo_amount = value
+	for l in lasers:
+		l.set_halo(value)
 
 
 func _set_laser_count(value: float):
@@ -401,6 +401,7 @@ func _spawn_lasers(count: int):
 		laser.use_palette(palette)
 		laser.set_length_scale(v_length)
 		laser.align = v_align
+		laser.set_halo(v_halo)
 		lasers.append(laser)
 
 
@@ -419,6 +420,10 @@ func _audio_meter() -> String:
 	var label: String = lang.text("status.audio")
 	if not audio.capturing:
 		return "%s %s" % [label, lang.text("status.deaf")]
+	# Told apart from a quiet passage on purpose: this one means the capture is open
+	# on something that carries nothing, which is almost always the wrong source.
+	if audio.is_silent():
+		return "%s %s" % [label, lang.text("status.silent")]
 	var glyphs := ["▁", "▂", "▃", "▄", "▅", "█"]
 	var bars := ""
 	for value in [audio.bass, audio.mid, audio.treble]:
@@ -444,6 +449,7 @@ func _broadcast_levels():
 		"bass": audio.bass,
 		"mid": audio.mid,
 		"treble": audio.treble,
+		"silent": audio.is_silent(),
 		"reactivity": _react,
 	})
 

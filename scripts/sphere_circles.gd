@@ -33,6 +33,13 @@ extends Node2D
 ## 0 gives an opaque sphere, showing only the cap facing the eye (the most legible).
 ## Raising it gives a glass sphere where the far side shows through as well.
 @export var back_dim: float = 0.0
+## Mirrors the HALO setting. Held here rather than read from the controller, so a
+## sphere rebuilt on a count change hands it straight to the new circles.
+var halo_amount: float = 0.0:
+	set(value):
+		halo_amount = value
+		for h in _halos:
+			h.amount = value
 
 var speed_scale: float = 1.0
 ## Shared reference to the colour state: nothing is copied.
@@ -44,6 +51,7 @@ var _time: float = 0.0
 var _dirs: PackedVector3Array = []
 var _hues: PackedFloat32Array = []
 var _circles: Array[Line2D] = []
+var _halos: Array[Halo] = []
 var _material: CanvasItemMaterial
 
 
@@ -57,6 +65,9 @@ func _rebuild():
 	for c in _circles:
 		c.queue_free()
 	_circles.clear()
+	# The echoes are children of their circle, so they go with it; the list only
+	# has to forget them.
+	_halos.clear()
 	_dirs.clear()
 	_hues.clear()
 
@@ -66,6 +77,9 @@ func _rebuild():
 		line.width = line_width
 		add_child(line)
 		_circles.append(line)
+		var halo := Halo.attach(line)
+		halo.amount = halo_amount
+		_halos.append(halo)
 		_dirs.append(_fibonacci_point(i, circle_count))
 		_hues.append(randf())
 

@@ -2,26 +2,23 @@
 
 [ext_resource type="Script" uid="uid://d2qogwwj75x77" path="res://scripts/glitch_circle.gd" id="1_x16oa"]
 [ext_resource type="Script" uid="uid://d4kegm87j06ne" path="res://scripts/vj_controller.gd" id="2_wjtrd"]
-[ext_resource type="Script" path="res://scripts/sphere_circles.gd" id="3_sphere"]
-[ext_resource type="Script" path="res://scripts/osc_server.gd" id="4_osc"]
-[ext_resource type="Script" path="res://scripts/web_server.gd" id="8_web"]
-[ext_resource type="Script" path="res://scripts/gamepad.gd" id="9_pad"]
-[ext_resource type="Script" path="res://scripts/presets.gd" id="10_presets"]
-[ext_resource type="Script" path="res://scripts/audio_reactor.gd" id="11_audio"]
-[ext_resource type="Script" path="res://scripts/rest_api.gd" id="12_api"]
-[ext_resource type="Script" path="res://scripts/autopilot.gd" id="13_auto"]
-[ext_resource type="Script" path="res://scripts/control_panel.gd" id="5_panel"]
-[ext_resource type="Script" path="res://scripts/kaleidoscope.gd" id="6_kaleido"]
-[ext_resource type="Shader" path="res://shaders/kaleidoscope.gdshader" id="7_shader"]
+[ext_resource type="Script" uid="uid://dhj8r6okm386c" path="res://scripts/sphere_circles.gd" id="3_sphere"]
+[ext_resource type="Script" uid="uid://grko7wg7oul1" path="res://scripts/osc_server.gd" id="4_osc"]
+[ext_resource type="Script" uid="uid://c7ds0h68455h4" path="res://scripts/control_panel.gd" id="5_panel"]
+[ext_resource type="Script" uid="uid://hyk3mrjde3i0" path="res://scripts/kaleidoscope.gd" id="6_kaleido"]
+[ext_resource type="Shader" uid="uid://12bsdtb2wo1s" path="res://shaders/kaleidoscope.gdshader" id="7_shader"]
+[ext_resource type="Script" uid="uid://lj1vhqus3h5" path="res://scripts/web_server.gd" id="8_web"]
+[ext_resource type="Script" uid="uid://cqj2ao6ebwa2y" path="res://scripts/gamepad.gd" id="9_pad"]
+[ext_resource type="Script" uid="uid://qaqatliylqe6" path="res://scripts/presets.gd" id="10_presets"]
+[ext_resource type="Script" uid="uid://c8527sjb6svlb" path="res://scripts/audio_reactor.gd" id="11_audio"]
+[ext_resource type="Script" uid="uid://cw6cyk8leuob0" path="res://scripts/rest_api.gd" id="12_api"]
+[ext_resource type="Script" uid="uid://bmc4vofsmn7sx" path="res://scripts/autopilot.gd" id="13_auto"]
 
 [sub_resource type="Environment" id="Environment_te0mf"]
 background_mode = 3
-glow_enabled = false
-glow_intensity = 0.0
-glow_strength = 1.0
-glow_bloom = 0.2
-glow_blend_mode = 0
-glow_hdr_threshold = 0.5
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_wjtrd"]
+blend_mode = 1
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_kaleido"]
 shader = ExtResource("7_shader")
@@ -29,47 +26,44 @@ shader_parameter/amount = 0.0
 shader_parameter/segments = 6
 shader_parameter/rotation = 0.0
 
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_wjtrd"]
-blend_mode = 1
-
-[node name="Main" type="WorldEnvironment"]
+[node name="Main" type="WorldEnvironment" unique_id=1286195540]
 environment = SubResource("Environment_te0mf")
 
-[node name="VJController" type="Node2D" parent="."]
+[node name="VJController" type="Node2D" parent="." unique_id=1656945823]
 script = ExtResource("2_wjtrd")
 
-[node name="GlitchCircle" type="Line2D" parent="VJController"]
+[node name="GlitchCircle" type="Line2D" parent="VJController" unique_id=183842512]
 material = SubResource("CanvasItemMaterial_wjtrd")
 script = ExtResource("1_x16oa")
 
-[node name="SphereCircles" type="Node2D" parent="VJController"]
+[node name="SphereCircles" type="Node2D" parent="VJController" unique_id=964563705]
 script = ExtResource("3_sphere")
 
-[node name="OscServer" type="Node" parent="VJController"]
+[node name="OscServer" type="Node" parent="VJController" unique_id=2147229394]
 script = ExtResource("4_osc")
 
-[node name="WebServer" type="Node" parent="VJController"]
+[node name="WebServer" type="Node" parent="VJController" unique_id=1652929096]
 script = ExtResource("8_web")
 
-[node name="Audio" type="Node" parent="VJController"]
+[node name="Audio" type="Node" parent="VJController" unique_id=1727152373]
 script = ExtResource("11_audio")
 
-[node name="RestApi" type="Node" parent="VJController"]
+[node name="RestApi" type="Node" parent="VJController" unique_id=1256053596]
 script = ExtResource("12_api")
 
-[node name="Autopilot" type="Node" parent="VJController"]
+[node name="Autopilot" type="Node" parent="VJController" unique_id=136326923]
 script = ExtResource("13_auto")
 
-[node name="Presets" type="Node" parent="VJController"]
+[node name="Presets" type="Node" parent="VJController" unique_id=331536378]
 script = ExtResource("10_presets")
 
-[node name="Gamepad" type="Node" parent="VJController"]
+[node name="Gamepad" type="Node" parent="VJController" unique_id=1699424218]
 script = ExtResource("9_pad")
 
-[node name="Kaleidoscope" type="CanvasLayer" parent="VJController"]
+[node name="Kaleidoscope" type="CanvasLayer" parent="VJController" unique_id=170079016]
 script = ExtResource("6_kaleido")
 
-[node name="Rect" type="ColorRect" parent="VJController/Kaleidoscope"]
+[node name="Rect" type="ColorRect" parent="VJController/Kaleidoscope" unique_id=1772031414]
 material = SubResource("ShaderMaterial_kaleido")
 anchors_preset = 15
 anchor_right = 1.0
@@ -77,12 +71,13 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="ControlPanel" type="CanvasLayer" parent="VJController"]
+[node name="ControlPanel" type="CanvasLayer" parent="VJController" unique_id=385245453]
 layer = 2
 script = ExtResource("5_panel")
 
-[node name="FpsLabel" type="Label" parent="VJController/ControlPanel"]
+[node name="FpsLabel" type="Label" parent="VJController/ControlPanel" unique_id=1879766804]
 visible = false
+anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -360.0
@@ -90,18 +85,19 @@ offset_top = 16.0
 offset_right = -24.0
 offset_bottom = 42.0
 grow_horizontal = 0
-horizontal_alignment = 2
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 5
+horizontal_alignment = 2
 
-[node name="Help" type="VBoxContainer" parent="VJController/ControlPanel"]
+[node name="Help" type="VBoxContainer" parent="VJController/ControlPanel" unique_id=2121469370]
 offset_left = 24.0
 offset_top = 20.0
 offset_right = 1300.0
 offset_bottom = 160.0
 theme_override_constants/separation = 2
 
-[node name="Controls" type="VBoxContainer" parent="VJController/ControlPanel"]
+[node name="Controls" type="VBoxContainer" parent="VJController/ControlPanel" unique_id=592631375]
+anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 24.0
@@ -109,5 +105,5 @@ offset_top = -1000.0
 offset_right = 1300.0
 offset_bottom = -24.0
 grow_vertical = 0
-alignment = 2
 theme_override_constants/separation = 2
+alignment = 2

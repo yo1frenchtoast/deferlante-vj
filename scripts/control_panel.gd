@@ -78,17 +78,28 @@ const HELP_HEIGHT := 0
 
 var _column: VBoxContainer
 
+## Chosen at the launcher: the panel is never shown at all, whatever anyone presses.
+## For a machine that only projects, where the sliders would be on the wall and the
+## driving happens from a phone. `F3` still works — a readout you have to ask for is
+## a diagnostic, not an interface.
+var hidden_for_good: bool = false
+
 
 func build(p_params: Array[VJParam], lang: Lang):
 	params = p_params
 	_lang = lang
 	_lang.changed.connect(_retranslate)
+	hidden_for_good = Launch.hide_panel
 
 	_build_columns()
 	_build_help()
 
 	select(0)
 	fps_label.visible = show_fps
+	if hidden_for_good:
+		rows.visible = false
+		help_box.visible = false
+		return
 	wake()
 
 
@@ -301,6 +312,10 @@ func set_external_control(active: bool, dim_to: float):
 
 
 func wake():
+	# Every route back on screen goes through here — a keypress, a click, the pad,
+	# a language change — so one guard covers all of them.
+	if hidden_for_good:
+		return
 	_idle = 0.0
 	if _fade:
 		_fade.kill()

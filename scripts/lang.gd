@@ -24,7 +24,6 @@ const LABELS := {
 	"global/recall": ["FONDU PRESET", "RECALL FADE"],
 	"global/panel": ["PANNEAU", "PANEL"],
 	"global/autodim": ["AUTO DISCRET", "AUTO DIM"],
-	"global/language": ["LANGUE", "LANGUAGE"],
 
 	"color/mode": ["MODE", "MODE"],
 	"color/saturation": ["SATURATION", "SATURATION"],
@@ -108,8 +107,48 @@ const TEXTS := {
 	"status.audio": ["son", "audio"],
 	"status.listening": ["à l'écoute", "listening"],
 	"status.deaf": ["pas de capture", "no capture"],
+	"status.silent": ["silence — rien n'entre", "silence — nothing coming in"],
 	"status.nopad": ["aucune manette", "no pad"],
 	"fps.screen": ["écran %.0f Hz", "screen %.0f Hz"],
+
+	"launch.subtitle": ["réglages de démarrage", "start-up settings"],
+	"launch.renderer": ["RENDU", "RENDERER"],
+	"launch.renderer.compat": [
+		"Compatibility — rapide, sans carte graphique",
+		"Compatibility — fast, no graphics card",
+	],
+	"launch.renderer.forward": [
+		"Forward+ — antialiasing, mais deux fois plus lourd",
+		"Forward+ — antialiasing, but twice the cost",
+	],
+	"launch.msaa": ["ANTIALIASING", "ANTIALIASING"],
+	"launch.msaa.off": ["aucun", "none"],
+	"launch.msaa.unavailable": [
+		"sans effet en Compatibility",
+		"has no effect in Compatibility",
+	],
+	"launch.resolution": ["RÉSOLUTION", "RESOLUTION"],
+	"launch.resolution.native": ["celle de l'écran", "the screen's own"],
+	"launch.fullscreen": ["PLEIN ÉCRAN", "FULLSCREEN"],
+	"launch.vsync": ["VSYNC", "VSYNC"],
+	"launch.maxfps": ["FPS MAX", "MAX FPS"],
+	"launch.maxfps.free": ["illimité", "uncapped"],
+	"launch.audio": ["ENTRÉE AUDIO", "AUDIO INPUT"],
+	"launch.audio.auto": ["choix automatique", "picked automatically"],
+	"launch.audio.blind": [
+		"ce Godot ignore ce choix — voir tools/listen-to-output.sh",
+		"this Godot build ignores the choice — see tools/listen-to-output.sh",
+	],
+	"launch.panel": ["PANNEAU", "PANEL"],
+	"launch.panel.hidden": ["masqué pour tout le set", "hidden for the whole set"],
+	"launch.webport": ["PORT WEB", "WEB PORT"],
+	"launch.oscport": ["PORT OSC", "OSC PORT"],
+	"launch.language": ["LANGUE", "LANGUAGE"],
+	"launch.go": ["LANCER", "START"],
+	"launch.restart": [
+		"changer de rendu relance l'application",
+		"changing the renderer restarts the app",
+	],
 }
 
 ## The language names stay in their own tongue, as is customary.

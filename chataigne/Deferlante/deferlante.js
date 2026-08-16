@@ -33,10 +33,6 @@ function globalAutodim(value) {
 	local.send("/deferlante/global/autodim", value);
 }
 
-function globalLanguage(value) {
-	local.send("/deferlante/global/language", value);
-}
-
 function colorMode(value) {
 	local.send("/deferlante/color/mode", value);
 }

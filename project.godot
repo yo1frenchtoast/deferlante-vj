@@ -11,13 +11,17 @@ config_version=5
 [application]
 
 config/name="Déferlante"
-run/main_scene="uid://c8o06a006nklu"
-config/features=PackedStringArray("4.7", "Forward Plus")
+run/main_scene="res://scenes/launcher.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [audio]
 
 driver/enable_input=true
+
+[autoload]
+
+Launch="*res://scripts/launch_config.gd"
 
 [display]
 
@@ -28,6 +32,6 @@ window/stretch/mode="canvas_items"
 [rendering]
 
 rendering_device/driver.windows="d3d12"
-renderer/rendering_method.mobile="gl_compatibility"
+renderer/rendering_method="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0, 0, 0, 1)

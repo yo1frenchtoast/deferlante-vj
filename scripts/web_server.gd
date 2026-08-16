@@ -43,6 +43,10 @@ func _ready():
 		set_process(false)
 		return
 
+	# Chosen at the launcher, because a port has to be settled before anything can
+	# listen on it. The exported value stays as the default the launcher opens on.
+	http_port = Launch.web_port
+
 	_page_bytes = _load_page(page)
 	_docs_bytes = _load_page(docs_page)
 

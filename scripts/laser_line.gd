@@ -41,10 +41,17 @@ var slot: float = 0.0
 # This stroke's own heading, revealed progressively by chaos.
 var _own_dir: float = 1.0
 
+var _halo: Halo
+
 
 func _ready():
+	_halo = Halo.attach(self)
 	randomize_look()
 	set_length_scale(1.0)
+
+
+func set_halo(value: float):
+	_halo.amount = value
 
 
 ## Redraws every random characteristic of the stroke (R key).
