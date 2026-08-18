@@ -256,7 +256,8 @@ def build(settings, labels):
 
 
 def address_table(settings, labels) -> str:
-    """The OSC reference as a markdown table, so the README cannot drift either."""
+    """The OSC reference as a markdown table, pasted into docs/external-control.md so
+    the prose cannot drift from the addresses either."""
     lines = ["| Address | Range | Default | On screen |", "| --- | --- | --- | --- |"]
     for slug, low, high, step, default in settings:
         fmt = (lambda v: f"{v:g}")

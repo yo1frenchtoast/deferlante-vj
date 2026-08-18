@@ -54,7 +54,7 @@ bands map straight onto any of these commands — nothing to add on the Godot si
 
 The module is a convenience. Godot listens for plain OSC, so any sender will do —
 Chataigne's generic OSC module, TouchOSC, a script. The addresses are documented in
-the main README.
+[docs/external-control.md](../../docs/external-control.md#external-control-over-osc).
 
 ## This module is generated
 
