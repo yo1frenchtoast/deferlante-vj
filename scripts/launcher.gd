@@ -55,6 +55,14 @@ var _osc_port: SpinBox
 var _language: OptionButton
 var _restart_note: Label
 
+## Whether the sound can be routed from here, probed once and remembered: every
+## answer costs a subprocess, and the row is rebuilt from scratch on each change of
+## language. -1 is "not asked yet".
+var _routable: int = -1
+## The outputs behind the audio row when the machine lets us route the sound
+## ourselves, as `{name, label}`. Empty on a machine where it does not, and the row
+## then falls back to offering Godot's own input list.
+var _audio_outputs: Array[Dictionary]
 var _audio_devices: PackedStringArray
 ## The addresses behind both access rows, in the order they list them after their
 ## shared first entry. The two rows offer the same list and answer it separately.
@@ -138,10 +146,17 @@ func _build():
 	_vsync = _check(grid, "launch.vsync")
 	_max_fps = _option(grid, "launch.maxfps", _max_fps_choices())
 
-	_audio = _option(grid, "launch.audio", _audio_choices())
-	# A picker that cannot pick has to say so rather than sit there looking
-	# operational. Whether it can is probed, not assumed — see `_input_honoured()`.
-	if not _input_honoured():
+	# Two different questions wearing one row. Where the sound can be routed from
+	# here, the useful choice is *which output to listen to* — the show taps its
+	# monitor at launch. Where it cannot, all that is left is Godot's own input list,
+	# which is the old row, and which on this backend cannot pick either.
+	var routed := _can_route()
+	_audio = _option(grid, "launch.listen" if routed else "launch.audio", _audio_choices())
+	if routed:
+		_note(grid).text = lang.text("launch.listen.hint")
+	elif not _input_honoured():
+		# A picker that cannot pick has to say so rather than sit there looking
+		# operational. Whether it can is probed, not assumed — see `_input_honoured()`.
 		_audio.disabled = true
 		_note(grid).text = lang.text("launch.audio.blind")
 	_hide_panel = _check(grid, "launch.panel", "launch.panel.hidden")
@@ -256,7 +271,22 @@ func _access_choices() -> PackedStringArray:
 	return out
 
 
+func _can_route() -> bool:
+	if _routable == -1:
+		_routable = 1 if AudioRouting.available() else 0
+	return _routable == 1
+
+
+## The outputs to listen to, or — where the sound cannot be routed from here — the
+## inputs Godot is willing to name.
 func _audio_choices() -> PackedStringArray:
+	if _can_route():
+		_audio_outputs = AudioRouting.outputs()
+		var outputs := PackedStringArray([lang.text("launch.listen.auto")])
+		for output in _audio_outputs:
+			outputs.append(output["label"])
+		return outputs
+
 	_audio_devices = PackedStringArray()
 	for device in AudioServer.get_input_device_list():
 		# Godot's own "Default" is what the first entry already means, spelled in the
@@ -300,7 +330,7 @@ func _load_values():
 	_fullscreen.button_pressed = Launch.fullscreen
 	_vsync.button_pressed = Launch.vsync
 	_max_fps.selected = maxi(0, MAX_FPS.find(Launch.max_fps))
-	_audio.selected = maxi(0, _audio_devices.find(Launch.audio_device) + 1)
+	_audio.selected = _audio_selection()
 	_hide_panel.button_pressed = Launch.hide_panel
 	_web_access.selected = maxi(0, _access_addresses.find(Launch.web_bind) + 1)
 	_web_port.value = Launch.web_port
@@ -310,6 +340,18 @@ func _load_values():
 	_refresh_renderer_dependants()
 
 
+## The saved answer's place in the row, or the first entry — "whatever is playing" —
+## when it names something this machine no longer has. An output that went away with
+## the interface it belonged to is the ordinary case, not an error.
+func _audio_selection() -> int:
+	if not _can_route():
+		return maxi(0, _audio_devices.find(Launch.audio_device) + 1)
+	for i in _audio_outputs.size():
+		if _audio_outputs[i]["name"] == Launch.audio_sink:
+			return i + 1
+	return 0
+
+
 func _collect():
 	Launch.rendering_method = "forward_plus" if _renderer.selected == 1 else "gl_compatibility"
 	Launch.msaa = MSAA_SAMPLES[_msaa.selected] if Launch.msaa_available() else 0
@@ -317,10 +359,14 @@ func _collect():
 	Launch.fullscreen = _fullscreen.button_pressed
 	Launch.vsync = _vsync.button_pressed
 	Launch.max_fps = MAX_FPS[_max_fps.selected]
-	# A disabled picker means this build ignores the choice; saving one would leave a
-	# setting in the file that quietly does nothing on the next launch.
-	Launch.audio_device = ("" if _audio.disabled or _audio.selected == 0
-		else _audio_devices[_audio.selected - 1])
+	if _can_route():
+		Launch.audio_sink = ("" if _audio.selected == 0
+			else _audio_outputs[_audio.selected - 1]["name"])
+	else:
+		# A disabled picker means this build ignores the choice; saving one would
+		# leave a setting in the file that quietly does nothing on the next launch.
+		Launch.audio_device = ("" if _audio.disabled or _audio.selected == 0
+			else _audio_devices[_audio.selected - 1])
 	Launch.hide_panel = _hide_panel.button_pressed
 	Launch.web_bind = (Launch.LOCAL if _web_access.selected == 0
 		else _access_addresses[_web_access.selected - 1])
@@ -391,10 +437,29 @@ func _go():
 
 
 func _start_show():
+	_route_audio()
 	Launch.apply_runtime()
 	# Deferred: on the skip path this runs from `_ready`, where the tree is still
 	# adding children and refuses to have the scene swapped out from under it.
 	get_tree().change_scene_to_file.call_deferred(MAIN_SCENE)
+
+
+## Put the tap on the chosen output, before anything opens a capture.
+##
+## Done on every launch, including the ones that walk straight past this screen. The
+## tap survives a reboot; the machine's output does not necessarily stay the same,
+## and a tap left on last night's interface reads as perfect silence — the failure
+## with no symptom that `audio_reactor.gd` counts the seconds of. Redoing it costs
+## nothing when it is already right, and is the whole fix when it is not.
+##
+## Never fatal. A show with no reactivity is a disappointment; a show that refuses to
+## start ten minutes before doors is an incident.
+func _route_audio():
+	if not _can_route():
+		return
+	if not AudioRouting.listen(Launch.audio_sink):
+		push_warning("Launcher: cannot listen to %s — the show will start without it"
+			% (Launch.audio_sink if Launch.audio_sink != "" else "the current output"))
 
 
 ## Start over with the other renderer. The new process skips this screen — the

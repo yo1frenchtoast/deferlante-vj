@@ -133,6 +133,15 @@ const TEXTS := {
 	"launch.vsync": ["VSYNC", "VSYNC"],
 	"launch.maxfps": ["FPS MAX", "MAX FPS"],
 	"launch.maxfps.free": ["illimité", "uncapped"],
+	"launch.listen": ["SON ÉCOUTÉ", "SOUND LISTENED TO"],
+	"launch.listen.auto": [
+		"la sortie active au lancement",
+		"whichever output is playing at launch",
+	],
+	"launch.listen.hint": [
+		"le son est écouté au passage, pas dérouté",
+		"the sound is tapped on its way out, not rerouted",
+	],
 	"launch.audio": ["ENTRÉE AUDIO", "AUDIO INPUT"],
 	"launch.audio.auto": ["choix automatique", "picked automatically"],
 	"launch.audio.blind": [

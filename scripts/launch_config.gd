@@ -10,7 +10,8 @@ extends Node
 ##   means starting the process again (`launcher.gd` does exactly that);
 ## - the **ports** have to be bound before anything can listen on them;
 ## - the **audio source** is bound when capture opens and, measured, cannot be
-##   re-opened afterwards — see the note in `audio_reactor.gd`;
+##   re-opened afterwards — see the note in `audio_reactor.gd` — so which output the
+##   show listens to is routed by the launcher, before the show exists;
 ## - the **panel** being absent is a decision about the room, not a look.
 ##
 ## Registered as the `Launch` autoload, so it is loaded and ready before any node of
@@ -36,7 +37,14 @@ var vsync: bool = true
 ## 0 is uncapped. Worth setting on a projector: frames past its refresh rate cost
 ## exactly as much to draw and nobody ever sees them.
 var max_fps: int = 0
-## Empty leaves `audio_reactor.gd` to its own automatic pick.
+## The output whose sound the show listens to, as PipeWire names it. Empty means
+## whichever output is playing when the show starts. Applied by `launcher.gd`
+## through `AudioRouting`, which is the only way the choice actually holds — see
+## the note there. Linux only; ignored where there is no `pactl`.
+var audio_sink: String = ""
+## The capture Godot itself is pointed at. Only used where `AudioServer.input_device`
+## is honoured, which the PulseAudio backend does not — there `audio_sink` is the
+## row the launcher shows instead. Empty leaves `audio_reactor.gd` its automatic pick.
 var audio_device: String = ""
 ## The settings panel never appears at all. For a machine that only projects, where
 ## the panel would be on the wall and the driving happens from a phone.
@@ -72,6 +80,7 @@ func load_from_disk():
 	fullscreen = cfg.get_value("render", "fullscreen", fullscreen)
 	vsync = cfg.get_value("render", "vsync", vsync)
 	max_fps = cfg.get_value("render", "max_fps", max_fps)
+	audio_sink = cfg.get_value("io", "audio_sink", audio_sink)
 	audio_device = cfg.get_value("io", "audio_device", audio_device)
 	web_bind = cfg.get_value("io", "web_bind", web_bind)
 	web_port = cfg.get_value("io", "web_port", web_port)
@@ -110,6 +119,7 @@ func save():
 	cfg.set_value("render", "fullscreen", fullscreen)
 	cfg.set_value("render", "vsync", vsync)
 	cfg.set_value("render", "max_fps", max_fps)
+	cfg.set_value("io", "audio_sink", audio_sink)
 	cfg.set_value("io", "audio_device", audio_device)
 	cfg.set_value("io", "web_bind", web_bind)
 	cfg.set_value("io", "web_port", web_port)
