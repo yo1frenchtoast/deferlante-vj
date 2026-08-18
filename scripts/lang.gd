@@ -138,6 +138,12 @@ const TEXTS := {
 		"la sortie active au lancement",
 		"whichever output is playing at launch",
 	],
+	"launch.listen.outputs": ["— écouter une sortie —", "— listen to an output —"],
+	"launch.listen.sources": ["— capter une entrée —", "— capture an input —"],
+	"launch.listen.nothing": [
+		"rien n'entre — ce choix est muet",
+		"nothing coming in — this one is silent",
+	],
 	"launch.listen.hint": [
 		"le son est écouté au passage, pas dérouté",
 		"the sound is tapped on its way out, not rerouted",

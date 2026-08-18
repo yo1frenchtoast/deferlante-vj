@@ -63,7 +63,17 @@ var _routable: int = -1
 ## ourselves, as `{name, label}`. Empty on a machine where it does not, and the row
 ## then falls back to offering Godot's own input list.
 var _audio_outputs: Array[Dictionary]
+## Every line of that row, in the order it is shown, so a selection index maps
+## straight back to what it means. The separators keep their place in here precisely
+## so that mapping stays a plain lookup rather than an arithmetic apology.
+var _audio_entries: Array[Dictionary]
 var _audio_devices: PackedStringArray
+## The live meter under the audio row, and the line beneath it. Only built where the
+## sound can be routed from here, which is also the only place the meter could follow
+## a change of choice.
+var _audio_meter: ProgressBar
+var _audio_hint: Label
+var _probe: AudioProbe
 ## The addresses behind both access rows, in the order they list them after their
 ## shared first entry. The two rows offer the same list and answer it separately.
 var _access_addresses: PackedStringArray
@@ -151,9 +161,10 @@ func _build():
 	# monitor at launch. Where it cannot, all that is left is Godot's own input list,
 	# which is the old row, and which on this backend cannot pick either.
 	var routed := _can_route()
-	_audio = _option(grid, "launch.listen" if routed else "launch.audio", _audio_choices())
+	_audio = _audio_row(grid)
 	if routed:
-		_note(grid).text = lang.text("launch.listen.hint")
+		_build_meter(grid)
+		_audio.item_selected.connect(_on_audio_picked)
 	elif not _input_honoured():
 		# A picker that cannot pick has to say so rather than sit there looking
 		# operational. Whether it can is probed, not assumed — see `_input_honoured()`.
@@ -230,6 +241,68 @@ func _spin(grid: GridContainer, key: String, low: int, high: int) -> SpinBox:
 	return spin
 
 
+## The meter, and the line under it.
+##
+## A launcher that lets you choose where the sound comes from and then says nothing
+## about it has moved the guesswork rather than removed it: every wrong answer looks
+## exactly like every right one until the show is running. This is the difference,
+## and it is worth the twenty lines.
+func _build_meter(grid: GridContainer):
+	grid.add_child(Control.new())
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 4)
+	grid.add_child(column)
+
+	_audio_meter = ProgressBar.new()
+	_audio_meter.show_percentage = false
+	_audio_meter.min_value = 0.0
+	_audio_meter.max_value = 1.0
+	_audio_meter.step = 0.001
+	_audio_meter.custom_minimum_size = Vector2(340, 8)
+	var back := StyleBoxFlat.new()
+	back.bg_color = Color(0.14, 0.14, 0.14)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = HEADING
+	_audio_meter.add_theme_stylebox_override("background", back)
+	_audio_meter.add_theme_stylebox_override("fill", fill)
+	column.add_child(_audio_meter)
+
+	_audio_hint = Label.new()
+	_audio_hint.add_theme_color_override("font_color", DIM)
+	_audio_hint.text = lang.text("launch.listen.hint")
+	column.add_child(_audio_hint)
+
+	_probe = AudioProbe.new()
+	add_child(_probe)
+	_probe.level_changed.connect(_on_level)
+	_probe.listen(_metered_source())
+
+
+## Which line the meter should be reading: the one just chosen, or the tap when the
+## choice was an output to listen to.
+func _metered_source() -> String:
+	return Launch.audio_device if Launch.audio_device != "" else AudioRouting.SOURCE
+
+
+func _on_level(value: float):
+	if _audio_meter == null:
+		return
+	_audio_meter.value = value
+	_audio_hint.text = lang.text(
+		"launch.listen.nothing" if _probe.silent else "launch.listen.hint")
+
+
+## Re-point the capture the moment the choice changes, so the meter answers about the
+## line just picked rather than about the one before it. This is the same routing the
+## GO button applies — doing it now only means the operator sees the result of their
+## own choice before committing to it.
+func _on_audio_picked(_index: int):
+	_collect()
+	_route_audio()
+	if _probe != null:
+		_probe.listen(_metered_source())
+
+
 ## An empty cell in the left column, so a note can sit under the control it explains
 ## without breaking the two-column rhythm.
 func _note(grid: GridContainer) -> Label:
@@ -277,16 +350,42 @@ func _can_route() -> bool:
 	return _routable == 1
 
 
-## The outputs to listen to, or — where the sound cannot be routed from here — the
-## inputs Godot is willing to name.
-func _audio_choices() -> PackedStringArray:
-	if _can_route():
-		_audio_outputs = AudioRouting.outputs()
-		var outputs := PackedStringArray([lang.text("launch.listen.auto")])
-		for output in _audio_outputs:
-			outputs.append(output["label"])
-		return outputs
+## One row, two questions, because they are the same question asked at two depths.
+##
+## **Listen to an output** and the show taps its monitor: the ordinary answer, and the
+## one that needs nothing arranged beforehand. **Capture an input** and it taps
+## nothing at all, it simply listens where it is told — which is what you want the
+## moment something else on the machine insists on standing in the middle. EasyEffects
+## hands every recording to its own source; naming that source here makes it a link in
+## the chain rather than a thing to be fought.
+func _audio_row(grid: GridContainer) -> OptionButton:
+	_audio_entries = []
+	var button := _option(grid, "launch.listen" if _can_route() else "launch.audio",
+		PackedStringArray() if _can_route() else _audio_choices())
+	if not _can_route():
+		return button
 
+	button.add_item(lang.text("launch.listen.auto"))
+	_audio_entries.append({"kind": "auto"})
+
+	button.add_separator(lang.text("launch.listen.outputs"))
+	_audio_entries.append({"kind": "separator"})
+	_audio_outputs = AudioRouting.outputs()
+	for output in _audio_outputs:
+		button.add_item(output["label"])
+		_audio_entries.append({"kind": "sink", "name": output["name"]})
+
+	button.add_separator(lang.text("launch.listen.sources"))
+	_audio_entries.append({"kind": "separator"})
+	for source in AudioRouting.sources():
+		button.add_item(source["label"])
+		_audio_entries.append({"kind": "source", "name": source["name"]})
+	return button
+
+
+## The inputs Godot is willing to name, for the platforms where naming one is what
+## works. Unused where the sound can be routed from here.
+func _audio_choices() -> PackedStringArray:
 	_audio_devices = PackedStringArray()
 	for device in AudioServer.get_input_device_list():
 		# Godot's own "Default" is what the first entry already means, spelled in the
@@ -346,9 +445,15 @@ func _load_values():
 func _audio_selection() -> int:
 	if not _can_route():
 		return maxi(0, _audio_devices.find(Launch.audio_device) + 1)
-	for i in _audio_outputs.size():
-		if _audio_outputs[i]["name"] == Launch.audio_sink:
-			return i + 1
+	for i in _audio_entries.size():
+		var entry := _audio_entries[i]
+		# A named source wins outright: it is the more specific of the two answers,
+		# and it is only ever set by having been chosen here.
+		if entry["kind"] == "source" and entry["name"] == Launch.audio_device:
+			return i
+		if (entry["kind"] == "sink" and Launch.audio_device == ""
+				and entry["name"] == Launch.audio_sink):
+			return i
 	return 0
 
 
@@ -360,8 +465,17 @@ func _collect():
 	Launch.vsync = _vsync.button_pressed
 	Launch.max_fps = MAX_FPS[_max_fps.selected]
 	if _can_route():
-		Launch.audio_sink = ("" if _audio.selected == 0
-			else _audio_outputs[_audio.selected - 1]["name"])
+		var entry: Dictionary = ({"kind": "auto"} if _audio.selected >= _audio_entries.size()
+			else _audio_entries[_audio.selected])
+		match entry["kind"]:
+			"sink":
+				Launch.audio_sink = entry["name"]
+				Launch.audio_device = ""
+			"source":
+				Launch.audio_device = entry["name"]
+			_:
+				Launch.audio_sink = ""
+				Launch.audio_device = ""
 	else:
 		# A disabled picker means this build ignores the choice; saving one would
 		# leave a setting in the file that quietly does nothing on the next launch.
@@ -456,6 +570,13 @@ func _start_show():
 ## start ten minutes before doors is an incident.
 func _route_audio():
 	if not _can_route():
+		return
+	# A named source is an instruction not to route anything: the operator has said
+	# where to listen, and the chain that gets the sound there is theirs to arrange.
+	if Launch.audio_device != "":
+		if not AudioRouting.capture_from(Launch.audio_device):
+			push_warning("Launcher: cannot capture from %s — the show will start "
+				% Launch.audio_device + "on whatever the machine offers instead")
 		return
 	if not AudioRouting.listen(Launch.audio_sink):
 		push_warning("Launcher: cannot listen to %s — the show will start without it"

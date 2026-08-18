@@ -209,6 +209,11 @@ func _diagnose_silence():
 	# question nobody asked with a warning that is always true.
 	if DisplayServer.get_name() == "headless":
 		return
+	# A named source is the operator saying where to listen and taking the chain that
+	# gets sound there into their own hands. Asking about the tap then answers a
+	# question nobody asked, and would answer it wrongly.
+	if Launch.audio_device != "":
+		return
 	if not AudioRouting.available() or AudioRouting.tap_has_listener():
 		return
 	push_warning(("Audio: nothing is reading \"%s\", so this capture went somewhere " +

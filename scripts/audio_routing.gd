@@ -45,11 +45,42 @@ static func available() -> bool:
 ## falls back to its name — long and ugly, but never blank.
 static func outputs() -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
-	var labels := _labels()
+	var labels := _labels("sinks")
 	for row in _table("pactl list short sinks"):
 		if row.size() > 1:
 			found.append({"name": row[1], "label": labels.get(row[1], row[1])})
 	return found
+
+
+## The capture sources to choose between: `{name, label}`, our own tap excepted.
+##
+## Offered because the tap is not always the last word. A sound server can insist on
+## handing recordings to something of its own — EasyEffects does — and then the honest
+## question is not "which output do we tap" but "which link of the chain do we listen
+## to". This is that list, monitors and processed sources included.
+static func sources() -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	var labels := _labels("sources")
+	for row in _table("pactl list short sources"):
+		# Ours is what the first entry of the row already means, arrived at by
+		# tapping an output. Listing it again would offer the same thing twice.
+		if row.size() > 1 and row[1] != SOURCE:
+			found.append({"name": row[1], "label": labels.get(row[1], row[1])})
+	return found
+
+
+## Capture from a named source, whatever it is and whoever feeds it.
+##
+## No tap, no monitor, no wrapping: the operator has said where to listen and this
+## puts the machine's capture there. Which is still done by moving the default rather
+## than by asking Godot, for the reason the file opens with.
+static func capture_from(source: String) -> bool:
+	if _index_of_source(source) == "":
+		return false
+	if _read("pactl get-default-source") == source:
+		return true
+	_remember_default()
+	return _run("pactl set-default-source %s" % source) == OK
 
 
 ## The output the sound is currently going to.
@@ -185,16 +216,16 @@ static func _index_of_source(name: String) -> String:
 	return ""
 
 
-## Name to description, for the outputs that carry one.
+## Name to description, for the devices that carry one.
 ##
 ## Parsed from the text listing rather than `-f json`, which looks like the right
 ## answer and is not: measured on this machine, the JSON writer chokes on the
 ## non-ASCII in a French description and emits `(null)` for every device, so the two
 ## outputs that most need naming come back nameless.
-static func _labels() -> Dictionary:
+static func _labels(what: String) -> Dictionary:
 	var labels := {}
 	var name := ""
-	for line in _lines("pactl list sinks"):
+	for line in _lines("pactl list %s" % what):
 		if line.begins_with("Name:"):
 			name = line.substr(5).strip_edges()
 		elif line.begins_with("Description:") and name != "":
