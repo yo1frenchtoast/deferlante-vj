@@ -151,7 +151,28 @@ func _build_bus():
 
 func _delayed_start():
 	await get_tree().create_timer(0.4).timeout
+	await _ask_for_the_microphone()
 	_start_capture()
+
+
+## Android hands the microphone over only when asked, and only while the app runs.
+##
+## The manifest entry is necessary and not sufficient: without the runtime grant the
+## stream opens perfectly happily and carries nothing, which is the one failure this
+## file spends the most words trying not to have. Waited on rather than raced with —
+## the dialogue is the operator's to answer, and there is nothing to capture until
+## they have.
+##
+## Untested on a phone: written from the platform's documented behaviour, not from a
+## measurement, unlike everything else here.
+func _ask_for_the_microphone():
+	if OS.get_name() != "Android":
+		return
+	if "android.permission.RECORD_AUDIO" in OS.get_granted_permissions():
+		return
+	if not OS.request_permission("RECORD_AUDIO"):
+		return
+	await get_tree().on_request_permissions_result
 
 
 func _start_capture():
