@@ -136,12 +136,18 @@ jobs:
           echo "swagger page served"
 
       # Kept a week, not the default ninety days. Three builds of ninety megabytes
-      # a run fill the storage quota in about thirty pushes, and a full quota fails
-      # the upload — a green build reported as red. What is worth keeping is tagged
-      # and attached to a release below; the rest is a build one looks at the same
-      # afternoon or never.
+      # a run fill the storage quota in about thirty pushes. What is worth keeping
+      # is tagged and attached to a release below; the rest is a build one looks at
+      # the same afternoon or never.
+      #
+      # The three uploads are allowed to fail. The quota is metered per billing
+      # period, so once it is full no amount of deleting frees it before the period
+      # resets, and every push would report a green build as red for the rest of the
+      # month. The build is what this job answers for; the convenience copies are
+      # not. Release assets are stored outside this quota and so stay mandatory.
       - uses: actions/upload-artifact@v7
         if: always()
+        continue-on-error: true
         with:
           name: deferlante-linux
           path: build/linux/
@@ -150,6 +156,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         if: always()
+        continue-on-error: true
         with:
           name: deferlante-windows
           path: build/windows/
@@ -158,6 +165,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         if: always()
+        continue-on-error: true
         with:
           name: deferlante-android
           path: build/android/
