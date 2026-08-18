@@ -1,8 +1,13 @@
 extends Line2D
 
 ## A long stroke that spins on itself and bounces off the screen edges.
-## Each stroke keeps its own random character (hue, length, spin rate); the sliders
+## Each stroke keeps its own random character (hue, spin rate, heading); the sliders
 ## apply global multipliers on top.
+##
+## Its **length is not one of those characters**. A stroke is meant to read as a beam
+## crossing the frame, not as a segment lying in it, and a segment is exactly what a
+## random length gives you the moment it comes up short — two bright tips sitting in
+## mid-air, which is the one thing that says "line" instead of "laser".
 ##
 ## `align` blends between two entirely different behaviours rather than tweaking
 ## one. At 0 the stroke drifts and spins on its own, bouncing off the edges. At 1 it
@@ -10,8 +15,17 @@ extends Line2D
 ## that fan sideways — which is what turns a scatter of lines into scanlines. In
 ## between, both are simply mixed.
 
-@export var min_length: float = 2000.0
-@export var max_length: float = 8000.0
+## How far past the frame a stroke runs, as a multiple of the screen's diagonal.
+##
+## Twice, and the two is arithmetic rather than taste. A stroke is centred on its own
+## position, that position wanders anywhere in the frame, and the worst case is one
+## sitting in a corner and pointing at the opposite one: half the stroke has to cover
+## the whole diagonal for both ends to be outside. So the whole of it is two.
+##
+## Taken from the viewport rather than fixed, so the resolution chosen on the launcher
+## is what it follows, and re-read when that changes.
+const SPAN := 2.0
+
 @export var min_speed: float = 50.0
 @export var max_speed: float = 150.0
 
@@ -19,7 +33,6 @@ var velocity: Vector2
 var _own_rotation: float = 0.0
 var _own_position: Vector2 = Vector2.ZERO
 var rotation_speed: float
-var base_length: float
 var hue: float
 
 # Global multipliers, driven by the controller.
@@ -41,12 +54,18 @@ var slot: float = 0.0
 # This stroke's own heading, revealed progressively by chaos.
 var _own_dir: float = 1.0
 
+var _length_scale: float = 1.0
+
 var _halo: Halo
 
 
 func _ready():
 	_halo = Halo.attach(self)
 	randomize_look()
+	# The frame is not fixed for the life of a stroke: the launcher chooses a
+	# resolution and F11 changes the shape of it again mid-set. A length worked out
+	# once at spawn would leave the ends showing on whichever is the larger.
+	get_viewport().size_changed.connect(_lay_out)
 	set_length_scale(1.0)
 
 
@@ -62,7 +81,6 @@ func randomize_look():
 	# "leftwards / rightwards" would mean nothing on screen.
 	rotation_speed = randf_range(0.4, 1.0)
 	_own_dir = randf_range(-1.0, 1.0)
-	base_length = randf_range(min_length, max_length)
 	velocity = Vector2.from_angle(randf() * TAU) * randf_range(min_speed, max_speed)
 	_own_rotation = randf() * TAU
 	refresh_color()
@@ -79,8 +97,16 @@ func refresh_color():
 		default_color = palette.resolve(hue)
 
 
+## The slider, and the audio, as a multiple of the crossing length. 1 crosses; below
+## that the ends come into frame, which is a thing worth being able to ask for and no
+## longer a thing that happens by itself.
 func set_length_scale(factor: float):
-	var half = (base_length * factor) / 2.0
+	_length_scale = factor
+	_lay_out()
+
+
+func _lay_out():
+	var half := get_viewport_rect().size.length() * SPAN * _length_scale / 2.0
 	clear_points()
 	add_point(Vector2(-half, 0))
 	add_point(Vector2(half, 0))

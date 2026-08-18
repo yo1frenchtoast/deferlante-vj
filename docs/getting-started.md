@@ -117,7 +117,7 @@ Labels below are the English ones.
 | --- | --- | --- |
 | `COUNT` | 0 – 40 | Number of strokes. Added and removed live. Starts at 3. |
 | `WIDTH` | 1 – 24 | Stroke width. |
-| `LENGTH` | 0.1 – 2 | Scales the length (each stroke keeps its own). |
+| `LENGTH` | 0.1 – 2 | **1 crosses the frame** whatever the resolution — twice its diagonal, so the ends stay outside wherever a stroke wanders. Below 1 the tips come into view, which is now something you ask for rather than something that happens. |
 | `SPIN` | -1 – 1 | ← leftwards, → rightwards. |
 | `PARALLEL` | 0 – 1 | 0 a scatter, 1 an evenly spaced fan. See [Scanlines](effects.md#scanlines). |
 | `SCROLL` | -1 – 1 | Walks that fan sideways. ← one way, → the other. |
