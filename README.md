@@ -48,6 +48,8 @@ handful of things the engine will not let you change once the show is running.
 | `MAX FPS` | uncapped, or a refresh rate | Frames past the projector's refresh cost the same to draw and nobody sees them. |
 | `AUDIO INPUT` | automatic, or a named source | Bound once and never re-opened. Greyed out where Godot ignores the choice, which is every PulseAudio build — see [audio reactivity](#audio-reactivity). |
 | `PANEL` | hidden for the whole set | For a machine that only projects, driven from a phone. `F3` still works. |
+| `WEB ACCESS` | this machine only, or one of its addresses | Loopback by default: the control surface has no password, so being reachable from the room is opt-in. Pick an address here to let a phone in. |
+| `OSC ACCESS` | this machine only, or one of its addresses | The same decision for OSC, answered separately. See [OSC](#external-control-over-osc). |
 | `WEB PORT` · `OSC PORT` | | Bound at start-up, so they cannot be moved later. |
 
 Answers are kept in `user://launch.cfg`, so the screen opens on last night's and
@@ -335,8 +337,18 @@ panel, on every connected phone, and in any console reading back over the API.
 
 ### Web control surface
 
-Godot serves a control page on port **7331**. Open `http://<machine-ip>:7331` from a
-phone or tablet on the same network — the address is printed at startup.
+Godot serves a control page on port **7331**, and out of the box it serves it to
+**this machine only** — `http://127.0.0.1:7331`. Nothing on this surface asks for a
+password, and neither does the API behind it: anyone who can reach the port can drive
+the show. On a venue's wifi that is not a footnote, so the room is let in on purpose
+rather than by default.
+
+To drive it from a phone, pick one of the machine's own addresses in the launcher's
+`WEB ACCESS` row. The surface then answers on that address — printed at startup, and
+shown in the panel's status line — and on that one alone: choosing a network address
+means `127.0.0.1` stops working on the machine itself. An address that has since gone
+(DHCP hands out a new one often enough) falls back to this machine rather than failing
+to bind and leaving the surface silently off; the launcher says so when it reopens.
 
 It is built for **landscape**. A **preset bar** sits across the top, above the tabs
 and visible from both pages — presets are what you reach for most in a set, so they
@@ -403,10 +415,10 @@ too. Sending `999` to a setting bounded at 3 returns `3` rather than an error �
 response body is always the setting as it ended up.
 
 ```
-curl -X PUT http://192.168.10.17:7331/api/params/global/chaos \
+curl -X PUT http://192.168.1.20:7331/api/params/global/chaos \
      -H 'Content-Type: application/json' -d '{"value": 0.8}'
 
-curl -X POST http://192.168.10.17:7331/api/actions/glitch
+curl -X POST http://192.168.1.20:7331/api/actions/glitch
 ```
 
 **The specification is generated from the settings**, not written beside them: the
@@ -422,8 +434,14 @@ As with everything else on this server, **there is no authentication**.
 
 ### External control over OSC
 
-Godot listens for OSC on port **9000** (UDP), on every interface. Every setting can
-be driven remotely from Chataigne, TouchOSC, a sequencer, or any script at all.
+Godot listens for OSC on port **9000** (UDP), and — like the web surface — on **this
+machine only** until told otherwise. OSC carries no credentials of any kind: a message
+that reaches the port is obeyed. A console on another machine is let in through the
+launcher's `OSC ACCESS` row, which offers the same list of addresses as `WEB ACCESS`
+and is answered separately: a phone driving the surface and a desk sending OSC are
+rarely the same machine, and letting one in is no reason to let the other. Every
+setting can be driven remotely from Chataigne, TouchOSC, a sequencer, or any script
+at all.
 
 #### How an address is built
 

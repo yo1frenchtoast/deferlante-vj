@@ -48,12 +48,17 @@ var _vsync: CheckBox
 var _max_fps: OptionButton
 var _audio: OptionButton
 var _hide_panel: CheckBox
+var _web_access: OptionButton
 var _web_port: SpinBox
+var _osc_access: OptionButton
 var _osc_port: SpinBox
 var _language: OptionButton
 var _restart_note: Label
 
 var _audio_devices: PackedStringArray
+## The addresses behind both access rows, in the order they list them after their
+## shared first entry. The two rows offer the same list and answer it separately.
+var _access_addresses: PackedStringArray
 ## Guards against handing over twice. See `_go()`.
 var _going: bool = false
 
@@ -140,7 +145,16 @@ func _build():
 		_audio.disabled = true
 		_note(grid).text = lang.text("launch.audio.blind")
 	_hide_panel = _check(grid, "launch.panel", "launch.panel.hidden")
+	_web_access = _option(grid, "launch.access", _access_choices())
+	# A saved address the network has taken back would fail to bind and leave the
+	# surface silently off. It falls back to this machine; the row says so rather
+	# than reopening on a choice that is no longer the one that will be honoured.
+	if Launch.web_bind != Launch.LOCAL and not _access_addresses.has(Launch.web_bind):
+		_note(grid).text = lang.text("launch.access.gone")
 	_web_port = _spin(grid, "launch.webport", 1024, 65534)
+	_osc_access = _option(grid, "launch.oscaccess", _access_choices())
+	if Launch.osc_bind != Launch.LOCAL and not _access_addresses.has(Launch.osc_bind):
+		_note(grid).text = lang.text("launch.access.gone")
 	_osc_port = _spin(grid, "launch.oscport", 1024, 65535)
 
 	column.add_child(_spacer(6))
@@ -232,6 +246,16 @@ func _max_fps_choices() -> PackedStringArray:
 	return out
 
 
+## Loopback first, then the addresses a phone could actually reach. Offered as a
+## list rather than a free field: the useful answers are few and the machine already
+## knows them, and a typo here is a surface that never comes up.
+func _access_choices() -> PackedStringArray:
+	_access_addresses = Launch.local_addresses()
+	var out := PackedStringArray([lang.text("launch.access.local")])
+	out.append_array(_access_addresses)
+	return out
+
+
 func _audio_choices() -> PackedStringArray:
 	_audio_devices = PackedStringArray()
 	for device in AudioServer.get_input_device_list():
@@ -278,7 +302,9 @@ func _load_values():
 	_max_fps.selected = maxi(0, MAX_FPS.find(Launch.max_fps))
 	_audio.selected = maxi(0, _audio_devices.find(Launch.audio_device) + 1)
 	_hide_panel.button_pressed = Launch.hide_panel
+	_web_access.selected = maxi(0, _access_addresses.find(Launch.web_bind) + 1)
 	_web_port.value = Launch.web_port
+	_osc_access.selected = maxi(0, _access_addresses.find(Launch.osc_bind) + 1)
 	_osc_port.value = Launch.osc_port
 	_language.selected = Launch.language
 	_refresh_renderer_dependants()
@@ -296,7 +322,11 @@ func _collect():
 	Launch.audio_device = ("" if _audio.disabled or _audio.selected == 0
 		else _audio_devices[_audio.selected - 1])
 	Launch.hide_panel = _hide_panel.button_pressed
+	Launch.web_bind = (Launch.LOCAL if _web_access.selected == 0
+		else _access_addresses[_web_access.selected - 1])
 	Launch.web_port = int(_web_port.value)
+	Launch.osc_bind = (Launch.LOCAL if _osc_access.selected == 0
+		else _access_addresses[_osc_access.selected - 1])
 	Launch.osc_port = int(_osc_port.value)
 	Launch.language = _language.selected
 

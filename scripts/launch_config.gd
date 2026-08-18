@@ -18,6 +18,9 @@ extends Node
 
 const PATH := "user://launch.cfg"
 
+## Reachable from this machine and nowhere else.
+const LOCAL := "127.0.0.1"
+
 ## `forward_plus` or `gl_compatibility`. The project ships Compatibility: it is
 ## twice as fast in software rendering, and this draws nothing but lines. Forward+
 ## exists here for one reason — it is the only one that antialiases.
@@ -38,7 +41,15 @@ var audio_device: String = ""
 ## The settings panel never appears at all. For a machine that only projects, where
 ## the panel would be on the wall and the driving happens from a phone.
 var hide_panel: bool = false
+## The address the web surface binds to. Loopback by default: the control surface
+## has no password, so being reachable from the whole room is something one turns
+## on, knowing the room. The launcher offers the machine's own addresses.
+var web_bind: String = LOCAL
 var web_port: int = 7331
+## The same decision for OSC, kept separate because the answers differ: the phone
+## driving the surface and the console sending OSC are rarely the same machine, and
+## letting one in is no reason to let the other.
+var osc_bind: String = LOCAL
 var osc_port: int = 9000
 ## `Lang.FR` / `Lang.EN`. Held here so the launcher speaks the same tongue as the
 ## show it is about to start.
@@ -62,10 +73,33 @@ func load_from_disk():
 	vsync = cfg.get_value("render", "vsync", vsync)
 	max_fps = cfg.get_value("render", "max_fps", max_fps)
 	audio_device = cfg.get_value("io", "audio_device", audio_device)
+	web_bind = cfg.get_value("io", "web_bind", web_bind)
 	web_port = cfg.get_value("io", "web_port", web_port)
+	osc_bind = cfg.get_value("io", "osc_bind", osc_bind)
 	osc_port = cfg.get_value("io", "osc_port", osc_port)
 	hide_panel = cfg.get_value("ui", "hide_panel", hide_panel)
 	language = cfg.get_value("ui", "language", language)
+
+
+## The private addresses this machine answers on. The same test the web surface has
+## always used to decide what to print, in one place now that the launcher offers the
+## list rather than the code picking the first match.
+static func local_addresses() -> PackedStringArray:
+	var out := PackedStringArray()
+	for a in IP.get_local_addresses():
+		if a.begins_with("192.") or a.begins_with("10.") or a.begins_with("172."):
+			out.append(a)
+	return out
+
+
+## What to hand `listen()` or `bind()`. A saved address is re-checked rather than
+## trusted: DHCP hands out a different one often enough, and binding to an address
+## the machine no longer holds fails outright — a server silently off is worse than
+## one that came back narrower than it was left.
+static func bind_address(saved: String) -> String:
+	if saved == LOCAL or local_addresses().has(saved):
+		return saved
+	return LOCAL
 
 
 func save():
@@ -77,7 +111,9 @@ func save():
 	cfg.set_value("render", "vsync", vsync)
 	cfg.set_value("render", "max_fps", max_fps)
 	cfg.set_value("io", "audio_device", audio_device)
+	cfg.set_value("io", "web_bind", web_bind)
 	cfg.set_value("io", "web_port", web_port)
+	cfg.set_value("io", "osc_bind", osc_bind)
 	cfg.set_value("io", "osc_port", osc_port)
 	cfg.set_value("ui", "hide_panel", hide_panel)
 	cfg.set_value("ui", "language", language)

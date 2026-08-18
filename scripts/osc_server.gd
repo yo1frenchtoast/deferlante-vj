@@ -13,6 +13,8 @@ signal message_received(address: String, args: Array)
 
 var _udp := PacketPeerUDP.new()
 var _listening: bool = false
+## The address handed to `bind()`, which is not always the one that was asked for.
+var _bind := ""
 
 
 func _ready():
@@ -24,14 +26,22 @@ func _ready():
 	# bind it. The exported value stays as the default the launcher opens on.
 	port = Launch.osc_port
 
-	var err := _udp.bind(port)
+	# Loopback unless the launcher was told otherwise. OSC carries no credentials of
+	# any kind — a message that reaches the port is obeyed — so the console is let in
+	# on purpose rather than by default.
+	_bind = Launch.bind_address(Launch.osc_bind)
+	if _bind != Launch.osc_bind:
+		push_warning("OSC: %s is not on this machine any more, listening on %s only"
+			% [Launch.osc_bind, _bind])
+
+	var err := _udp.bind(port, _bind)
 	if err != OK:
 		push_warning("OSC: cannot listen on port %d (error %d)" % [port, err])
 		set_process(false)
 		return
 
 	_listening = true
-	print("OSC: listening on port %d" % port)
+	print("OSC: listening on %s:%d" % [_bind, port])
 
 
 func is_listening() -> bool:

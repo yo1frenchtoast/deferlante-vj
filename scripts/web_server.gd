@@ -36,6 +36,8 @@ var _requests: Array = []
 var _page_bytes := PackedByteArray()
 var _docs_bytes := PackedByteArray()
 var _listening := false
+## The address handed to `listen()`, which is not always the one that was asked for.
+var _bind := ""
 
 
 func _ready():
@@ -50,31 +52,36 @@ func _ready():
 	_page_bytes = _load_page(page)
 	_docs_bytes = _load_page(docs_page)
 
-	var err := _http.listen(http_port)
-	var err_ws := _ws.listen(http_port + 1)
+	# Loopback unless the launcher was told otherwise. Nothing here asks for a
+	# password, so a surface the whole venue can reach is a decision someone makes
+	# about a room, not a default one inherits.
+	_bind = Launch.bind_address(Launch.web_bind)
+	if _bind != Launch.web_bind:
+		push_warning("Web: %s is not on this machine any more, serving on %s only"
+			% [Launch.web_bind, _bind])
+
+	var err := _http.listen(http_port, _bind)
+	var err_ws := _ws.listen(http_port + 1, _bind)
 	if err != OK or err_ws != OK:
 		push_warning("Web: cannot listen on ports %d/%d" % [http_port, http_port + 1])
 		set_process(false)
 		return
 
 	_listening = true
-	for address in IP.get_local_addresses():
-		if address.begins_with("192.") or address.begins_with("10.") or address.begins_with("172."):
-			print("Web: control surface at http://%s:%d" % [address, http_port])
+	print("Web: control surface at %s" % address())
 
 
 func is_listening() -> bool:
 	return _listening
 
 
-## The address to type into a phone, or empty if nothing is being served.
+## The address to type into a phone, or empty if nothing is being served. It is the
+## address actually bound rather than the prettiest one the machine holds: on
+## loopback there is no phone in the story, and saying so is the point.
 func address() -> String:
 	if not _listening:
 		return ""
-	for a in IP.get_local_addresses():
-		if a.begins_with("192.") or a.begins_with("10.") or a.begins_with("172."):
-			return "http://%s:%d" % [a, http_port]
-	return "http://127.0.0.1:%d" % http_port
+	return "http://%s:%d" % [_bind, http_port]
 
 
 func _load_page(path: String) -> PackedByteArray:
