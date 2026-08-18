@@ -2,6 +2,12 @@
 
 [![Build](https://github.com/yo1frenchtoast/deferlante-vj/actions/workflows/build.yml/badge.svg)](https://github.com/yo1frenchtoast/deferlante-vj/actions/workflows/build.yml)
 
+![Lasers, the sphere and the spotlight, with the desk open](docs/screenshot.png)
+
+*The whole instrument in one frame: the room on the right, the desk on the left. The
+desk dims itself the moment anything else takes over — a phone, a console, the pad —
+and comes back on the first keypress.*
+
 VJ visuals in Godot 4: neon strokes on black, additively blended.
 Built for video projection with a haze machine.
 
