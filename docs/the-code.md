@@ -34,6 +34,7 @@ scripts/
   sphere_circles.gd Circles projected onto a virtual sphere
   presets.gd        Nine slots on disk, recalled as a crossfade
   audio_reactor.gd  Captures the output, reads bass / mid / treble
+  audio_routing.gd  Points the machine's capture at the output being played
   autopilot.gd      Moves settings on its own, at the pace you set
 ```
 

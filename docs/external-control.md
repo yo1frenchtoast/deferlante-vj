@@ -309,25 +309,36 @@ it follows the track being played rather than the room.
 
 ### Setting it up
 
+Pick the output on the launcher, under **`SON ÉCOUTÉ` / `SOUND LISTENED TO`**. The
+default — *the output playing at launch* — is right on a machine with one sound card
+and stays right when that changes.
+
+That is all. The show taps the chosen output's monitor and points the machine's
+capture at it, **on every launch**, including the launches that walk straight past
+the launcher with `--skip-launcher`. Re-doing it every time is the point: the tap
+outlives nothing in particular, and a tap left on last night's interface is the most
+likely reason for "the sound stopped working".
+
+It taps the output; it does not reroute it, so playback is untouched.
+
+The old script still exists and does the same thing from a terminal, which is what
+you want when the show is not the thing being launched:
+
 ```
 tools/listen-to-output.sh          # start listening
-tools/listen-to-output.sh --stop   # put everything back
+tools/listen-to-output.sh --stop   # put the machine's capture back the way it was
 ```
 
-**Run it before launching** — that part is not optional. Godot binds to whatever the
-default source was when it started and never looks again: run the script afterwards
-and the app stays deaf, with nothing on screen to say so. Stopping and restarting the
-capture stream does not recover it either; measured, that leaves the analyser reading
-exactly zero. If the levels are dead, restart Déferlante.
+`--stop` is the undo for both — the launcher notes the previous default source in the
+same place the script does. Nothing puts it back on its own: a routing that
+half-restores after a crash is worse than one that stays put.
 
-**Run it again after every reboot.** `pactl load-module` lasts as long as the sound
-server does, and no longer. When it goes, the default source falls back to whatever
-it was before — often a physical input with nothing plugged into it, which reads as
-perfect silence rather than as an error. This is the single most likely reason for
-"the sound stopped working".
+If your sound arrives through an interface instead — a Focusrite, a desk — none of
+this is needed: that is already an input, and Déferlante reads the default one.
 
-The status line now says so rather than leaving it to be discovered. Three states
-that used to look alike on flat bars, and each says which:
+### Telling whether it hears anything
+
+Three states that used to look alike on flat bars, and the status line now says which:
 
 | on screen | meaning |
 | --- | --- |
@@ -336,15 +347,67 @@ that used to look alike on flat bars, and each says which:
 | `son ▁▂▃ 0%` | hearing it perfectly well; `REACTIVITY` is simply at zero |
 
 Ten seconds is longer than any gap in a set and shorter than the time it takes to
-start wondering. The web surface shows the same three states in its vu-mètre.
+start wondering. The web surface shows the same three states in its vu-mètre. The
+middle row is also what triggers the diagnosis below.
 
-It taps the output; it does not reroute it, so playback is untouched.
+### When something else is listening first
 
-If your sound arrives through an interface instead — a Focusrite, a desk — you do
-not need the script at all: that is already an input, and Déferlante reads the
-default one.
+A sound server is free to put a recording stream wherever its own policy says, and
+some do. Measured on the machine this was written on: **EasyEffects in service mode
+pulls every capture onto its own source**, `parecord` included, and undoes a
+`pactl move-source-output` within the second. Nothing the show does at the Pulse
+level survives that.
 
-### Why a script is needed at all
+It is not necessarily a fault. EasyEffects also latched onto the tap itself and
+passed the music through — the show heard everything, one link further down the
+chain than it thought. It only breaks when EasyEffects is pointed somewhere else,
+typically the built-in microphone after the default source moved, and then the show
+reads a silent room while the music plays.
+
+So the show does not fight it, it reports it. When every band has been flat for ten
+seconds, `audio_reactor.gd` asks whether anything is reading the tap at all, and if
+nothing is, says so by name in the log. That turns the failure with no symptom into
+one line naming the likely culprit.
+
+If it is EasyEffects and you would rather it stayed out of the way, quit it before
+the show — `flatpak kill com.github.wwmm.easyeffects`. Its input blocklist was tried
+here and did not take.
+
+### Windows
+
+There is nothing to route: Windows has no monitor to wrap. What the launcher offers
+there is the old `AUDIO INPUT` row — Godot's own input list, which the WASAPI backend
+does honour, unlike PulseAudio — and what has to exist first is an input carrying the
+output. Two ways, both outside this project:
+
+- **Stereo Mix**, if the chipset's driver still exposes it. Enable it in the sound
+  control panel, then pick it in the row.
+- **A virtual cable** — VB-Audio Cable, VoiceMeeter — which appears as an ordinary
+  input device and is the answer when Stereo Mix is not offered.
+
+Not measured: written from how the pieces are documented to behave, with no Windows
+machine to check it on. The launcher probes rather than assumes — it assigns a
+device, reads it back, and greys the row out if it did not stick — so a build that
+turns out not to honour the choice says so on screen instead of pretending.
+
+### Android
+
+The system's own output cannot be captured. Android puts that behind `MediaProjection`
+and `AudioPlaybackCapture`, which needs consent per session, which any app playing
+audio is allowed to refuse, and which Godot exposes no binding for. There is no
+version of the Linux trick that works here.
+
+What does work is the **microphone**, and in a room it is not the poor relation it
+sounds like: a phone on a table hears the PA perfectly well, and a phone is a
+secondary screen at best anyway.
+
+That needs two things, both now in place: `RECORD_AUDIO` in the export preset, and
+the runtime grant, which `audio_reactor.gd` asks for before it opens the capture. The
+manifest entry alone is not enough — without the grant the stream opens quite happily
+and carries nothing, which is the failure this whole page keeps circling. Untested on
+a phone.
+
+### Why it has to go round the outside
 
 Godot captures an *input*, and music is an *output*. PipeWire does publish the
 output's monitor as a source, but **Godot's PulseAudio backend filters monitors out
@@ -352,9 +415,9 @@ of its device list**, so it cannot be picked from inside the app.
 
 Worse, `AudioServer.input_device` does not hold in this build: assigned during
 `_ready` it reads back `"Default"`, one frame later it reads back empty, and the
-capture follows neither. So the script wraps the monitor in an ordinary source *and
-makes it the default* — pointing Godot at it by giving it no choice. `--stop`
-restores the source you had.
+capture follows neither. So the monitor is wrapped in an ordinary source *and made
+the default* — pointing Godot at it by giving it no choice. `AudioRouting` does that
+through `pactl`, and `tools/listen-to-output.sh --stop` restores the source you had.
 
 Measured again since, and precisely. `AudioServer.get_input_device_list()` does
 enumerate properly — every source on the machine, monitors excepted. It is the
@@ -362,11 +425,18 @@ enumerate properly — every source on the machine, monitors excepted. It is the
 Godot still read the music off the system default, at -55 dB, with a second and a
 half to settle in between. The assignment reads back empty, then `"Default"`.
 
-So the launcher's `AUDIO INPUT` row lists the real sources but is greyed out, with
-the reason on screen. It is not hardcoded to Linux: the launcher assigns a device,
-reads it back and disables the row only if it did not stick, which is safe there
-because no capture is open yet. Same story for `preferred_device` in
-`audio_reactor.gd` — best-effort, not the mechanism.
+So on Linux the launcher stops offering inputs and offers outputs instead, and the
+old `AUDIO INPUT` row survives only for the platforms where picking an input is the
+answer. Which row appears is probed, not hardcoded: `pactl info` decides the first,
+and for the second the launcher assigns a device, reads it back and disables the row
+if it did not stick — safe there because no capture is open yet. Same story for
+`preferred_device` in `audio_reactor.gd` — best-effort, not the mechanism.
+
+One trap for anyone adding to `AudioRouting`: what it hands to `sh -c` is parsed
+twice. Measured, `awk '$2 == "x"'` arrives at awk as `awk == x`, quotes stripped and
+fields expanded away to nothing. Every listing is therefore fetched whole and picked
+apart in GDScript, and the shell lines carry no quotes, no `$` and no pipelines that
+need either.
 
 ⚠️ Audio cannot be measured under `--headless`: that mode loads the dummy audio
 driver, where the device list really *is* `["Default"]` and every band reads `-inf`.
