@@ -185,11 +185,36 @@ func _start_capture():
 	device_name = AudioServer.input_device
 	_player.play()
 	capturing = _analyser != null
-	if capturing:
-		print("Audio: capturing the default input%s" %
-			(" (%s)" % device_name if device_name != "" else ""))
-	else:
+	if not capturing:
 		push_warning("Audio: no spectrum analyser, reactivity is off")
+		return
+	print("Audio: capturing the default input%s" %
+		(" (%s)" % device_name if device_name != "" else ""))
+
+
+## Why nothing is coming in, asked at the one moment it is worth asking.
+##
+## Not at startup, which was the first attempt and was wrong: a capture that did not
+## land on the tap is not necessarily deaf. Measured here — EasyEffects, told to
+## process every recording, latched onto the tap itself and passed the music through
+## its own source, so the show heard the music perfectly well through a stream that
+## was not the tap. Checked at startup, that reads as a fault; checked when the bands
+## have been flat for ten seconds, it reads as the explanation.
+##
+## Nothing can be done about it from here either: moving the stream back is undone
+## within the second. So this does not try to fix it, it says it.
+func _diagnose_silence():
+	# Headless loads the dummy audio driver, where there is no capture to place and
+	# every band reads silence by construction. Diagnosing that would be answering a
+	# question nobody asked with a warning that is always true.
+	if DisplayServer.get_name() == "headless":
+		return
+	if not AudioRouting.available() or AudioRouting.tap_has_listener():
+		return
+	push_warning(("Audio: nothing is reading \"%s\", so this capture went somewhere " +
+		"else. Something on this machine intercepts recordings — EasyEffects set to " +
+		"process every input does exactly that — and whatever it handed over is " +
+		"carrying no sound.") % AudioRouting.SOURCE)
 
 
 ## Prefers the monitor wrapper if the helper script has been run, and says nothing
@@ -227,7 +252,12 @@ func _process(delta: float):
 	]
 
 	if raw[0] <= silence_db and raw[1] <= silence_db and raw[2] <= silence_db:
+		var was_quiet := is_silent()
 		silent_for += delta
+		# On the crossing, not on every frame past it: the diagnosis costs a
+		# subprocess, and the answer does not change while nothing changes.
+		if is_silent() and not was_quiet:
+			_diagnose_silence()
 	else:
 		silent_for = 0.0
 
