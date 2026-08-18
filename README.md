@@ -100,9 +100,12 @@ The mouse works on the sliders too, but the keyboard is safer live: no aiming in
 the dark.
 
 Under the sliders sits a status line — **the web address to type into a phone**, the
-OSC port, and which pad is plugged in — followed by the shortcuts. The address is
-something you look up rather than remember, so it belongs on screen and not only in
-the console, where it scrolls away long before anyone needs it.
+address a console has to aim OSC at, and which pad is plugged in — followed by the
+shortcuts. Both addresses are shown in full, host and port: since each is a choice
+made at the launcher, a bare port number would no longer tell anyone whether the
+phone or the desk across the room will be heard. They are what you look up rather
+than remember, so they belong on screen and not only in the console, where they
+scroll away long before anyone needs them.
 
 ### Settings
 

@@ -48,6 +48,15 @@ func is_listening() -> bool:
 	return _listening
 
 
+## Where a console has to aim, or empty if nothing is listening. The address is worth
+## saying now that it is a choice: "port 9000" no longer tells anyone whether the desk
+## across the room will be heard.
+func address() -> String:
+	if not _listening:
+		return ""
+	return "%s:%d" % [_bind, port]
+
+
 func _process(_delta: float):
 	while _udp.get_available_packet_count() > 0:
 		_read_packet(_udp.get_packet())

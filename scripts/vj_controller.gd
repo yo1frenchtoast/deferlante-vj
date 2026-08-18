@@ -264,8 +264,9 @@ func _refresh_status():
 	var url: String = web.address()
 	if url != "":
 		bits.append("%s  %s" % [lang.text("status.web"), url])
-	if osc.is_listening():
-		bits.append("osc %d" % osc.port)
+	var osc_at: String = osc.address()
+	if osc_at != "":
+		bits.append("osc  %s" % osc_at)
 	var meter: String = _audio_meter()
 	if meter != "":
 		bits.append(meter)
