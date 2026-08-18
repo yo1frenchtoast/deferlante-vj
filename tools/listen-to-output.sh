@@ -26,6 +26,26 @@ existing() {
     pactl list short modules 2>/dev/null | awk -v n="source_name=$NAME" '$0 ~ n {print $1}'
 }
 
+# Which sink the existing source is actually tapping, as opposed to which one is
+# playing now. The two drift apart on their own: plug in an interface, unplug it,
+# and the default sink moves while the remap stays pointed at yesterday's monitor.
+master_of() {
+    pactl list short modules 2>/dev/null \
+        | awk -v n="source_name=$NAME" '$0 ~ n' \
+        | grep -o 'master=[^[:space:]]*' | head -1 | cut -d= -f2
+}
+
+# Only remember a default that is not ours. Running this twice used to overwrite
+# the note with "deferlante_capture" itself, so --stop then restored the source it
+# was in the middle of deleting.
+remember_default() {
+    local current
+    current=$(pactl get-default-source)
+    if [[ "$current" != "$NAME" ]]; then
+        echo "$current" > "$PREVIOUS"
+    fi
+}
+
 if [[ "${1:-}" == "--stop" ]]; then
     ids=$(existing)
     if [[ -z "$ids" ]]; then
@@ -46,20 +66,30 @@ fi
 # leave it behind while something else takes the default back, and bailing out here
 # on the strength of the source alone reported success while capturing the wrong
 # thing entirely.
-if [[ -n "$(existing)" ]]; then
-    if [[ "$(pactl get-default-source)" == "$NAME" ]]; then
-        echo "Already listening to $(pactl get-default-sink)."
-        exit 0
-    fi
-    echo "Source exists but was not the default — pointing capture back at it."
-    pactl get-default-source > "$PREVIOUS"
-    pactl set-default-source "$NAME"
-    echo "Listening to: $(pactl get-default-sink)"
-    exit 0
-fi
-
 sink=$(pactl get-default-sink)
 monitor="${sink}.monitor"
+
+# The source existing is not the same as it being listened to, and neither is the
+# same as it listening to the right thing. Both have been the failure in practice:
+# the capture stays open and healthy and simply carries nothing, which looks exactly
+# like reactivity being broken. So check all three before deciding there is nothing
+# to do, and rebuild rather than report success on a stale tap.
+if [[ -n "$(existing)" ]]; then
+    if [[ "$(master_of)" != "$monitor" ]]; then
+        echo "Capture was tapping $(master_of), but the sound now goes to $sink."
+        echo "Rebuilding it on the current output."
+        for id in $(existing); do pactl unload-module "$id"; done
+    elif [[ "$(pactl get-default-source)" == "$NAME" ]]; then
+        echo "Already listening to $sink."
+        exit 0
+    else
+        echo "Source exists but was not the default — pointing capture back at it."
+        remember_default
+        pactl set-default-source "$NAME"
+        echo "Listening to: $sink"
+        exit 0
+    fi
+fi
 
 if ! pactl list short sources | grep -q "^[0-9]*[[:space:]]*${monitor}[[:space:]]"; then
     echo "No monitor found for the default sink ($sink)." >&2
@@ -73,7 +103,7 @@ pactl load-module module-remap-source \
     source_name="$NAME" \
     source_properties=device.description=Deferlante-Capture > /dev/null
 
-pactl get-default-source > "$PREVIOUS"
+remember_default
 pactl set-default-source "$NAME"
 
 echo "Listening to: $sink"
