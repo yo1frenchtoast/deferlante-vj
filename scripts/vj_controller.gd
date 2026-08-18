@@ -197,8 +197,11 @@ func _build_params():
 	# ceiling that stopped at something reasonable meant the top of the slider was
 	# merely brisk. The top of a slider should be too much; the middle is where the
 	# set lives.
-	_fn("audio/lasers", 0, 12, 0.05, 2.5, func(v): _amounts["lasers"] = v)
+	# In the order the ear takes them, low to high, which is also the order the
+	# vu-metre draws them. They used to run mids, bass, treble — the order they were
+	# written in — and reading the panel meant translating every time.
 	_fn("audio/spot", 0, 12, 0.05, 2.5, func(v): _amounts["spot"] = v)
+	_fn("audio/lasers", 0, 12, 0.05, 2.5, func(v): _amounts["lasers"] = v)
 	_fn("audio/sphere", 0, 12, 0.05, 2.5, func(v): _amounts["sphere"] = v)
 
 	_section("section.sphere")

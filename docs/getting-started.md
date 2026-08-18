@@ -140,8 +140,8 @@ Labels below are the English ones.
 | --- | --- | --- |
 | `REACTIVITY` | 0 – 1 | Master amount. **0 by default** — nothing moves until asked. |
 | `PUNCH` | 0 – 1 | Response curve. Higher pushes the middle down so only hits show. |
-| `LASERS ← MID` | 0 – 12 | Mids drive the laser strokes. |
 | `SPOT ← BASS` | 0 – 12 | The kick drives the spotlight. |
+| `LASERS ← MID` | 0 – 12 | Mids drive the laser strokes. |
 | `SPHERE ← TREBLE` | 0 – 12 | Treble drives the sphere. |
 
 The top of those three is deliberately past the point of good taste — see

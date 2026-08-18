@@ -515,9 +515,9 @@
         }
       }
     },
-    "Audio Lasers \u2190 Mid": {
+    "Audio Spot \u2190 Bass": {
       "menu": "Audio",
-      "callback": "audioLasers",
+      "callback": "audioSpot",
       "parameters": {
         "Value": {
           "type": "Float",
@@ -529,9 +529,9 @@
         }
       }
     },
-    "Audio Spot \u2190 Bass": {
+    "Audio Lasers \u2190 Mid": {
       "menu": "Audio",
-      "callback": "audioSpot",
+      "callback": "audioLasers",
       "parameters": {
         "Value": {
           "type": "Float",

@@ -145,12 +145,12 @@ function audioPunch(value) {
 	local.send("/deferlante/audio/punch", value);
 }
 
-function audioLasers(value) {
-	local.send("/deferlante/audio/lasers", value);
-}
-
 function audioSpot(value) {
 	local.send("/deferlante/audio/spot", value);
+}
+
+function audioLasers(value) {
+	local.send("/deferlante/audio/lasers", value);
 }
 
 function audioSphere(value) {
