@@ -148,9 +148,13 @@ func apply_runtime():
 		DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED
 	)
 	Engine.max_fps = maxi(0, max_fps)
-	# Ignored outright by the Compatibility renderer, so it is only ever set to
-	# something other than off when Forward+ is running.
-	get_viewport().msaa_2d = msaa_mode()
+	# Measured against the renderer that is *running*, not the one the file asks for.
+	# The two come apart on the `--skip-launcher` path, which applies the saved answer
+	# without passing the screen that would have relaunched the process for it: the
+	# file says Forward+, the engine came up in Compatibility, and setting 2D MSAA
+	# there earns a warning on every single start and changes not one pixel.
+	get_viewport().msaa_2d = (msaa_mode() if renderer_honours_msaa()
+		else Viewport.MSAA_DISABLED)
 
 
 ## Samples to the viewport enum. Anything unexpected reads as off rather than as
@@ -163,6 +167,14 @@ func msaa_mode() -> Viewport.MSAA:
 		_: return Viewport.MSAA_DISABLED
 
 
-## True when antialiasing is actually available. Forward+ only — see `msaa`.
+## True when the antialiasing setting is worth offering: it describes the renderer
+## the operator has *chosen*, which is what the launcher's row is about. The next
+## process is the one that will honour it.
 func msaa_available() -> bool:
 	return rendering_method == "forward_plus"
+
+
+## True when the renderer *already running* honours it, which is a different question
+## and the one that matters at the moment of applying.
+func renderer_honours_msaa() -> bool:
+	return RenderingServer.get_current_rendering_method() == "forward_plus"
