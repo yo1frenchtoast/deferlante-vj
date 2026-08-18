@@ -35,6 +35,7 @@ scripts/
   presets.gd        Nine slots on disk, recalled as a crossfade
   audio_reactor.gd  Captures the output, reads bass / mid / treble
   audio_routing.gd  Points the machine's capture at the output being played
+  audio_probe.gd    Meters a source for the launcher, without the engine's help
   autopilot.gd      Moves settings on its own, at the pace you set
 ```
 

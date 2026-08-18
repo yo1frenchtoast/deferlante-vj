@@ -20,7 +20,7 @@ handful of things the engine will not let you change once the show is running.
 | `FULLSCREEN` | | `F11` still toggles it during the show. |
 | `VSYNC` | | |
 | `MAX FPS` | uncapped, or a refresh rate | Frames past the projector's refresh cost the same to draw and nobody sees them. |
-| `SOUND LISTENED TO` | the output playing at launch, or a named one | The show taps that output on its way past and listens to it. Re-done at every launch, so it cannot be left pointing at last night's interface. Linux with PipeWire or PulseAudio. |
+| `SOUND LISTENED TO` | the output playing at launch, a named output, or a named input | An output is tapped on its way past; an input is listened to as it is, for when something else on the machine sits in the middle. A live meter under the row says what the choice actually carries. Re-done at every launch, so it cannot be left pointing at last night's interface. Linux with PipeWire or PulseAudio. |
 | `AUDIO INPUT` | automatic, or a named source | The same row, on a machine where the sound cannot be routed from here — Windows, mainly. Greyed out where Godot ignores the choice too. Both are explained under [audio reactivity](external-control.md#audio-reactivity). |
 | `PANEL` | hidden for the whole set | For a machine that only projects, driven from a phone. `F3` still works. |
 | `WEB ACCESS` | this machine only, or one of its addresses | Loopback by default: the control surface has no password, so being reachable from the room is opt-in. Pick an address here to let a phone in. |

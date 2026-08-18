@@ -309,9 +309,21 @@ it follows the track being played rather than the room.
 
 ### Setting it up
 
-Pick the output on the launcher, under **`SON ÉCOUTÉ` / `SOUND LISTENED TO`**. The
-default — *the output playing at launch* — is right on a machine with one sound card
-and stays right when that changes.
+Pick it on the launcher, under **`SON ÉCOUTÉ` / `SOUND LISTENED TO`**. The default —
+*the output playing at launch* — is right on a machine with one sound card and stays
+right when that changes.
+
+The row asks one question at two depths. **Listen to an output** and the show taps its
+monitor: the ordinary answer, and the one that needs nothing arranged beforehand.
+**Capture an input** and it taps nothing at all, it listens where it is told — which is
+what you want the moment something else on the machine insists on standing in the
+middle. `easyeffects_source` appears in that half, and naming it makes EasyEffects a
+link in the chain rather than a thing to be fought.
+
+Under the row is a **meter**, live, showing what the line you have selected is
+actually carrying — and saying `rien n'entre` when the answer is nothing. Every wrong
+answer used to look exactly like every right one until the show was running; this is
+the difference.
 
 That is all. The show taps the chosen output's monitor and points the machine's
 capture at it, **on every launch**, including the launches that walk straight past
@@ -369,9 +381,11 @@ seconds, `audio_reactor.gd` asks whether anything is reading the tap at all, and
 nothing is, says so by name in the log. That turns the failure with no symptom into
 one line naming the likely culprit.
 
-If it is EasyEffects and you would rather it stayed out of the way, quit it before
-the show — `flatpak kill com.github.wwmm.easyeffects`. Its input blocklist was tried
-here and did not take.
+Two ways round it. Name its source in the launcher's audio row, which accepts the
+interception and listens one link further down — its meter will tell you at once
+whether that link carries anything. Or quit it before the show,
+`flatpak kill com.github.wwmm.easyeffects`, which is the only arrangement measured
+end to end here. Its input blocklist was tried and did not take.
 
 ### Windows
 
@@ -431,6 +445,16 @@ answer. Which row appears is probed, not hardcoded: `pactl info` decides the fir
 and for the second the launcher assigns a device, reads it back and disables the row
 if it did not stick — safe there because no capture is open yet. Same story for
 `preferred_device` in `audio_reactor.gd` — best-effort, not the mechanism.
+
+The meter does not use the engine to listen, and cannot. Godot binds a capture to the
+default source when the stream opens and never looks again; freeing the player and
+making another changes nothing, and `AudioServer.input_device`, which does force the
+driver to reopen its input, kills the capture outright — measured, the first reading
+comes through at 0.68 with music playing and every reopening after it reads 0.000 with
+`pa_stream_disconnect: Bad state`. So `audio_probe.gd` shells out to `parecord` and
+reads the tail of the raw file it writes. What that measures is what a recording client
+on this machine actually receives, policy and all — which is the point, and the reason
+it is trustworthy about the EasyEffects case.
 
 One trap for anyone adding to `AudioRouting`: what it hands to `sh -c` is parsed
 twice. Measured, `awk '$2 == "x"'` arrives at awk as `awk == x`, quotes stripped and
