@@ -17,6 +17,21 @@ though it had seen something, then it leaves. It never lands on anyone. Everythi
 else — the lasers, the sphere, the glitches — happens around that deferral: a room
 swept by a light that is always about to arrive, and never does.
 
+![A red kaleidoscope mandala folding and unfolding](docs/kaleidoscope.gif)
+
+*The same show, set up differently and filmed off the projector itself — which is
+where it is meant to end up. One colour, folded twelve ways, the strokes long and
+thin so the mirror has something to repeat:*
+
+| | |
+| --- | --- |
+| MIRROR | `EFFECT 1` · `SEGMENTS 12` · `ROTATION 0.22` |
+| COLOR | `MODE MANUAL` · `RED 1` · `GREEN 0` · `BLUE 0` · `SATURATION 1` |
+| LASERS | `COUNT 18` · `WIDTH 1` · `LENGTH 2` · `SPIN -0.6` · `PARALLEL 0.58` · `SCROLL 1` |
+| SPOTLIGHT | `RADIUS 295` · `WIDTH 17` · `HOLD 0.6` · `FREQUENCY 13.5` |
+| SPHERE | `CIRCLES 18` · `GLASS 1` |
+| GLOBAL | `SPEED 0.4` · `CHAOS 0.56` · `GLOW 1.25` |
+
 ![Lasers, the sphere and the spotlight, with the desk open](docs/screenshot.png)
 
 *The whole instrument in one frame: the room on the right, the desk on the left. The
