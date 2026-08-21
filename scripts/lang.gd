@@ -174,6 +174,12 @@ const TEXTS := {
 	# The web surface offers the same settings from across the room, and needs a few
 	# words the launcher never had to say: it can restart the show itself, and it is
 	# reached through the very port one of these rows can move.
+	# The one-shot actions, as the web surface labels its buttons. The panel says the
+	# same words in its help line; these are keyed by action name so a new one in
+	# `ACTIONS` only needs a line here to read properly.
+	"action.glitch": ["GLITCH", "GLITCH"],
+	"action.randomize": ["COULEURS", "COLORS"],
+
 	"launch.tab": ["DÉMARRAGE", "START-UP"],
 	"launch.restart.now": ["REDÉMARRER", "RESTART"],
 	"launch.restart.applies": [

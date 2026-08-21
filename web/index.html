@@ -193,6 +193,14 @@
   }
   .launch-links a:active { color: var(--accent); }
 
+  /* The same actions, offered on the settings page too: reaching for a glitch
+     should not mean changing tab first. */
+  .strip.actions {
+    padding: .7rem .7rem 0;
+    padding-left: max(.7rem, env(safe-area-inset-left));
+    padding-right: max(.7rem, env(safe-area-inset-right));
+  }
+
   /* Surfaces: the pads get the room, which is the whole point of a second page. */
   .surfaces { gap: .6rem; padding: .7rem; }
   .strip { flex: 0 0 auto; display: flex; gap: .5rem; }
@@ -292,6 +300,7 @@
 
 <main>
   <section class="view settings on" id="settings">
+    <div class="strip actions" id="settings-actions"></div>
     <div class="grid" id="grid"></div>
     <button class="reorder-reset" id="reorder-reset" hidden>ordre par défaut</button>
   </section>
@@ -308,10 +317,7 @@
   </section>
 
   <section class="view surfaces" id="surfaces">
-    <div class="strip">
-      <button data-action="glitch">GLITCH</button>
-      <button data-action="randomize">COLORS</button>
-    </div>
+    <div class="strip" id="surfaces-actions"></div>
     <div class="pads" id="pads"></div>
   </section>
 </main>
@@ -529,6 +535,7 @@ function build(schema) {
 
   defaultOrder = [...grid.children].map((card) => card.dataset.section);
   applyOrder(grid);
+  buildActions(schema.actions);
   lastLaunch = schema.launch;
   buildLaunch(schema.launch);
   buildPads(schema.params);
@@ -660,6 +667,22 @@ function buildPresets(info) {
   hint.className = "hint";
   hint.textContent = "tap recall · STORE then a slot to save";
   holder.appendChild(hint);
+}
+
+// One-shot actions. Godot names them; this only draws them, so an action added
+// there turns up here with no change to this file.
+function buildActions(actions) {
+  for (const id of ["settings-actions", "surfaces-actions"]) {
+    const holder = document.getElementById(id);
+    if (!holder) continue;
+    holder.innerHTML = "";
+    for (const action of actions || []) {
+      const button = document.createElement("button");
+      button.textContent = action.label || action.name;
+      button.addEventListener("click", () => send({ type: "action", name: action.name }));
+      holder.appendChild(button);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -878,10 +901,6 @@ function buildPads(list) {
     pads.push({ refresh });
     refresh();
   });
-}
-
-for (const button of document.querySelectorAll("[data-action]")) {
-  button.addEventListener("click", () => send({ type: "action", name: button.dataset.action }));
 }
 
 // Tabs. The pads need the whole screen to be playable and the grid needs it to be

@@ -158,7 +158,7 @@ func _build_params():
 	_fn("global/chaos", 0, 1, 0.02, 0.0, _set_chaos)
 	_fn("global/randomizer", 0, 1, 0.02, 0.0, autopilot.set_amount).randomizable = false
 	_fn("global/glow", 0, 2, 0.05, default_glow, _set_glow)
-	_prop("global/recall", 0, 10, 0.1, 2.0, presets, "recall_time")
+	_prop("global/recall", 0, 10, 0.1, 0.0, presets, "recall_time")
 	_fn("global/panel", 0.05, 1, 0.05, 1.0, panel.set_brightness)
 	var autodim := _fn("global/autodim", 0, 1, 1, 1.0, _set_autodim)
 	autodim.choices = PackedStringArray(["mode.off", "mode.on"])
@@ -174,7 +174,7 @@ func _build_params():
 
 	_section("section.mirror")
 	_fn("mirror/effect", 0, 1, 0.02, 0.0, kaleido.set_amount)
-	_fn("mirror/segments", 2, 16, 1, 6.0, kaleido.set_segments)
+	_fn("mirror/segments", 2, 16, 1, 5.0, kaleido.set_segments)
 	_fn("mirror/rotation", -1, 1, 0.02, 0.0, kaleido.set_spin, true)
 
 	_section("section.lasers")
@@ -647,6 +647,11 @@ func _send_schema():
 		"type": "schema",
 		"params": described,
 		"presets": {"used": presets.used_slots(), "count": presets.SLOTS},
+		# Named rather than spelled out in the page: the buttons are built from this,
+		# so an action added to `ACTIONS` appears on every phone without touching
+		# the HTML — the same way a setting does.
+		"actions": ACTIONS.map(func(a): return {
+			"name": a, "label": lang.text("action." + a)}),
 		"launch": _describe_launch(),
 	})
 
