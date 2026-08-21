@@ -722,6 +722,17 @@ function buildLaunch(info) {
   const failed = document.createElement("p");
   failed.className = "fail"; failed.hidden = true;
 
+  // Where the platform cannot start itself over — Android tears the activity down
+  // mid-frame and takes the show with it — the instruction replaces the button
+  // rather than sitting under a control that would empty the room.
+  if (info.can_restart === false) {
+    failed.textContent = info.failed || "";
+    failed.hidden = false;
+    foot.append(applies, failed);
+    panel.appendChild(foot);
+    return;
+  }
+
   const button = document.createElement("button");
   const idle = info.restart || "RESTART";
   button.textContent = idle;

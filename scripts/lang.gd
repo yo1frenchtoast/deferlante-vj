@@ -185,8 +185,10 @@ const TEXTS := {
 		"changing the web access or port will cut this page off",
 	],
 	"launch.restart.failed": [
-		"cette machine ne sait pas se relancer — rien n'a changé",
-		"this machine cannot restart itself — nothing has changed",
+		"cet appareil ne sait pas se relancer seul · les réglages sont enregistrés, "
+			+ "relancez l'application pour les appliquer",
+		"this device cannot restart itself · the settings are saved, relaunch the "
+			+ "app to apply them",
 	],
 }
 

@@ -686,6 +686,9 @@ func _describe_launch() -> Dictionary:
 		"applies": lang.text("launch.restart.applies"),
 		"web_warning": lang.text("launch.restart.web"),
 		"failed": lang.text("launch.restart.failed"),
+		# Asked before the button is drawn, not after it is pressed: a control that
+		# can never work is worse than a sentence saying so.
+		"can_restart": Launch.can_relaunch(),
 		"settings": [
 			_launch_choice("language", "launch.language", Lang.LANGUAGES, Launch.language),
 			_launch_choice("renderer", "launch.renderer", [
@@ -764,7 +767,8 @@ func _on_web_action(name: String):
 ##
 ## The saving is done on every keystroke of that tab rather than here, so a restart
 ## by any other route — the panel, a power cut — still comes up on what was asked
-## for. This only has to start the next process and stand down.
+## for. Standing the old show down belongs to `Launch.relaunch()`, which is the only
+## place that knows whether this platform wants it.
 ##
 ## A machine that will not fork is told so on the surface that asked, rather than
 ## by appearing to ignore the button: nothing has changed, and the operator needs
@@ -773,8 +777,6 @@ func _restart():
 	if not Launch.relaunch():
 		push_warning("Web: this platform will not start a second process")
 		web.broadcast({"type": "restart_failed"})
-		return
-	get_tree().quit()
 
 
 ## A start-up setting, changed from the web surface.

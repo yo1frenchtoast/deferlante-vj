@@ -146,6 +146,24 @@ func save():
 	cfg.save(PATH)
 
 
+## Whether starting over is something this platform can actually be asked to do.
+##
+## Android cannot, and the way it fails is the worst of all of them: `OS.create_process`
+## there is not a second process at all, it is this activity being told to restart
+## itself. The engine tears the fragment down while the GL thread is still stepping
+## it, and the SIGSEGV that follows kills the app before Android can bring it back.
+## The show does not restart — it disappears, and somebody has to walk to the
+## projector and start it by hand.
+##
+## Measured on the projector across repeated presses: quitting afterwards or not,
+## and with the render loop stopped first, the crash lands in `GodotLib_step` every
+## time and a successful restart is a coin toss at best. The bug is below this
+## project, so this refuses rather than gambles, and the surfaces ask first so they
+## can offer an honest instruction instead of a button that empties the room.
+func can_relaunch() -> bool:
+	return not OS.has_feature("android")
+
+
 ## Start this show again on the settings as they now stand, and skip the screen
 ## that would ask for them a second time.
 ##
@@ -153,14 +171,18 @@ func save():
 ## before a single script runs, so the new process has to be told on the way in.
 ## Everything else is read from disk, which is why the caller saves first.
 ##
-## Returns false when the platform will not start a second process. Never fatal on
-## its own — what to do with a machine that cannot restart is the caller's to
-## decide, and being stranded on a black screen ten minutes before doors is worse
-## than any setting being wrong.
+## Standing the old one down is part of the job, because whether that is even
+## wanted depends on the platform — see below.
 ##
-## Verified on Android as well as Linux: `OS.create_process` does return a pid
-## there, and the new activity replaces the old one.
+## Returns false when the platform will not start a second process at all, and
+## then nothing has happened: the show is still running and still on the old
+## settings. Never fatal on its own — what to do with a machine that cannot
+## restart is the caller's to decide, and being stranded on a black screen ten
+## minutes before doors is worse than any one setting being wrong.
 func relaunch() -> bool:
+	if not can_relaunch():
+		return false
+
 	var args := PackedStringArray()
 	if OS.has_feature("editor"):
 		# From the editor the executable is Godot itself, which needs telling which
@@ -170,7 +192,14 @@ func relaunch() -> bool:
 	# After a bare `--`, Godot stops interpreting and hands the rest to the project.
 	# Anything it does not recognise before that point is a fatal argument error.
 	args.append_array(["--", "--skip-launcher"])
-	return OS.create_process(OS.get_executable_path(), args) != -1
+	if OS.create_process(OS.get_executable_path(), args) == -1:
+		return false
+
+	# A second show is now running. Two of them fighting over one set of ports is
+	# exactly the mess the launcher's latch exists to avoid, so standing this one
+	# down is the last thing left to do.
+	get_tree().quit()
+	return true
 
 
 ## The half of the configuration that can be applied to a running process. The

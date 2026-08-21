@@ -593,4 +593,3 @@ func _relaunch():
 			% [Launch.rendering_method, RenderingServer.get_current_rendering_method()])
 		_start_show()
 		return
-	get_tree().quit()

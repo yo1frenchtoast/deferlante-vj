@@ -139,8 +139,19 @@ thumb brushing past it mid-set would be unforgivable.
 
 Two of those rows can cut the page off from the show it is driving — the web access
 and the web port — and the surface says so above the button rather than letting you
-find out. On a machine that will not start a second process, the button says that
-too, instead of appearing to do nothing.
+find out.
+
+**On Android there is no button**, and the tab says why instead. `OS.create_process`
+there is not a second process at all: it is the activity being told to restart
+itself, and the engine tears the fragment down while the GL thread is still stepping
+it. The SIGSEGV that follows kills the app before Android can bring it back, so the
+show does not restart — it vanishes, and somebody walks to the projector. Measured
+across repeated presses, with and without quitting afterwards and with the render
+loop stopped first: the crash lands in `GodotLib_step` every time and a clean
+restart is a coin toss. It is a bug below this project, so the surface refuses
+rather than gambles. The settings are still saved; the app has to be started again
+by hand for them to take. That is one walk, against the alternative of an empty
+screen mid-set.
 
 Splitting the pages is the point: the pads need the whole screen to be playable, the
 grid needs it to be readable, and the start-up rows are read and considered rather
