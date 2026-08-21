@@ -79,6 +79,9 @@ var _probe: AudioProbe
 var _access_addresses: PackedStringArray
 ## Guards against handing over twice. See `_go()`.
 var _going: bool = false
+## The launch button, kept so Enter can tell whether it is aimed here. See the guard
+## in `_unhandled_input()`.
+var _go_button: Button
 
 
 func _ready():
@@ -190,12 +193,12 @@ func _build():
 	_restart_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(_restart_note)
 
-	var go := Button.new()
-	go.text = lang.text("launch.go")
-	go.custom_minimum_size = Vector2(0, 44)
-	go.pressed.connect(_go)
-	column.add_child(go)
-	go.grab_focus()
+	_go_button = Button.new()
+	_go_button.text = lang.text("launch.go")
+	_go_button.custom_minimum_size = Vector2(0, 44)
+	_go_button.pressed.connect(_go)
+	column.add_child(_go_button)
+	_go_button.grab_focus()
 
 
 func _spacer(height: int) -> Control:
@@ -527,6 +530,15 @@ func _unhandled_input(event: InputEvent):
 		return
 	match event.keycode:
 		KEY_ENTER, KEY_KP_ENTER:
+			# A remote control has no mouse: OK arrives as Enter, and the row it
+			# lands on is far more often a droplist than the launch button. Controls
+			# act on the key *release* (see `_go()`), so the press falls through to
+			# here first — which made one press of OK unfold a list and start the
+			# show in the same breath, with no way left to change a setting from the
+			# sofa. Enter is a launch only when nothing else is waiting to answer it.
+			var focused := get_viewport().gui_get_focus_owner()
+			if focused != null and focused != _go_button:
+				return
 			_go()
 		KEY_ESCAPE:
 			get_tree().quit()
