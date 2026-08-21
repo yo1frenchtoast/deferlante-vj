@@ -25,17 +25,35 @@ void fragment() {
 	float radius = length(centre_uv);
 
 	float wedge = TAU / float(segments);
-	angle = mod(angle, wedge);
+	// Which wedge this pixel is in, and where it sits inside it. Keeping the two
+	// apart is what lets the effect open gradually without the image collapsing.
+	float turn = floor(angle / wedge);
+	float within = angle - turn * wedge;
 	// The mirrored fold inside the wedge: this is what creates the symmetry. A plain
 	// modulo would merely repeat the pattern in rotation.
-	angle = abs(angle - wedge * 0.5);
+	float mirrored = abs(within - wedge * 0.5);
+
+	// Two motions, both continuous, both finished at 1. Each wedge folds onto its
+	// own centre line, and every wedge turns towards the first one. At 0 they undo
+	// each other exactly and the image is untouched; at 1 every wedge shows the
+	// same mirrored slice, which is the kaleidoscope.
+	//
+	// Blending the *coordinates* instead — mix(uv, folded) — is what used to make
+	// the middle of the range ugly: `folded` always lands in one narrow sector, so
+	// half-way there the whole screen was squeezed into that corner rather than
+	// folded. Angles have somewhere to travel; positions do not.
+	angle = mix(within, mirrored, amount) + turn * wedge * (1.0 - amount);
 
 	vec2 folded = vec2(cos(angle), sin(angle)) * radius;
 	folded.x /= aspect;
 	folded += 0.5;
 
-	// `amount` blends gradually between the original and the folded image, which
-	// lets the effect be opened and closed smoothly during a set.
-	vec2 final_uv = mix(uv, clamp(folded, vec2(0.0), vec2(1.0)), amount);
-	COLOR = texture(screen_tex, final_uv);
+	// Off the edge, reflect rather than clamp. Clamping smears the last row of
+	// pixels into a flat panel — the dark wedge that used to sit in a corner
+	// half-way through the range — where a reflection carries on the pattern and
+	// reads as more mirror, which is what this effect is made of anyway.
+	folded = abs(mod(folded, 2.0));
+	folded = min(folded, 2.0 - folded);
+
+	COLOR = texture(screen_tex, folded);
 }

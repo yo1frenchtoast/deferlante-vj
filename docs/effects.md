@@ -77,6 +77,19 @@ sliders would end up multiplied across the screen too.
 Like the halo, at 0 the pass is genuinely switched off rather than left running as
 an identity transform.
 
+Between 0 and 1 the fold **opens**, and it is worth saying how, because the obvious
+way is wrong. Blending the sampled *coordinates* — half-way between where a pixel
+is and where its mirror would be — squeezes the whole screen into the one narrow
+sector the fold maps onto, so the middle of the range came out as a squashed
+amalgam in a corner rather than as a half-open mirror.
+
+It blends in **angle space** instead: each wedge folds onto its own centre line
+while every wedge turns towards the first. Both motions are continuous, both finish
+at 1, and at 0 they cancel exactly, so the image is untouched. Off the edge of the
+frame the lookup reflects rather than clamps — clamping smeared the last row of
+pixels into the flat dark panel that used to sit in a corner mid-range, where a
+reflection carries the pattern on and reads as more mirror.
+
 ## Scanlines
 
 `PARALLEL` does not tune the scatter, it crossfades between two different
