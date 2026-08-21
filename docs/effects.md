@@ -77,6 +77,22 @@ sliders would end up multiplied across the screen too.
 Like the halo, at 0 the pass is genuinely switched off rather than left running as
 an identity transform.
 
+Between 0 and 1 it **cross-fades**: the frame as drawn, and the fully folded frame,
+mixed. Both are continuous everywhere, so their mixture is too.
+
+Two other ways were tried and both broke in the middle of the range, which is worth
+writing down because each looks obviously right. Blending the sampled *coordinates*
+squeezes the whole screen into the one narrow sector the fold maps onto — the middle
+came out as a squashed amalgam in a corner. Blending the **angle** instead avoids
+the squeeze, and is the same thing algebraically, but `atan` cuts the circle along
+the left-hand axis: the angle jumps a full turn there, the jump cancels only at 0
+and at 1, and every value between wore a seam running out from the centre. Measured
+across that ray, the mismatch was four to six times what the cross-fade leaves.
+
+Off the edge of the frame the lookup reflects rather than clamps — clamping smears
+the last row of pixels into a flat dark panel, where a reflection carries the
+pattern on and reads as more mirror.
+
 ## Scanlines
 
 `PARALLEL` does not tune the scatter, it crossfades between two different

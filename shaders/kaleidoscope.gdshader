@@ -34,8 +34,18 @@ void fragment() {
 	folded.x /= aspect;
 	folded += 0.5;
 
-	// `amount` blends gradually between the original and the folded image, which
-	// lets the effect be opened and closed smoothly during a set.
-	vec2 final_uv = mix(uv, clamp(folded, vec2(0.0), vec2(1.0)), amount);
-	COLOR = texture(screen_tex, final_uv);
+	// Off the edge, reflect rather than clamp: clamping smears the last row of
+	// pixels into a flat panel, where a reflection carries the pattern on — which
+	// reads as more mirror, and this effect is made of mirrors.
+	folded = abs(mod(folded, 2.0));
+	folded = min(folded, 2.0 - folded);
+
+	// `amount` cross-fades between the frame as drawn and the fully folded one.
+	//
+	// Not between their *coordinates*: that is the same thing as interpolating the
+	// angle, and `atan` cuts the circle along the left-hand axis, where its value
+	// jumps by a full turn. The jump cancels only at 0 and at 1, so every value in
+	// between wore a seam running out from the centre. Blending the two images has
+	// no such edge: both are continuous everywhere, so their mixture is too.
+	COLOR = mix(texture(screen_tex, uv), texture(screen_tex, folded), amount);
 }
