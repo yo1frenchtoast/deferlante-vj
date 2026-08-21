@@ -501,6 +501,13 @@ function makeDraggable(card, grid) {
 function build(schema) {
   // Before the cards: each one carries a roll button labelled from this.
   buildActions(schema.actions);
+  // Which sections have anything the shuffle may move. A section of settings the
+  // auto-pilot is not allowed to touch — COLOUR is all of them — gets no button
+  // rather than one that does nothing.
+  const rollable = new Set();
+  for (const p of schema.params) {
+    if (p.randomizable !== false) rollable.add(p.slug.split("/")[0]);
+  }
   params = new Map();
   rows = new Map();
   const grid = document.getElementById("grid");
@@ -518,19 +525,13 @@ function build(schema) {
       const h = document.createElement("h2");
       h.textContent = section;
       // The slug prefix, not the heading: the heading is translated, the prefix is
-      // what every surface calls this section.
-      card.dataset.prefix = p.slug.split("/")[0];
-      const roll = document.createElement("button");
-      roll.className = "roll";
-      roll.textContent = shuffleLabel;
-      roll.title = shuffleLabel;
-      for (const stop of ["pointerdown", "mousedown", "touchstart"]) {
-        roll.addEventListener(stop, (e) => e.stopPropagation());
-      }
-      roll.addEventListener("click", () => {
-        send({ type: "action", name: "shuffle:" + card.dataset.prefix });
-      });
-      h.appendChild(roll);
+      // what every surface calls this section. Held in a constant of its own, not
+      // read back off the card when the button is pressed — `card` is reassigned on
+      // every section, so by click time it is whichever card was built last, and
+      // every button on the page shuffled the same one.
+      const prefix = p.slug.split("/")[0];
+      card.dataset.prefix = prefix;
+      if (rollable.has(prefix)) buildRoll(h, prefix);
       card.appendChild(h);
       grid.appendChild(card);
       makeDraggable(card, grid);
@@ -700,6 +701,25 @@ function buildPresets(info) {
 // The word on the per-section roll buttons, taken from the shuffle action so the
 // two never disagree about what this is called.
 let shuffleLabel = "SHUFFLE";
+
+// The per-section roll button. Built here rather than inline so the prefix it
+// sends is captured once, per card: `card` is reassigned on every section, and
+// reading the prefix back off it at click time made every button on the page
+// shuffle whichever section happened to be built last.
+function buildRoll(heading, prefix) {
+  const roll = document.createElement("button");
+  roll.className = "roll";
+  roll.textContent = shuffleLabel;
+  roll.title = shuffleLabel;
+  // The heading is also the drag handle, so the press must not reach it.
+  for (const stop of ["pointerdown", "mousedown", "touchstart"]) {
+    roll.addEventListener(stop, (e) => e.stopPropagation());
+  }
+  roll.addEventListener("click", () => {
+    send({ type: "action", name: "shuffle:" + prefix });
+  });
+  heading.appendChild(roll);
+}
 
 function buildActions(actions) {
   const shuffle = (actions || []).find((a) => a.name === "shuffle");

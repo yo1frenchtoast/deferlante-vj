@@ -99,11 +99,15 @@ Below that, three pages.
 flow into as many columns as the screen can take: one on a phone held upright, three
 or four across a tablet in landscape. Nothing is nested and nothing scrolls sideways.
 
-Each card carries a small **roll button** in its title bar, which re-rolls that
+Most cards carry a small **roll button** in their title bar, which re-rolls that
 section alone — the lasers taking a new shape while the spotlight carries on doing
 what it was asked. It is the same move the auto-pilot makes on its own, aimed. The
 strips at the top of RÉGLAGES and SURFACES hold the whole-show version alongside
 GLITCH and the colours.
+
+A section the auto-pilot is not allowed to touch gets no button rather than one
+that does nothing — which today means COULEUR, whose five settings are all
+decisions about the room rather than variations to play with.
 
 The cards can be **reordered**: drag one by its title — the amber heading is the
 handle, since everything below it is a slider and a card that moved when you grabbed

@@ -948,6 +948,11 @@ func _describe(p: VJParam, tongue: int) -> Dictionary:
 		"value": p.value,
 		"choices": choices,
 		"bidirectional": p.bidirectional,
+		# Whether the auto-pilot may move it, which is also whether a shuffle can.
+		# The surfaces need it to avoid offering a button that cannot do anything:
+		# every setting under COLOUR is a decision about the room, so that section
+		# has nothing to roll.
+		"randomizable": p.randomizable,
 	}
 
 
