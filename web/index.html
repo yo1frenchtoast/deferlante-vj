@@ -401,50 +401,65 @@ resetEl.addEventListener("click", () => {
 
 function makeDraggable(card, grid) {
   const handle = card.querySelector("h2");
-  let pointer = null, startX = 0, startY = 0, moved = false;
 
   handle.addEventListener("pointerdown", (event) => {
-    pointer = event.pointerId;
-    startX = event.clientX; startY = event.clientY;
-    moved = false;
-    // Without the capture the smallest drift hands the events to whatever the
-    // finger has slid over, and the card is dropped mid-move.
-    try { handle.setPointerCapture(pointer); } catch (e) { /* not fatal */ }
+    if (event.button) return;   // right and middle clicks are not a grip
+    event.preventDefault();
+    // Where the finger was when the card last sat still. Reordering shifts the
+    // card under it, and this shifts by the same amount — see the step below.
+    let originX = event.clientX, originY = event.clientY;
+    let moved = false;
+
+    const move = (e) => {
+      const dx = e.clientX - originX, dy = e.clientY - originY;
+      // A few pixels of slack: a thumb never presses perfectly still, and a tap
+      // on a title should not count as a drag.
+      if (!moved && Math.hypot(dx, dy) < 6) return;
+      if (!moved) { moved = true; card.classList.add("dragging"); }
+      card.style.transform = `translate(${dx}px, ${dy}px)`;
+
+      // The card is pointer-events:none while carried, so this reads whatever is
+      // underneath rather than the card in hand.
+      const under = document.elementFromPoint(e.clientX, e.clientY);
+      const target = under && under.closest(".card");
+      if (!target || target === card || target.parentElement !== grid) return;
+
+      // Which side to land on comes from the order the two are already in, not
+      // from geometry: in a grid the neighbour can be beside rather than below,
+      // and comparing midpoints there flickers between two slots.
+      const before = card.getBoundingClientRect();
+      const cards = [...grid.children];
+      const after = cards.indexOf(target) > cards.indexOf(card);
+      grid.insertBefore(card, after ? target.nextSibling : target);
+      // The grid has just carried the card to another slot, possibly a column
+      // away. Move the origin exactly as far, so the card stays under the finger
+      // rather than leaping out from under it.
+      const now = card.getBoundingClientRect();
+      originX += now.left - before.left;
+      originY += now.top - before.top;
+      card.style.transform =
+        `translate(${e.clientX - originX}px, ${e.clientY - originY}px)`;
+    };
+
+    const drop = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", drop);
+      window.removeEventListener("pointercancel", drop);
+      card.style.transform = "";
+      if (!moved) return;
+      card.classList.remove("dragging");
+      rememberOrder(grid);
+    };
+
+    // Listened for on the window, and deliberately not through setPointerCapture:
+    // reordering moves the card inside the grid, and a node that moves in the DOM
+    // loses its capture. The card was then stranded mid-drag — still outlined,
+    // never saved, and pointer-events:none, so it could not even be picked up
+    // again. The window goes on delivering either way.
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", drop);
+    window.addEventListener("pointercancel", drop);
   });
-
-  handle.addEventListener("pointermove", (event) => {
-    if (event.pointerId !== pointer) return;
-    const dx = event.clientX - startX, dy = event.clientY - startY;
-    // A few pixels of slack: a thumb never presses perfectly still, and a tap on
-    // a title should not count as a drag.
-    if (!moved && Math.hypot(dx, dy) < 6) return;
-    if (!moved) { moved = true; card.classList.add("dragging"); }
-    card.style.transform = `translate(${dx}px, ${dy}px)`;
-
-    const under = document.elementFromPoint(event.clientX, event.clientY);
-    const target = under && under.closest(".card");
-    if (!target || target === card || target.parentElement !== grid) return;
-    // Which side to land on is read from the order the two are already in, not
-    // from the geometry: in a grid the neighbour can be beside rather than below,
-    // and comparing midpoints there flickers between two slots.
-    const cards = [...grid.children];
-    const after = cards.indexOf(target) > cards.indexOf(card);
-    grid.insertBefore(card, after ? target.nextSibling : target);
-    // The card just moved out from under the finger. Keeping the old offset would
-    // fling it the width of a column away.
-    startX = event.clientX; startY = event.clientY;
-    card.style.transform = "";
-  });
-
-  const drop = (event) => {
-    if (event.pointerId !== pointer) return;
-    pointer = null;
-    card.style.transform = "";
-    if (moved) { card.classList.remove("dragging"); rememberOrder(grid); }
-    moved = false;
-  };
-  handle.addEventListener("pointerup", drop);
-  handle.addEventListener("pointercancel", drop);
 }
 
 function build(schema) {
