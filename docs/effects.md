@@ -77,18 +77,21 @@ sliders would end up multiplied across the screen too.
 Like the halo, at 0 the pass is genuinely switched off rather than left running as
 an identity transform.
 
-Between 0 and 1 the fold **opens**, and it is worth saying how, because the obvious
-way is wrong. Blending the sampled *coordinates* — half-way between where a pixel
-is and where its mirror would be — squeezes the whole screen into the one narrow
-sector the fold maps onto, so the middle of the range came out as a squashed
-amalgam in a corner rather than as a half-open mirror.
+Between 0 and 1 it **cross-fades**: the frame as drawn, and the fully folded frame,
+mixed. Both are continuous everywhere, so their mixture is too.
 
-It blends in **angle space** instead: each wedge folds onto its own centre line
-while every wedge turns towards the first. Both motions are continuous, both finish
-at 1, and at 0 they cancel exactly, so the image is untouched. Off the edge of the
-frame the lookup reflects rather than clamps — clamping smeared the last row of
-pixels into the flat dark panel that used to sit in a corner mid-range, where a
-reflection carries the pattern on and reads as more mirror.
+Two other ways were tried and both broke in the middle of the range, which is worth
+writing down because each looks obviously right. Blending the sampled *coordinates*
+squeezes the whole screen into the one narrow sector the fold maps onto — the middle
+came out as a squashed amalgam in a corner. Blending the **angle** instead avoids
+the squeeze, and is the same thing algebraically, but `atan` cuts the circle along
+the left-hand axis: the angle jumps a full turn there, the jump cancels only at 0
+and at 1, and every value between wore a seam running out from the centre. Measured
+across that ray, the mismatch was four to six times what the cross-fade leaves.
+
+Off the edge of the frame the lookup reflects rather than clamps — clamping smears
+the last row of pixels into a flat dark panel, where a reflection carries the
+pattern on and reads as more mirror.
 
 ## Scanlines
 
