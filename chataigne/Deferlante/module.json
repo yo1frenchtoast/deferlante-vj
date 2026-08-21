@@ -718,6 +718,17 @@
           "mappingIndex": 0
         }
       }
+    },
+    "Shuffle": {
+      "menu": "Actions",
+      "callback": "shuffle",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
     }
   }
 }

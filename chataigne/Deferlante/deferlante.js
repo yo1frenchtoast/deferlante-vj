@@ -205,3 +205,7 @@ function triggerGlitch(value) {
 function randomizeColors(value) {
 	local.send("/deferlante/randomize");
 }
+
+function shuffle(value) {
+	local.send("/deferlante/shuffle");
+}

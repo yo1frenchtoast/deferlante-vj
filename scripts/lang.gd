@@ -179,6 +179,7 @@ const TEXTS := {
 	# `ACTIONS` only needs a line here to read properly.
 	"action.glitch": ["GLITCH", "GLITCH"],
 	"action.randomize": ["COULEURS", "COLORS"],
+	"action.shuffle": ["BRASSER", "SHUFFLE"],
 
 	"launch.tab": ["DÉMARRAGE", "START-UP"],
 	"launch.restart.now": ["REDÉMARRER", "RESTART"],

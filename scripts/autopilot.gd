@@ -38,6 +38,16 @@ func _process(delta: float):
 	_roll()
 
 
+## One move, now, whatever the pace is set to — including nought, which is the
+## point: it makes the randomiser something you can hit rather than something you
+## leave running. The clock is rearmed so a hit does not land moments before an
+## automatic one and read as a double.
+func roll_now():
+	_roll()
+	if amount > 0.0:
+		_next_roll = _interval()
+
+
 func _roll():
 	if not all_params.is_valid():
 		return

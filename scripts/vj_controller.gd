@@ -9,7 +9,7 @@ extends Node2D
 
 ## The one-shot actions every surface offers. Named once: the REST spec advertises
 ## these, the Chataigne module is built from them, and `_on_web_action()` wires them.
-const ACTIONS := ["glitch", "randomize"]
+const ACTIONS := ["glitch", "randomize", "shuffle"]
 
 ## Where OSC addresses and Chataigne callbacks are rooted.
 const OSC_PREFIX := "/deferlante/"
@@ -580,6 +580,9 @@ func _on_osc_message(address: String, args: Array):
 		"/deferlante/randomize":
 			_randomize_all()
 			return
+		"/deferlante/shuffle":
+			autopilot.roll_now()
+			return
 		"/deferlante/preset/recall":
 			if not args.is_empty():
 				presets.recall(int(args[0]))
@@ -767,6 +770,8 @@ func _on_web_action(name: String):
 			circle.apply_glitch()
 		"randomize":
 			_randomize_all()
+		"shuffle":
+			autopilot.roll_now()
 		"restart":
 			_restart()
 
