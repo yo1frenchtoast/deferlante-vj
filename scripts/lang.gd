@@ -171,6 +171,23 @@ const TEXTS := {
 		"changer de rendu relance l'application",
 		"changing the renderer restarts the app",
 	],
+	# The web surface offers the same settings from across the room, and needs a few
+	# words the launcher never had to say: it can restart the show itself, and it is
+	# reached through the very port one of these rows can move.
+	"launch.tab": ["DÉMARRAGE", "START-UP"],
+	"launch.restart.now": ["REDÉMARRER", "RESTART"],
+	"launch.restart.applies": [
+		"ces réglages prennent effet au redémarrage",
+		"these settings take effect on restart",
+	],
+	"launch.restart.web": [
+		"changer l'accès ou le port web coupera cette page",
+		"changing the web access or port will cut this page off",
+	],
+	"launch.restart.failed": [
+		"cette machine ne sait pas se relancer — rien n'a changé",
+		"this machine cannot restart itself — nothing has changed",
+	],
 }
 
 ## The language names stay in their own tongue, as is customary.

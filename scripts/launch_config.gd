@@ -19,6 +19,22 @@ extends Node
 
 const PATH := "user://launch.cfg"
 
+## What each of the choices above may be set to. They live with the settings rather
+## than with the screen that shows them, because the launcher is no longer the only
+## thing offering them: the web surface builds the same rows from the same lists.
+const RESOLUTIONS := [
+	Vector2i.ZERO,          # the screen's own
+	Vector2i(1280, 720),
+	Vector2i(1600, 900),
+	Vector2i(1920, 1080),
+	Vector2i(2560, 1440),
+	Vector2i(3840, 2160),
+]
+const MSAA_SAMPLES := [0, 2, 4, 8]
+## 0 is uncapped; the rest are the refresh rates a projector or a monitor actually
+## runs at. A free-typed number would be one more thing to get wrong in the dark.
+const MAX_FPS := [0, 30, 60, 75, 120, 144, 240]
+
 ## Reachable from this machine and nowhere else.
 const LOCAL := "127.0.0.1"
 
@@ -128,6 +144,33 @@ func save():
 	cfg.set_value("ui", "hide_panel", hide_panel)
 	cfg.set_value("ui", "language", language)
 	cfg.save(PATH)
+
+
+## Start this show again on the settings as they now stand, and skip the screen
+## that would ask for them a second time.
+##
+## The renderer is passed as a flag rather than left to the file: Godot fixes it
+## before a single script runs, so the new process has to be told on the way in.
+## Everything else is read from disk, which is why the caller saves first.
+##
+## Returns false when the platform will not start a second process. Never fatal on
+## its own — what to do with a machine that cannot restart is the caller's to
+## decide, and being stranded on a black screen ten minutes before doors is worse
+## than any setting being wrong.
+##
+## Verified on Android as well as Linux: `OS.create_process` does return a pid
+## there, and the new activity replaces the old one.
+func relaunch() -> bool:
+	var args := PackedStringArray()
+	if OS.has_feature("editor"):
+		# From the editor the executable is Godot itself, which needs telling which
+		# project to run.
+		args.append_array(["--path", ProjectSettings.globalize_path("res://")])
+	args.append_array(["--rendering-method", rendering_method])
+	# After a bare `--`, Godot stops interpreting and hands the rest to the project.
+	# Anything it does not recognise before that point is a fatal argument error.
+	args.append_array(["--", "--skip-launcher"])
+	return OS.create_process(OS.get_executable_path(), args) != -1
 
 
 ## The half of the configuration that can be applied to a running process. The

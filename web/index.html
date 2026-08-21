@@ -138,6 +138,51 @@
   }
   input[type=range]::-moz-range-thumb { width: 24px; height: 24px; border: 0; border-radius: 50%; background: var(--text); }
 
+  /* Start-up settings: one column, the width of a sentence, because these are read
+     and considered rather than played with. */
+  .launch-panel {
+    max-width: 30rem; margin: 0 auto; padding: .8rem;
+    padding-left: max(.8rem, env(safe-area-inset-left));
+    padding-right: max(.8rem, env(safe-area-inset-right));
+  }
+  .launch-row {
+    display: flex; align-items: center; gap: .7rem;
+    padding: .45rem 0; border-bottom: 1px solid var(--line);
+  }
+  .launch-row .name {
+    flex: 0 0 8.5rem; font-size: .7rem; letter-spacing: .1em; color: var(--accent);
+  }
+  .launch-row .field { flex: 1 1 auto; min-width: 0; }
+  .launch-row select, .launch-row input[type=number] {
+    width: 100%; padding: .4rem; font-size: .82rem;
+    background: #0e0e12; color: var(--text);
+    border: 1px solid var(--line); border-radius: .35rem;
+  }
+  .launch-row input[type=checkbox] { width: 1.2rem; height: 1.2rem; accent-color: var(--accent); }
+  .launch-check { display: flex; align-items: center; gap: .5rem; font-size: .8rem; }
+  /* A row that is currently powerless — antialiasing under Compatibility — says so
+     in the gap under itself rather than vanishing: a setting that disappears reads
+     as a bug, one that explains itself reads as an answer. */
+  .launch-note {
+    font-size: .68rem; color: var(--dim); padding: 0 0 .5rem 9.2rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .launch-row.inert .name, .launch-row.inert select { color: var(--dim); }
+
+  .launch-foot { padding: 1rem 0 .5rem; text-align: center; }
+  .launch-foot p { font-size: .72rem; color: var(--dim); margin: 0 0 .3rem; }
+  .launch-foot .warn { color: var(--accent); }
+  .launch-foot .fail { color: var(--red); }
+  .launch-foot button {
+    margin-top: .6rem; width: 100%; padding: .8rem; font-size: .85rem;
+    letter-spacing: .12em; background: var(--panel); color: var(--text);
+    border: 1px solid var(--accent); border-radius: .5rem;
+  }
+  .launch-foot button:active { background: var(--accent); color: #000; }
+  /* Armed, then confirmed: this one ends the show for a few seconds, and a thumb
+     brushing past it during a set would be unforgivable. */
+  .launch-foot button.armed { background: var(--red); border-color: var(--red); color: #000; }
+
   /* Surfaces: the pads get the room, which is the whole point of a second page. */
   .surfaces { gap: .6rem; padding: .7rem; }
   .strip { flex: 0 0 auto; display: flex; gap: .5rem; }
@@ -219,6 +264,7 @@
   <div class="tabs">
     <button data-view="settings" class="on">RÉGLAGES</button>
     <button data-view="surfaces">SURFACES</button>
+    <button data-view="launch" id="launch-tab">DÉMARRAGE</button>
   </div>
   <span id="status">connecting…</span>
   <div class="meter" id="meter" hidden title="Vu-mètre : basses · médiums · aigus">
@@ -240,6 +286,8 @@
     <button class="reorder-reset" id="reorder-reset" hidden>ordre par défaut</button>
   </section>
 
+  <section class="view launch" id="launch"><div class="launch-panel" id="launch-panel"></div></section>
+
   <section class="view surfaces" id="surfaces">
     <div class="strip">
       <button data-action="glitch">GLITCH</button>
@@ -258,6 +306,7 @@
 let params = new Map();
 let rows = new Map();
 let socket = null;
+let lastLaunch = null;
 const pads = [];
 
 const statusEl = document.getElementById("status");
@@ -278,6 +327,7 @@ function connect() {
     if (msg.type === "schema") build(msg);
     else if (msg.type === "value") apply(msg.slug, msg.value);
     else if (msg.type === "audio") meter(msg);
+    else if (msg.type === "restart_failed") restartFailed(lastLaunch && lastLaunch.failed);
   };
 }
 
@@ -445,6 +495,8 @@ function build(schema) {
 
   defaultOrder = [...grid.children].map((card) => card.dataset.section);
   applyOrder(grid);
+  lastLaunch = schema.launch;
+  buildLaunch(schema.launch);
   buildPads(schema.params);
   buildPresets(schema.presets);
   statusEl.textContent = "live"; statusEl.className = "on";
@@ -574,6 +626,137 @@ function buildPresets(info) {
   hint.className = "hint";
   hint.textContent = "tap recall · STORE then a slot to save";
   holder.appendChild(hint);
+}
+
+// ---------------------------------------------------------------------------
+// Start-up settings
+// ---------------------------------------------------------------------------
+//
+// The launcher's own rows, offered from wherever the phone is. The machine running
+// the show is usually the one nobody can reach — projecting from a shelf, or an
+// Android box with a remote and no keyboard — and every one of these has to be
+// answered before the show starts, which is exactly when nobody is standing at it.
+//
+// Nothing here changes the running show, and the page does not pretend otherwise:
+// Godot fixes the renderer before a script runs and binds the ports before anything
+// can listen. The values are saved as they are touched, and the button below starts
+// the process again on them.
+function buildLaunch(info) {
+  const panel = document.getElementById("launch-panel");
+  if (!info) {
+    // An older Godot build simply does not send this. Better an absent tab than one
+    // full of controls that answer to nothing.
+    document.getElementById("launch-tab").hidden = true;
+    return;
+  }
+  document.getElementById("launch-tab").textContent = info.tab || "DÉMARRAGE";
+  panel.innerHTML = "";
+
+  for (const setting of info.settings || []) {
+    const row = document.createElement("div");
+    row.className = "launch-row" + (setting.note ? " inert" : "");
+    const name = document.createElement("span");
+    name.className = "name"; name.textContent = setting.label;
+    const field = document.createElement("div");
+    field.className = "field";
+
+    let input;
+    if (setting.type === "choice") {
+      input = document.createElement("select");
+      (setting.choices || []).forEach((choice, index) => {
+        const option = document.createElement("option");
+        option.value = index; option.textContent = choice;
+        input.appendChild(option);
+      });
+      input.value = setting.value;
+      input.addEventListener("change", () => {
+        send({ type: "launch", key: setting.key, value: parseInt(input.value, 10) });
+      });
+    } else if (setting.type === "bool") {
+      input = document.createElement("input");
+      input.type = "checkbox"; input.checked = !!setting.value;
+      input.addEventListener("change", () => {
+        send({ type: "launch", key: setting.key, value: input.checked });
+      });
+      if (setting.caption) {
+        // The words belong to the box, so the whole thing is one target: on a
+        // phone a bare checkbox is the smallest thing on the page.
+        const wrap = document.createElement("label");
+        wrap.className = "launch-check";
+        const words = document.createElement("span");
+        words.textContent = setting.caption;
+        wrap.append(input, words);
+        field.appendChild(wrap);
+        row.append(name, field);
+        panel.appendChild(row);
+        continue;
+      }
+    } else {
+      input = document.createElement("input");
+      input.type = "number";
+      input.min = setting.min; input.max = setting.max; input.value = setting.value;
+      // On change, not on input: a port is typed a digit at a time, and sending
+      // every keystroke would save 7, then 73, then 733 as real answers.
+      input.addEventListener("change", () => {
+        send({ type: "launch", key: setting.key, value: parseInt(input.value, 10) });
+      });
+    }
+
+    field.appendChild(input);
+    row.append(name, field);
+    panel.appendChild(row);
+
+    if (setting.note) {
+      const note = document.createElement("div");
+      note.className = "launch-note"; note.textContent = setting.note;
+      panel.appendChild(note);
+    }
+  }
+
+  const foot = document.createElement("div");
+  foot.className = "launch-foot";
+  const applies = document.createElement("p");
+  applies.textContent = info.applies || "";
+  const warning = document.createElement("p");
+  warning.className = "warn"; warning.textContent = info.web_warning || "";
+  const failed = document.createElement("p");
+  failed.className = "fail"; failed.hidden = true;
+
+  const button = document.createElement("button");
+  const idle = info.restart || "RESTART";
+  button.textContent = idle;
+  let armed = false, timer = null;
+  const disarm = () => {
+    armed = false; clearTimeout(timer);
+    button.classList.remove("armed"); button.textContent = idle;
+  };
+  button.addEventListener("click", () => {
+    if (!armed) {
+      // Armed for a few seconds, then it forgets: a button that stays cocked is a
+      // button that goes off on the next accidental touch.
+      armed = true;
+      button.classList.add("armed");
+      button.textContent = idle + " ?";
+      timer = setTimeout(disarm, 4000);
+      return;
+    }
+    disarm();
+    failed.hidden = true;
+    send({ type: "action", name: "restart" });
+  });
+  restartFailedEl = failed;
+
+  foot.append(applies, warning, failed, button);
+  panel.appendChild(foot);
+}
+
+// Godot answers this only when the platform refused to fork, in which case the show
+// is still running and the operator would otherwise be watching a button do nothing.
+let restartFailedEl = null;
+function restartFailed(text) {
+  if (!restartFailedEl) return;
+  restartFailedEl.textContent = text;
+  restartFailedEl.hidden = false;
 }
 
 // Two XY pads. Each axis is assignable, because which pair is worth playing with
