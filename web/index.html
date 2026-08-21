@@ -92,7 +92,33 @@
   .card h2 {
     font-size: .68rem; letter-spacing: .16em; color: var(--accent);
     margin: .1rem 0 .4rem; font-weight: 600;
+    /* The title is the handle. A card is nothing but sliders below this line, and
+       one that moved when a slider was grabbed would be unusable — so the grip is
+       the one strip of a card that does nothing else. */
+    cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
   }
+  .card h2::after {
+    content: "\2059"; float: right; color: var(--line);
+    letter-spacing: 0; font-size: .9rem; line-height: .8;
+  }
+  .card.dragging {
+    opacity: .9; border-color: var(--accent); box-shadow: 0 .5rem 1.5rem #000a;
+    position: relative; z-index: 5;
+    /* Transparent to hit-testing while carried, so the card under the finger can
+       be read rather than the one being moved. */
+    pointer-events: none;
+  }
+  .card.dragging h2 { cursor: grabbing; }
+
+  /* Only offered once the order has actually been changed: nothing to reset
+     otherwise, and the row is quieter for its absence. */
+  .reorder-reset {
+    display: block; margin: 0 auto .9rem; padding: .35rem .8rem;
+    font-size: .68rem; letter-spacing: .1em;
+    background: transparent; color: var(--dim);
+    border: 1px solid var(--line); border-radius: .4rem;
+  }
+  .reorder-reset[hidden] { display: none; }
 
   .row { padding: .12rem 0; }
   .row .top { display: flex; justify-content: space-between; font-size: .78rem; }
@@ -209,7 +235,10 @@
 <div class="slots" id="slots"></div>
 
 <main>
-  <section class="view settings on" id="settings"><div class="grid" id="grid"></div></section>
+  <section class="view settings on" id="settings">
+    <div class="grid" id="grid"></div>
+    <button class="reorder-reset" id="reorder-reset" hidden>ordre par défaut</button>
+  </section>
 
   <section class="view surfaces" id="surfaces">
     <div class="strip">
@@ -272,6 +301,102 @@ function format(p, value) {
 
 const TINTS = { "color/red": "red", "color/green": "green", "color/blue": "blue" };
 
+// ---------------------------------------------------------------------------
+// Where the cards sit
+// ---------------------------------------------------------------------------
+//
+// Which section you reach for first changes with the set, and with whether the
+// tablet is in a hand or flat on a table. So the order is the operator's: dragged
+// by the card title, kept in this browser, and reapplied to every schema. Godot
+// has no opinion about it and is never told — this is a property of the surface
+// you happen to be holding, not of the show.
+const ORDER_KEY = "deferlante.card-order";
+const resetEl = document.getElementById("reorder-reset");
+// The order Godot sent, before any of it was rearranged: the one description of
+// "default" that cannot drift, since it is rebuilt from the schema every connect.
+let defaultOrder = [];
+
+function savedOrder() {
+  // Private windows and cleared site data both throw rather than return nothing.
+  try { return JSON.parse(localStorage.getItem(ORDER_KEY)) || []; } catch (e) { return []; }
+}
+
+function rememberOrder(grid) {
+  const order = [...grid.children].map((card) => card.dataset.section);
+  try { localStorage.setItem(ORDER_KEY, JSON.stringify(order)); } catch (e) { /* not fatal */ }
+  resetEl.hidden = false;
+}
+
+function applyOrder(grid) {
+  const order = savedOrder();
+  if (!order.length) return;
+  const rank = new Map(order.map((name, i) => [name, i]));
+  // A section the saved order has never heard of — one just added in Godot — sorts
+  // to the end rather than vanishing or forcing the whole order to be thrown away.
+  [...grid.children]
+    .sort((a, b) => (rank.get(a.dataset.section) ?? 1e6) - (rank.get(b.dataset.section) ?? 1e6))
+    .forEach((card) => grid.appendChild(card));
+  resetEl.hidden = false;
+}
+
+resetEl.addEventListener("click", () => {
+  try { localStorage.removeItem(ORDER_KEY); } catch (e) { /* not fatal */ }
+  resetEl.hidden = true;
+  const grid = document.getElementById("grid");
+  const rank = new Map(defaultOrder.map((name, i) => [name, i]));
+  [...grid.children]
+    .sort((a, b) => (rank.get(a.dataset.section) ?? 1e6) - (rank.get(b.dataset.section) ?? 1e6))
+    .forEach((card) => grid.appendChild(card));
+});
+
+function makeDraggable(card, grid) {
+  const handle = card.querySelector("h2");
+  let pointer = null, startX = 0, startY = 0, moved = false;
+
+  handle.addEventListener("pointerdown", (event) => {
+    pointer = event.pointerId;
+    startX = event.clientX; startY = event.clientY;
+    moved = false;
+    // Without the capture the smallest drift hands the events to whatever the
+    // finger has slid over, and the card is dropped mid-move.
+    try { handle.setPointerCapture(pointer); } catch (e) { /* not fatal */ }
+  });
+
+  handle.addEventListener("pointermove", (event) => {
+    if (event.pointerId !== pointer) return;
+    const dx = event.clientX - startX, dy = event.clientY - startY;
+    // A few pixels of slack: a thumb never presses perfectly still, and a tap on
+    // a title should not count as a drag.
+    if (!moved && Math.hypot(dx, dy) < 6) return;
+    if (!moved) { moved = true; card.classList.add("dragging"); }
+    card.style.transform = `translate(${dx}px, ${dy}px)`;
+
+    const under = document.elementFromPoint(event.clientX, event.clientY);
+    const target = under && under.closest(".card");
+    if (!target || target === card || target.parentElement !== grid) return;
+    // Which side to land on is read from the order the two are already in, not
+    // from the geometry: in a grid the neighbour can be beside rather than below,
+    // and comparing midpoints there flickers between two slots.
+    const cards = [...grid.children];
+    const after = cards.indexOf(target) > cards.indexOf(card);
+    grid.insertBefore(card, after ? target.nextSibling : target);
+    // The card just moved out from under the finger. Keeping the old offset would
+    // fling it the width of a column away.
+    startX = event.clientX; startY = event.clientY;
+    card.style.transform = "";
+  });
+
+  const drop = (event) => {
+    if (event.pointerId !== pointer) return;
+    pointer = null;
+    card.style.transform = "";
+    if (moved) { card.classList.remove("dragging"); rememberOrder(grid); }
+    moved = false;
+  };
+  handle.addEventListener("pointerup", drop);
+  handle.addEventListener("pointercancel", drop);
+}
+
 function build(schema) {
   params = new Map();
   rows = new Map();
@@ -286,10 +411,12 @@ function build(schema) {
       section = p.section;
       card = document.createElement("div");
       card.className = "card";
+      card.dataset.section = section;
       const h = document.createElement("h2");
       h.textContent = section;
       card.appendChild(h);
       grid.appendChild(card);
+      makeDraggable(card, grid);
     }
 
     const row = document.createElement("div");
@@ -316,6 +443,8 @@ function build(schema) {
     rows.set(p.slug, { slider, val, p });
   }
 
+  defaultOrder = [...grid.children].map((card) => card.dataset.section);
+  applyOrder(grid);
   buildPads(schema.params);
   buildPresets(schema.presets);
   statusEl.textContent = "live"; statusEl.className = "on";
