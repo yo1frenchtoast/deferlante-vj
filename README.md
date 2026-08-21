@@ -5,6 +5,8 @@
 VJ visuals in Godot 4: neon strokes on black, additively blended.
 Built for video projection with a haze machine.
 
+![A run through the effects: lasers, sphere, spotlight, kaleidoscope](docs/demo.gif)
+
 *Déferlante* is French for the breaking wave — the one that surges in and takes the
 room. Pull the word apart in English and something else surfaces: **defer**, and a
 *lante* one syllable short of *lantern*. A light that keeps putting off the moment
@@ -14,15 +16,6 @@ Which is exactly what the spotlight does here. It sweeps, it stops, it trembles 
 though it had seen something, then it leaves. It never lands on anyone. Everything
 else — the lasers, the sphere, the glitches — happens around that deferral: a room
 swept by a light that is always about to arrive, and never does.
-
-![A run through the effects: lasers, sphere, spotlight, kaleidoscope](docs/demo.gif)
-
-*Eight seconds across most of what it does: strokes filling the frame, then lined up
-into a scrolling curtain, circles turning on a virtual sphere, the spotlight swelling
-and coming apart, everything folded into a kaleidoscope, one colour taking over, and
-all of it at once. Recorded in Forward+ with antialiasing on, on the machine that has
-a graphics card — the show ships on the other renderer, which is twice as fast here
-and antialiases nothing.*
 
 ![Lasers, the sphere and the spotlight, with the desk open](docs/screenshot.png)
 
