@@ -59,6 +59,11 @@ func label() -> String:
 	return _lang.label(slug) if _lang else slug
 
 
+## In a named tongue rather than the room's. See `Lang.label_in()`.
+func label_in(tongue: int) -> String:
+	return _lang.label_in(slug, tongue) if _lang else slug
+
+
 ## The single entry point: slider, keyboard and OSC all end up here.
 func set_value(new_value: float):
 	value = clampf(snappedf(new_value, step), min_value, max_value)

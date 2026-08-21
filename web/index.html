@@ -92,7 +92,33 @@
   .card h2 {
     font-size: .68rem; letter-spacing: .16em; color: var(--accent);
     margin: .1rem 0 .4rem; font-weight: 600;
+    /* The title is the handle. A card is nothing but sliders below this line, and
+       one that moved when a slider was grabbed would be unusable — so the grip is
+       the one strip of a card that does nothing else. */
+    cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
   }
+  .card h2::after {
+    content: "\2059"; float: right; color: var(--line);
+    letter-spacing: 0; font-size: .9rem; line-height: .8;
+  }
+  .card.dragging {
+    opacity: .9; border-color: var(--accent); box-shadow: 0 .5rem 1.5rem #000a;
+    position: relative; z-index: 5;
+    /* Transparent to hit-testing while carried, so the card under the finger can
+       be read rather than the one being moved. */
+    pointer-events: none;
+  }
+  .card.dragging h2 { cursor: grabbing; }
+
+  /* Only offered once the order has actually been changed: nothing to reset
+     otherwise, and the row is quieter for its absence. */
+  .reorder-reset {
+    display: block; margin: 0 auto .9rem; padding: .35rem .8rem;
+    font-size: .68rem; letter-spacing: .1em;
+    background: transparent; color: var(--dim);
+    border: 1px solid var(--line); border-radius: .4rem;
+  }
+  .reorder-reset[hidden] { display: none; }
 
   .row { padding: .12rem 0; }
   .row .top { display: flex; justify-content: space-between; font-size: .78rem; }
@@ -111,6 +137,61 @@
     border-radius: 50%; background: var(--text);
   }
   input[type=range]::-moz-range-thumb { width: 24px; height: 24px; border: 0; border-radius: 50%; background: var(--text); }
+
+  /* Start-up settings: one column, the width of a sentence, because these are read
+     and considered rather than played with. */
+  .launch-panel {
+    max-width: 30rem; margin: 0 auto; padding: .8rem;
+    padding-left: max(.8rem, env(safe-area-inset-left));
+    padding-right: max(.8rem, env(safe-area-inset-right));
+  }
+  .launch-row {
+    display: flex; align-items: center; gap: .7rem;
+    padding: .45rem 0; border-bottom: 1px solid var(--line);
+  }
+  .launch-row .name {
+    flex: 0 0 8.5rem; font-size: .7rem; letter-spacing: .1em; color: var(--accent);
+  }
+  .launch-row .field { flex: 1 1 auto; min-width: 0; }
+  .launch-row select, .launch-row input[type=number] {
+    width: 100%; padding: .4rem; font-size: .82rem;
+    background: #0e0e12; color: var(--text);
+    border: 1px solid var(--line); border-radius: .35rem;
+  }
+  .launch-row input[type=checkbox] { width: 1.2rem; height: 1.2rem; accent-color: var(--accent); }
+  .launch-check { display: flex; align-items: center; gap: .5rem; font-size: .8rem; }
+  /* A row that is currently powerless — antialiasing under Compatibility — says so
+     in the gap under itself rather than vanishing: a setting that disappears reads
+     as a bug, one that explains itself reads as an answer. */
+  .launch-note {
+    font-size: .68rem; color: var(--dim); padding: 0 0 .5rem 9.2rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .launch-row.inert .name, .launch-row.inert select { color: var(--dim); }
+
+  .launch-foot { padding: 1rem 0 .5rem; text-align: center; }
+  .launch-foot p { font-size: .72rem; color: var(--dim); margin: 0 0 .3rem; }
+  .launch-foot .warn { color: var(--accent); }
+  .launch-foot .fail { color: var(--red); }
+  .launch-foot button {
+    margin-top: .6rem; width: 100%; padding: .8rem; font-size: .85rem;
+    letter-spacing: .12em; background: var(--panel); color: var(--text);
+    border: 1px solid var(--accent); border-radius: .5rem;
+  }
+  .launch-foot button:active { background: var(--accent); color: #000; }
+  /* Armed, then confirmed: this one ends the show for a few seconds, and a thumb
+     brushing past it during a set would be unforgivable. */
+  .launch-foot button.armed { background: var(--red); border-color: var(--red); color: #000; }
+
+  .launch-links {
+    max-width: 30rem; margin: 0 auto; padding: .2rem .8rem 1.4rem;
+    display: flex; gap: 1.2rem; justify-content: center;
+  }
+  .launch-links a {
+    font-size: .72rem; letter-spacing: .08em; color: var(--dim);
+    text-decoration: none; border-bottom: 1px solid var(--line); padding-bottom: .1rem;
+  }
+  .launch-links a:active { color: var(--accent); }
 
   /* Surfaces: the pads get the room, which is the whole point of a second page. */
   .surfaces { gap: .6rem; padding: .7rem; }
@@ -193,6 +274,7 @@
   <div class="tabs">
     <button data-view="settings" class="on">RÉGLAGES</button>
     <button data-view="surfaces">SURFACES</button>
+    <button data-view="launch" id="launch-tab">DÉMARRAGE</button>
   </div>
   <span id="status">connecting…</span>
   <div class="meter" id="meter" hidden title="Vu-mètre : basses · médiums · aigus">
@@ -209,7 +291,21 @@
 <div class="slots" id="slots"></div>
 
 <main>
-  <section class="view settings on" id="settings"><div class="grid" id="grid"></div></section>
+  <section class="view settings on" id="settings">
+    <div class="grid" id="grid"></div>
+    <button class="reorder-reset" id="reorder-reset" hidden>ordre par défaut</button>
+  </section>
+
+  <section class="view launch" id="launch">
+    <div class="launch-panel" id="launch-panel"></div>
+    <!-- Outside the panel above, which is emptied and rebuilt from every schema.
+         Both open in a tab of their own: this one is often the only thing driving
+         the show, and navigating away from it mid-set would be a poor trade. -->
+    <div class="launch-links">
+      <a href="/docs" target="_blank" rel="noopener">API · Swagger ↗</a>
+      <a href="https://github.com/yo1frenchtoast/deferlante-vj" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+  </section>
 
   <section class="view surfaces" id="surfaces">
     <div class="strip">
@@ -229,6 +325,7 @@
 let params = new Map();
 let rows = new Map();
 let socket = null;
+let lastLaunch = null;
 const pads = [];
 
 const statusEl = document.getElementById("status");
@@ -249,6 +346,7 @@ function connect() {
     if (msg.type === "schema") build(msg);
     else if (msg.type === "value") apply(msg.slug, msg.value);
     else if (msg.type === "audio") meter(msg);
+    else if (msg.type === "restart_failed") restartFailed(lastLaunch && lastLaunch.failed);
   };
 }
 
@@ -272,6 +370,117 @@ function format(p, value) {
 
 const TINTS = { "color/red": "red", "color/green": "green", "color/blue": "blue" };
 
+// ---------------------------------------------------------------------------
+// Where the cards sit
+// ---------------------------------------------------------------------------
+//
+// Which section you reach for first changes with the set, and with whether the
+// tablet is in a hand or flat on a table. So the order is the operator's: dragged
+// by the card title, kept in this browser, and reapplied to every schema. Godot
+// has no opinion about it and is never told — this is a property of the surface
+// you happen to be holding, not of the show.
+const ORDER_KEY = "deferlante.card-order";
+const resetEl = document.getElementById("reorder-reset");
+// The order Godot sent, before any of it was rearranged: the one description of
+// "default" that cannot drift, since it is rebuilt from the schema every connect.
+let defaultOrder = [];
+
+function savedOrder() {
+  // Private windows and cleared site data both throw rather than return nothing.
+  try { return JSON.parse(localStorage.getItem(ORDER_KEY)) || []; } catch (e) { return []; }
+}
+
+function rememberOrder(grid) {
+  const order = [...grid.children].map((card) => card.dataset.section);
+  try { localStorage.setItem(ORDER_KEY, JSON.stringify(order)); } catch (e) { /* not fatal */ }
+  resetEl.hidden = false;
+}
+
+function applyOrder(grid) {
+  const order = savedOrder();
+  if (!order.length) return;
+  const rank = new Map(order.map((name, i) => [name, i]));
+  // A section the saved order has never heard of — one just added in Godot — sorts
+  // to the end rather than vanishing or forcing the whole order to be thrown away.
+  [...grid.children]
+    .sort((a, b) => (rank.get(a.dataset.section) ?? 1e6) - (rank.get(b.dataset.section) ?? 1e6))
+    .forEach((card) => grid.appendChild(card));
+  resetEl.hidden = false;
+}
+
+resetEl.addEventListener("click", () => {
+  try { localStorage.removeItem(ORDER_KEY); } catch (e) { /* not fatal */ }
+  resetEl.hidden = true;
+  const grid = document.getElementById("grid");
+  const rank = new Map(defaultOrder.map((name, i) => [name, i]));
+  [...grid.children]
+    .sort((a, b) => (rank.get(a.dataset.section) ?? 1e6) - (rank.get(b.dataset.section) ?? 1e6))
+    .forEach((card) => grid.appendChild(card));
+});
+
+function makeDraggable(card, grid) {
+  const handle = card.querySelector("h2");
+
+  handle.addEventListener("pointerdown", (event) => {
+    if (event.button) return;   // right and middle clicks are not a grip
+    event.preventDefault();
+    // Where the finger was when the card last sat still. Reordering shifts the
+    // card under it, and this shifts by the same amount — see the step below.
+    let originX = event.clientX, originY = event.clientY;
+    let moved = false;
+
+    const move = (e) => {
+      const dx = e.clientX - originX, dy = e.clientY - originY;
+      // A few pixels of slack: a thumb never presses perfectly still, and a tap
+      // on a title should not count as a drag.
+      if (!moved && Math.hypot(dx, dy) < 6) return;
+      if (!moved) { moved = true; card.classList.add("dragging"); }
+      card.style.transform = `translate(${dx}px, ${dy}px)`;
+
+      // The card is pointer-events:none while carried, so this reads whatever is
+      // underneath rather than the card in hand.
+      const under = document.elementFromPoint(e.clientX, e.clientY);
+      const target = under && under.closest(".card");
+      if (!target || target === card || target.parentElement !== grid) return;
+
+      // Which side to land on comes from the order the two are already in, not
+      // from geometry: in a grid the neighbour can be beside rather than below,
+      // and comparing midpoints there flickers between two slots.
+      const before = card.getBoundingClientRect();
+      const cards = [...grid.children];
+      const after = cards.indexOf(target) > cards.indexOf(card);
+      grid.insertBefore(card, after ? target.nextSibling : target);
+      // The grid has just carried the card to another slot, possibly a column
+      // away. Move the origin exactly as far, so the card stays under the finger
+      // rather than leaping out from under it.
+      const now = card.getBoundingClientRect();
+      originX += now.left - before.left;
+      originY += now.top - before.top;
+      card.style.transform =
+        `translate(${e.clientX - originX}px, ${e.clientY - originY}px)`;
+    };
+
+    const drop = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", drop);
+      window.removeEventListener("pointercancel", drop);
+      card.style.transform = "";
+      if (!moved) return;
+      card.classList.remove("dragging");
+      rememberOrder(grid);
+    };
+
+    // Listened for on the window, and deliberately not through setPointerCapture:
+    // reordering moves the card inside the grid, and a node that moves in the DOM
+    // loses its capture. The card was then stranded mid-drag — still outlined,
+    // never saved, and pointer-events:none, so it could not even be picked up
+    // again. The window goes on delivering either way.
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", drop);
+    window.addEventListener("pointercancel", drop);
+  });
+}
+
 function build(schema) {
   params = new Map();
   rows = new Map();
@@ -286,10 +495,12 @@ function build(schema) {
       section = p.section;
       card = document.createElement("div");
       card.className = "card";
+      card.dataset.section = section;
       const h = document.createElement("h2");
       h.textContent = section;
       card.appendChild(h);
       grid.appendChild(card);
+      makeDraggable(card, grid);
     }
 
     const row = document.createElement("div");
@@ -316,6 +527,10 @@ function build(schema) {
     rows.set(p.slug, { slider, val, p });
   }
 
+  defaultOrder = [...grid.children].map((card) => card.dataset.section);
+  applyOrder(grid);
+  lastLaunch = schema.launch;
+  buildLaunch(schema.launch);
   buildPads(schema.params);
   buildPresets(schema.presets);
   statusEl.textContent = "live"; statusEl.className = "on";
@@ -445,6 +660,148 @@ function buildPresets(info) {
   hint.className = "hint";
   hint.textContent = "tap recall · STORE then a slot to save";
   holder.appendChild(hint);
+}
+
+// ---------------------------------------------------------------------------
+// Start-up settings
+// ---------------------------------------------------------------------------
+//
+// The launcher's own rows, offered from wherever the phone is. The machine running
+// the show is usually the one nobody can reach — projecting from a shelf, or an
+// Android box with a remote and no keyboard — and every one of these has to be
+// answered before the show starts, which is exactly when nobody is standing at it.
+//
+// Nothing here changes the running show, and the page does not pretend otherwise:
+// Godot fixes the renderer before a script runs and binds the ports before anything
+// can listen. The values are saved as they are touched, and the button below starts
+// the process again on them.
+function buildLaunch(info) {
+  const panel = document.getElementById("launch-panel");
+  if (!info) {
+    // An older Godot build simply does not send this. Better an absent tab than one
+    // full of controls that answer to nothing.
+    document.getElementById("launch-tab").hidden = true;
+    return;
+  }
+  document.getElementById("launch-tab").textContent = info.tab || "DÉMARRAGE";
+  panel.innerHTML = "";
+
+  for (const setting of info.settings || []) {
+    const row = document.createElement("div");
+    row.className = "launch-row" + (setting.note ? " inert" : "");
+    const name = document.createElement("span");
+    name.className = "name"; name.textContent = setting.label;
+    const field = document.createElement("div");
+    field.className = "field";
+
+    let input;
+    if (setting.type === "choice") {
+      input = document.createElement("select");
+      (setting.choices || []).forEach((choice, index) => {
+        const option = document.createElement("option");
+        option.value = index; option.textContent = choice;
+        input.appendChild(option);
+      });
+      input.value = setting.value;
+      input.addEventListener("change", () => {
+        send({ type: "launch", key: setting.key, value: parseInt(input.value, 10) });
+      });
+    } else if (setting.type === "bool") {
+      input = document.createElement("input");
+      input.type = "checkbox"; input.checked = !!setting.value;
+      input.addEventListener("change", () => {
+        send({ type: "launch", key: setting.key, value: input.checked });
+      });
+      if (setting.caption) {
+        // The words belong to the box, so the whole thing is one target: on a
+        // phone a bare checkbox is the smallest thing on the page.
+        const wrap = document.createElement("label");
+        wrap.className = "launch-check";
+        const words = document.createElement("span");
+        words.textContent = setting.caption;
+        wrap.append(input, words);
+        field.appendChild(wrap);
+        row.append(name, field);
+        panel.appendChild(row);
+        continue;
+      }
+    } else {
+      input = document.createElement("input");
+      input.type = "number";
+      input.min = setting.min; input.max = setting.max; input.value = setting.value;
+      // On change, not on input: a port is typed a digit at a time, and sending
+      // every keystroke would save 7, then 73, then 733 as real answers.
+      input.addEventListener("change", () => {
+        send({ type: "launch", key: setting.key, value: parseInt(input.value, 10) });
+      });
+    }
+
+    field.appendChild(input);
+    row.append(name, field);
+    panel.appendChild(row);
+
+    if (setting.note) {
+      const note = document.createElement("div");
+      note.className = "launch-note"; note.textContent = setting.note;
+      panel.appendChild(note);
+    }
+  }
+
+  const foot = document.createElement("div");
+  foot.className = "launch-foot";
+  const applies = document.createElement("p");
+  applies.textContent = info.applies || "";
+  const warning = document.createElement("p");
+  warning.className = "warn"; warning.textContent = info.web_warning || "";
+  const failed = document.createElement("p");
+  failed.className = "fail"; failed.hidden = true;
+
+  // Where the platform cannot start itself over — Android tears the activity down
+  // mid-frame and takes the show with it — the instruction replaces the button
+  // rather than sitting under a control that would empty the room.
+  if (info.can_restart === false) {
+    failed.textContent = info.failed || "";
+    failed.hidden = false;
+    foot.append(applies, failed);
+    panel.appendChild(foot);
+    return;
+  }
+
+  const button = document.createElement("button");
+  const idle = info.restart || "RESTART";
+  button.textContent = idle;
+  let armed = false, timer = null;
+  const disarm = () => {
+    armed = false; clearTimeout(timer);
+    button.classList.remove("armed"); button.textContent = idle;
+  };
+  button.addEventListener("click", () => {
+    if (!armed) {
+      // Armed for a few seconds, then it forgets: a button that stays cocked is a
+      // button that goes off on the next accidental touch.
+      armed = true;
+      button.classList.add("armed");
+      button.textContent = idle + " ?";
+      timer = setTimeout(disarm, 4000);
+      return;
+    }
+    disarm();
+    failed.hidden = true;
+    send({ type: "action", name: "restart" });
+  });
+  restartFailedEl = failed;
+
+  foot.append(applies, warning, failed, button);
+  panel.appendChild(foot);
+}
+
+// Godot answers this only when the platform refused to fork, in which case the show
+// is still running and the operator would otherwise be watching a button do nothing.
+let restartFailedEl = null;
+function restartFailed(text) {
+  if (!restartFailedEl) return;
+  restartFailedEl.textContent = text;
+  restartFailedEl.hidden = false;
 }
 
 // Two XY pads. Each axis is assignable, because which pair is worth playing with

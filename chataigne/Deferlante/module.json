@@ -114,7 +114,7 @@
       "callback": "globalAutodim",
       "parameters": {
         "Value": {
-          "type": "Float",
+          "type": "Integer",
           "ui": "slider",
           "min": 0.0,
           "max": 1.0,
@@ -324,7 +324,7 @@
       "callback": "spotRadius",
       "parameters": {
         "Value": {
-          "type": "Float",
+          "type": "Integer",
           "ui": "slider",
           "min": 20.0,
           "max": 600.0,
@@ -338,7 +338,7 @@
       "callback": "spotPulse",
       "parameters": {
         "Value": {
-          "type": "Float",
+          "type": "Integer",
           "ui": "slider",
           "min": 0.0,
           "max": 300.0,
@@ -450,7 +450,7 @@
       "callback": "spotManual",
       "parameters": {
         "Value": {
-          "type": "Float",
+          "type": "Integer",
           "ui": "slider",
           "min": 0.0,
           "max": 1.0,
@@ -478,7 +478,7 @@
       "callback": "spotHandback",
       "parameters": {
         "Value": {
-          "type": "Float",
+          "type": "Integer",
           "ui": "slider",
           "min": 2.0,
           "max": 120.0,
@@ -590,7 +590,7 @@
       "callback": "sphereRadius",
       "parameters": {
         "Value": {
-          "type": "Float",
+          "type": "Integer",
           "ui": "slider",
           "min": 100.0,
           "max": 800.0,

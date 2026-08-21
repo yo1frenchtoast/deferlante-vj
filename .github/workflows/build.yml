@@ -73,6 +73,7 @@ jobs:
             echo "export/android/debug_keystore = \"${HOME}/debug.keystore\""
             echo 'export/android/debug_keystore_user = "androiddebugkey"'
             echo 'export/android/debug_keystore_pass = "android"'
+            echo "export/android/java_sdk_path = \"${JAVA_HOME_17_X64:-${JAVA_HOME}}\""
           } > ~/.config/godot/editor_settings-${minor}.tres
           cat ~/.config/godot/editor_settings-${minor}.tres
 
@@ -89,6 +90,14 @@ jobs:
       - name: Import the project
         run: godot --headless --import || true
 
+      # The console module is generated from the settings, so a setting added
+      # without regenerating it leaves the two describing different shows — the
+      # failure this catches is a knob on the console that drives nothing, or
+      # bounds that have quietly drifted apart. Godot is asked directly here, the
+      # same way the generator asks it locally.
+      - name: Check the Chataigne module still matches the settings
+        run: python3 tools/build_chataigne_module.py --check
+
       # One export per step: a failure names its own platform in the annotation,
       # instead of a single "Export failed" that could mean any of the three.
       - name: Export Linux
@@ -101,10 +110,17 @@ jobs:
           mkdir -p build/windows
           godot --headless --export-release "Windows" build/windows/deferlante.exe
 
+      # Android alone builds through gradle rather than from the prebuilt template.
+      # That is what puts the app in an Android TV menu: the LEANBACK_LAUNCHER
+      # category cannot be patched into the template's binary manifest, so
+      # `show_in_android_tv` is silently inert without a real build. The template
+      # for it lands in `android/`, which is gitignored and therefore absent from a
+      # fresh checkout — hence installing it here, in the same breath as the export.
       - name: Export Android
         run: |
           mkdir -p build/android
-          godot --headless --export-release "Android" build/android/deferlante.apk
+          godot --headless --install-android-build-template \
+            --export-release "Android" build/android/deferlante.apk
 
       # A build that starts but serves nothing is the failure mode that matters
       # here: the control page ships through the export filter, not the code.
@@ -115,13 +131,21 @@ jobs:
           ./build/linux/deferlante.x86_64 --headless --quit-after 3000 &
           sleep 8
           page=$(curl -sS --max-time 5 http://127.0.0.1:7331/)
-          # `grep -q ... && { exit 1; }` would fail the step on the *good* path
-          # under `set -e`, since grep exits 1 when it finds nothing.
-          if printf '%s' "$page" | grep -q "Page missing"; then
-            echo "web/ was left out of the export filter"
-            exit 1
-          fi
-          printf '%s' "$page" | grep -q "DÉFERLANTE" || { echo "control page missing"; exit 1; }
+          # Matched with `case` rather than `printf | grep -q`, which is a trap
+          # under `pipefail`: grep -q exits the moment it matches, printf takes an
+          # EPIPE for the rest of the page, and pipefail then reports the pipeline
+          # as failed *because* the pattern was found. It only bites once the page
+          # outgrows a pipe buffer, so it sat here quietly until it did — and the
+          # "Page missing" check above had never been able to fire at all.
+          case "$page" in
+            *"Page missing"*)
+              echo "web/ was left out of the export filter"
+              exit 1 ;;
+          esac
+          case "$page" in
+            *"DÉFERLANTE"*) ;;
+            *) echo "control page missing"; exit 1 ;;
+          esac
           echo "control page served, $(printf '%s' "$page" | wc -c) bytes"
 
           # The spec is generated from the settings, so this also catches a

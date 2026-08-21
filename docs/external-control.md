@@ -93,11 +93,20 @@ and visible from both pages — presets are what you reach for most in a set, so
 should never be a tab away. Empty slots are outlined in dashes, filled ones in solid
 amber, and a slot saved from one phone lights up on every other one at once.
 
-Below that, two pages.
+Below that, three pages.
 
 **RÉGLAGES** — every setting as a touch slider, with each section a card. The cards
 flow into as many columns as the screen can take: one on a phone held upright, three
 or four across a tablet in landscape. Nothing is nested and nothing scrolls sideways.
+
+The cards can be **reordered**: drag one by its title — the amber heading is the
+handle, since everything below it is a slider and a card that moved when you grabbed
+a fader would be unusable. The order is kept in that browser and reapplied on every
+connect, so the phone taped to the desk and the tablet in your hand can be laid out
+differently for the same show. Godot is never told; this is a property of the surface
+you happen to be holding, not of the show. A section added to Godot after an order
+was saved lands at the end rather than disappearing. `ordre par défaut` appears under
+the grid once anything has been moved, and puts Godot's own order back.
 
 **SURFACES** — the things you play rather than set, given the whole screen:
 
@@ -108,8 +117,45 @@ or four across a tablet in landscape. Nothing is nested and nothing scrolls side
   and spotlight radius × pulse.
 - **GLITCH** and **COLORS**.
 
-Splitting them is the point: the pads need the whole screen to be playable and the
-grid needs it to be readable, and neither works squeezed above the other.
+**DÉMARRAGE** — the launcher's own rows, offered from wherever the phone is. The
+machine running the show is usually the one nobody can reach: projecting from a
+shelf, or an Android box with a remote and no keyboard. Yet every one of these has to
+be answered *before* the show starts, which is precisely when nobody is standing at
+it.
+
+Renderer, antialiasing, resolution, fullscreen, vsync, max FPS, the panel, both
+access rows, both ports and the language — each saved to `launch.cfg` the moment it
+is touched, so a restart by any route comes up on what was asked for. The audio rows
+are deliberately absent: which output the show listens to is bound when capture opens
+and cannot be moved afterwards, and answering it honestly needs a live meter and a
+subprocess per candidate. That question stays in the launcher.
+
+None of it touches the running show — Godot fixes the renderer before a script runs
+and binds the ports before anything can listen, which is the whole reason these are
+start-up settings. **REDÉMARRER** at the bottom starts the process again on them,
+going straight to the show rather than back through the launcher. It arms on the
+first press and fires on the second, because it ends the show for a few seconds and a
+thumb brushing past it mid-set would be unforgivable.
+
+Two of those rows can cut the page off from the show it is driving — the web access
+and the web port — and the surface says so above the button rather than letting you
+find out.
+
+**On Android there is no button**, and the tab says why instead. `OS.create_process`
+there is not a second process at all: it is the activity being told to restart
+itself, and the engine tears the fragment down while the GL thread is still stepping
+it. The SIGSEGV that follows kills the app before Android can bring it back, so the
+show does not restart — it vanishes, and somebody walks to the projector. Measured
+across repeated presses, with and without quitting afterwards and with the render
+loop stopped first: the crash lands in `GodotLib_step` every time and a clean
+restart is a coin toss. It is a bug below this project, so the surface refuses
+rather than gambles. The settings are still saved; the app has to be started again
+by hand for them to take. That is one walk, against the alternative of an empty
+screen mid-set.
+
+Splitting the pages is the point: the pads need the whole screen to be playable, the
+grid needs it to be readable, and the start-up rows are read and considered rather
+than played with. None of the three works squeezed above the others.
 
 **Live mirroring** applies across both: a value changed on the keyboard, over OSC, by
 the auto-pilot or from the gamepad moves on the phone too, and vice versa.

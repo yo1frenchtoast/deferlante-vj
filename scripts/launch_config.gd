@@ -19,6 +19,22 @@ extends Node
 
 const PATH := "user://launch.cfg"
 
+## What each of the choices above may be set to. They live with the settings rather
+## than with the screen that shows them, because the launcher is no longer the only
+## thing offering them: the web surface builds the same rows from the same lists.
+const RESOLUTIONS := [
+	Vector2i.ZERO,          # the screen's own
+	Vector2i(1280, 720),
+	Vector2i(1600, 900),
+	Vector2i(1920, 1080),
+	Vector2i(2560, 1440),
+	Vector2i(3840, 2160),
+]
+const MSAA_SAMPLES := [0, 2, 4, 8]
+## 0 is uncapped; the rest are the refresh rates a projector or a monitor actually
+## runs at. A free-typed number would be one more thing to get wrong in the dark.
+const MAX_FPS := [0, 30, 60, 75, 120, 144, 240]
+
 ## Reachable from this machine and nowhere else.
 const LOCAL := "127.0.0.1"
 
@@ -128,6 +144,62 @@ func save():
 	cfg.set_value("ui", "hide_panel", hide_panel)
 	cfg.set_value("ui", "language", language)
 	cfg.save(PATH)
+
+
+## Whether starting over is something this platform can actually be asked to do.
+##
+## Android cannot, and the way it fails is the worst of all of them: `OS.create_process`
+## there is not a second process at all, it is this activity being told to restart
+## itself. The engine tears the fragment down while the GL thread is still stepping
+## it, and the SIGSEGV that follows kills the app before Android can bring it back.
+## The show does not restart — it disappears, and somebody has to walk to the
+## projector and start it by hand.
+##
+## Measured on the projector across repeated presses: quitting afterwards or not,
+## and with the render loop stopped first, the crash lands in `GodotLib_step` every
+## time and a successful restart is a coin toss at best. The bug is below this
+## project, so this refuses rather than gambles, and the surfaces ask first so they
+## can offer an honest instruction instead of a button that empties the room.
+func can_relaunch() -> bool:
+	return not OS.has_feature("android")
+
+
+## Start this show again on the settings as they now stand, and skip the screen
+## that would ask for them a second time.
+##
+## The renderer is passed as a flag rather than left to the file: Godot fixes it
+## before a single script runs, so the new process has to be told on the way in.
+## Everything else is read from disk, which is why the caller saves first.
+##
+## Standing the old one down is part of the job, because whether that is even
+## wanted depends on the platform — see below.
+##
+## Returns false when the platform will not start a second process at all, and
+## then nothing has happened: the show is still running and still on the old
+## settings. Never fatal on its own — what to do with a machine that cannot
+## restart is the caller's to decide, and being stranded on a black screen ten
+## minutes before doors is worse than any one setting being wrong.
+func relaunch() -> bool:
+	if not can_relaunch():
+		return false
+
+	var args := PackedStringArray()
+	if OS.has_feature("editor"):
+		# From the editor the executable is Godot itself, which needs telling which
+		# project to run.
+		args.append_array(["--path", ProjectSettings.globalize_path("res://")])
+	args.append_array(["--rendering-method", rendering_method])
+	# After a bare `--`, Godot stops interpreting and hands the rest to the project.
+	# Anything it does not recognise before that point is a fatal argument error.
+	args.append_array(["--", "--skip-launcher"])
+	if OS.create_process(OS.get_executable_path(), args) == -1:
+		return false
+
+	# A second show is now running. Two of them fighting over one set of ports is
+	# exactly the mess the launcher's latch exists to avoid, so standing this one
+	# down is the last thing left to do.
+	get_tree().quit()
+	return true
 
 
 ## The half of the configuration that can be applied to a running process. The

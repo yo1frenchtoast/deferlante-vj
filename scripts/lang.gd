@@ -171,6 +171,25 @@ const TEXTS := {
 		"changer de rendu relance l'application",
 		"changing the renderer restarts the app",
 	],
+	# The web surface offers the same settings from across the room, and needs a few
+	# words the launcher never had to say: it can restart the show itself, and it is
+	# reached through the very port one of these rows can move.
+	"launch.tab": ["DÉMARRAGE", "START-UP"],
+	"launch.restart.now": ["REDÉMARRER", "RESTART"],
+	"launch.restart.applies": [
+		"ces réglages prennent effet au redémarrage",
+		"these settings take effect on restart",
+	],
+	"launch.restart.web": [
+		"changer l'accès ou le port web coupera cette page",
+		"changing the web access or port will cut this page off",
+	],
+	"launch.restart.failed": [
+		"cet appareil ne sait pas se relancer seul · les réglages sont enregistrés, "
+			+ "relancez l'application pour les appliquer",
+		"this device cannot restart itself · the settings are saved, relaunch the "
+			+ "app to apply them",
+	],
 }
 
 ## The language names stay in their own tongue, as is customary.
@@ -183,8 +202,19 @@ func set_language(value: int):
 
 
 func label(slug: String) -> String:
-	return LABELS[slug][current] if LABELS.has(slug) else slug
+	return label_in(slug, current)
 
 
 func text(key: String) -> String:
-	return TEXTS[key][current] if TEXTS.has(key) else key
+	return text_in(key, current)
+
+
+## The same words, in a tongue named rather than the one the room is set to. The
+## API answers in English whatever the launcher was told, so that a spec written
+## against it does not change meaning when somebody switches the screen to French.
+func label_in(slug: String, tongue: int) -> String:
+	return LABELS[slug][tongue] if LABELS.has(slug) else slug
+
+
+func text_in(key: String, tongue: int) -> String:
+	return TEXTS[key][tongue] if TEXTS.has(key) else key

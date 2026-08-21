@@ -24,19 +24,6 @@ const MAIN_SCENE := "res://scenes/main.tscn"
 const HEADING := Color(1.0, 0.72, 0.35)
 const DIM := Color(0.62, 0.62, 0.62)
 
-const RESOLUTIONS := [
-	Vector2i.ZERO,          # the screen's own
-	Vector2i(1280, 720),
-	Vector2i(1600, 900),
-	Vector2i(1920, 1080),
-	Vector2i(2560, 1440),
-	Vector2i(3840, 2160),
-]
-const MSAA_SAMPLES := [0, 2, 4, 8]
-## 0 is uncapped; the rest are the refresh rates a projector or a monitor actually
-## runs at. A free-typed number would be one more thing to get wrong in the dark.
-const MAX_FPS := [0, 30, 60, 75, 120, 144, 240]
-
 var lang := Lang.new()
 
 var _renderer: OptionButton
@@ -79,6 +66,9 @@ var _probe: AudioProbe
 var _access_addresses: PackedStringArray
 ## Guards against handing over twice. See `_go()`.
 var _going: bool = false
+## The launch button, kept so Enter can tell whether it is aimed here. See the guard
+## in `_unhandled_input()`.
+var _go_button: Button
 
 
 func _ready():
@@ -190,12 +180,12 @@ func _build():
 	_restart_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(_restart_note)
 
-	var go := Button.new()
-	go.text = lang.text("launch.go")
-	go.custom_minimum_size = Vector2(0, 44)
-	go.pressed.connect(_go)
-	column.add_child(go)
-	go.grab_focus()
+	_go_button = Button.new()
+	_go_button.text = lang.text("launch.go")
+	_go_button.custom_minimum_size = Vector2(0, 44)
+	_go_button.pressed.connect(_go)
+	column.add_child(_go_button)
+	_go_button.grab_focus()
 
 
 func _spacer(height: int) -> Control:
@@ -315,21 +305,21 @@ func _note(grid: GridContainer) -> Label:
 
 func _msaa_choices() -> PackedStringArray:
 	var out := PackedStringArray([lang.text("launch.msaa.off")])
-	for samples in MSAA_SAMPLES.slice(1):
+	for samples in Launch.MSAA_SAMPLES.slice(1):
 		out.append("MSAA %d×" % samples)
 	return out
 
 
 func _resolution_choices() -> PackedStringArray:
 	var out := PackedStringArray([lang.text("launch.resolution.native")])
-	for size in RESOLUTIONS.slice(1):
+	for size in Launch.RESOLUTIONS.slice(1):
 		out.append("%d × %d" % [size.x, size.y])
 	return out
 
 
 func _max_fps_choices() -> PackedStringArray:
 	var out := PackedStringArray([lang.text("launch.maxfps.free")])
-	for fps in MAX_FPS.slice(1):
+	for fps in Launch.MAX_FPS.slice(1):
 		out.append("%d fps" % fps)
 	return out
 
@@ -424,11 +414,11 @@ func _input_honoured() -> bool:
 
 func _load_values():
 	_renderer.selected = 1 if Launch.rendering_method == "forward_plus" else 0
-	_msaa.selected = maxi(0, MSAA_SAMPLES.find(Launch.msaa))
-	_resolution.selected = maxi(0, RESOLUTIONS.find(Launch.resolution))
+	_msaa.selected = maxi(0, Launch.MSAA_SAMPLES.find(Launch.msaa))
+	_resolution.selected = maxi(0, Launch.RESOLUTIONS.find(Launch.resolution))
 	_fullscreen.button_pressed = Launch.fullscreen
 	_vsync.button_pressed = Launch.vsync
-	_max_fps.selected = maxi(0, MAX_FPS.find(Launch.max_fps))
+	_max_fps.selected = maxi(0, Launch.MAX_FPS.find(Launch.max_fps))
 	_audio.selected = _audio_selection()
 	_hide_panel.button_pressed = Launch.hide_panel
 	_web_access.selected = maxi(0, _access_addresses.find(Launch.web_bind) + 1)
@@ -459,11 +449,11 @@ func _audio_selection() -> int:
 
 func _collect():
 	Launch.rendering_method = "forward_plus" if _renderer.selected == 1 else "gl_compatibility"
-	Launch.msaa = MSAA_SAMPLES[_msaa.selected] if Launch.msaa_available() else 0
-	Launch.resolution = RESOLUTIONS[_resolution.selected]
+	Launch.msaa = Launch.MSAA_SAMPLES[_msaa.selected] if Launch.msaa_available() else 0
+	Launch.resolution = Launch.RESOLUTIONS[_resolution.selected]
 	Launch.fullscreen = _fullscreen.button_pressed
 	Launch.vsync = _vsync.button_pressed
-	Launch.max_fps = MAX_FPS[_max_fps.selected]
+	Launch.max_fps = Launch.MAX_FPS[_max_fps.selected]
 	if _can_route():
 		var entry: Dictionary = ({"kind": "auto"} if _audio.selected >= _audio_entries.size()
 			else _audio_entries[_audio.selected])
@@ -527,6 +517,15 @@ func _unhandled_input(event: InputEvent):
 		return
 	match event.keycode:
 		KEY_ENTER, KEY_KP_ENTER:
+			# A remote control has no mouse: OK arrives as Enter, and the row it
+			# lands on is far more often a droplist than the launch button. Controls
+			# act on the key *release* (see `_go()`), so the press falls through to
+			# here first — which made one press of OK unfold a list and start the
+			# show in the same breath, with no way left to change a setting from the
+			# sofa. Enter is a launch only when nothing else is waiting to answer it.
+			var focused := get_viewport().gui_get_focus_owner()
+			if focused != null and focused != _go_button:
+				return
 			_go()
 		KEY_ESCAPE:
 			get_tree().quit()
@@ -587,21 +586,10 @@ func _route_audio():
 ## question has just been answered — and reads everything else from the file that
 ## was saved a moment ago.
 func _relaunch():
-	var args := PackedStringArray()
-	if OS.has_feature("editor"):
-		# From the editor the executable is Godot itself, which needs telling which
-		# project to run.
-		args.append_array(["--path", ProjectSettings.globalize_path("res://")])
-	args.append_array(["--rendering-method", Launch.rendering_method])
-	# After a bare `--`, Godot stops interpreting and hands the rest to the project.
-	# Anything it does not recognise before that point is a fatal argument error.
-	args.append_array(["--", "--skip-launcher"])
-
-	if OS.create_process(OS.get_executable_path(), args) == -1:
+	if not Launch.relaunch():
 		# Stranding the operator on a black screen ten minutes before doors is worse
 		# than the wrong renderer. Carry on in the one already running, and say why.
 		push_warning("Launcher: cannot restart for %s, staying on %s"
 			% [Launch.rendering_method, RenderingServer.get_current_rendering_method()])
 		_start_show()
 		return
-	get_tree().quit()

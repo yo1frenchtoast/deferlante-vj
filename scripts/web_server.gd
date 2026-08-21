@@ -13,6 +13,10 @@ extends Node
 
 signal set_requested(slug: String, value: float)
 signal action_requested(name: String)
+## A start-up setting, which lands in the config rather than in the show. Untyped
+## on purpose: these are choices, switches and ports, not the single float every
+## live setting is.
+signal launch_set_requested(key: String, value: Variant)
 ## A browser has just finished its handshake and is waiting to be told what exists.
 signal client_connected
 
@@ -227,6 +231,8 @@ func _handle(text: String):
 			set_requested.emit(str(message.get("slug", "")), float(message.get("value", 0.0)))
 		"action":
 			action_requested.emit(str(message.get("name", "")))
+		"launch":
+			launch_set_requested.emit(str(message.get("key", "")), message.get("value"))
 
 
 func broadcast(payload: Dictionary):

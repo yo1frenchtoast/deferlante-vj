@@ -7,6 +7,13 @@ extends Node2D
 ## they drive — adding a line to `_build_params()` creates the slider, the keyboard
 ## navigation and the OSC address in one go.
 
+## The one-shot actions every surface offers. Named once: the REST spec advertises
+## these, the Chataigne module is built from them, and `_on_web_action()` wires them.
+const ACTIONS := ["glitch", "randomize"]
+
+## Where OSC addresses and Chataigne callbacks are rooted.
+const OSC_PREFIX := "/deferlante/"
+
 @export var laser_scene: PackedScene = preload("res://scenes/laser.tscn")
 @export var laser_count: int = 3
 ## Where the D key ducks the panel to: readable up close, all but gone on a wall.
@@ -92,24 +99,33 @@ func _ready():
 	_initializing = false
 
 	for p in params:
-		osc_routes["/deferlante/" + p.slug] = p
+		osc_routes[OSC_PREFIX + p.slug] = p
 	osc.message_received.connect(_on_osc_message)
 
 	api.find_param = param
 	api.all_params = func(): return params
-	api.describe = _describe
+	api.describe = func(p): return _describe(p, Lang.EN)
 	api.presets = presets
+	api.actions = ACTIONS
 	api.glitch = circle.apply_glitch
 	api.randomize = _randomize_all
 	web.api_handler = api.handle
 	web.client_connected.connect(_send_schema)
 	web.set_requested.connect(_on_web_set)
 	web.action_requested.connect(_on_web_action)
+	web.launch_set_requested.connect(_on_web_launch_set)
 	# A phone must see what the keyboard, OSC or the auto-pilot just did.
 	for p in params:
 		p.changed.connect(func(v): web.broadcast({"type": "value", "slug": p.slug, "value": v}))
 
 	_refresh_status()
+
+	# Asked for by a generator rather than by an operator: describe the show and
+	# stand down without ever putting anything on screen.
+	var wanted := _dump_path()
+	if wanted != "":
+		_dump(wanted)
+		return
 
 	# A deliberate click hands the panel back, exactly like a keypress does.
 	panel.mouse_reclaimed.connect(func(): panel.set_external_control(false, discreet_brightness))
@@ -625,25 +641,104 @@ func _randomize_all():
 func _send_schema():
 	var described: Array = []
 	for p in params:
-		var choices: Array = []
-		for c in p.choices:
-			choices.append(lang.text(c) if p.translate_choices else c)
-		described.append({
-			"slug": p.slug,
-			"label": p.label(),
-			"section": lang.text(p.section),
-			"min": p.min_value,
-			"max": p.max_value,
-			"step": p.step,
-			"value": p.value,
-			"choices": choices,
-			"bidirectional": p.bidirectional,
-		})
+		# In the room's own tongue: this one is read by a person, not a program.
+		described.append(_describe(p, lang.current))
 	web.broadcast({
 		"type": "schema",
 		"params": described,
 		"presets": {"used": presets.used_slots(), "count": presets.SLOTS},
+		"launch": _describe_launch(),
 	})
+
+
+## The start-up settings, described the same way the live ones are, so the page can
+## build its tab from this and never drift from what Godot holds.
+##
+## These are the launcher's rows minus the audio ones. Which output the show listens
+## to is bound when capture opens and cannot be moved afterwards — the very reason
+## it lives in the launcher — and answering it honestly needs a live meter and a
+## subprocess per candidate. A phone across the room is the wrong place to ask.
+##
+## Every one of these takes effect on the next process, not this one, which is what
+## the restart button is for. `apply_runtime()` could reach some of them live, but a
+## tab where three rows bite immediately and six wait would be worse than one where
+## none do.
+func _describe_launch() -> Dictionary:
+	var resolutions: Array = [lang.text("launch.resolution.native")]
+	for i in range(1, Launch.RESOLUTIONS.size()):
+		var r: Vector2i = Launch.RESOLUTIONS[i]
+		resolutions.append("%d × %d" % [r.x, r.y])
+
+	var rates: Array = [lang.text("launch.maxfps.free")]
+	for i in range(1, Launch.MAX_FPS.size()):
+		rates.append(str(Launch.MAX_FPS[i]))
+
+	var samples: Array = [lang.text("launch.msaa.off")]
+	for i in range(1, Launch.MSAA_SAMPLES.size()):
+		samples.append("%d×" % Launch.MSAA_SAMPLES[i])
+
+	# The same list the launcher offers, and the same re-check: an address saved
+	# last night may not be one this machine still holds.
+	var addresses: Array = [lang.text("launch.access.local")]
+	for a in Launch.local_addresses():
+		addresses.append(a)
+
+	return {
+		"tab": lang.text("launch.tab"),
+		"restart": lang.text("launch.restart.now"),
+		"applies": lang.text("launch.restart.applies"),
+		"web_warning": lang.text("launch.restart.web"),
+		"failed": lang.text("launch.restart.failed"),
+		# Asked before the button is drawn, not after it is pressed: a control that
+		# can never work is worse than a sentence saying so.
+		"can_restart": Launch.can_relaunch(),
+		"settings": [
+			_launch_choice("language", "launch.language", Lang.LANGUAGES, Launch.language),
+			_launch_choice("renderer", "launch.renderer", [
+				lang.text("launch.renderer.compat"), lang.text("launch.renderer.forward"),
+			], 1 if Launch.rendering_method == "forward_plus" else 0),
+			# Offered against the renderer *chosen*, not the one running: the next
+			# process is the one that will honour it, and it is the one being
+			# configured here.
+			_launch_choice("msaa", "launch.msaa", samples,
+				maxi(0, Launch.MSAA_SAMPLES.find(Launch.msaa)),
+				"" if Launch.msaa_available() else lang.text("launch.msaa.unavailable")),
+			_launch_choice("resolution", "launch.resolution", resolutions,
+				maxi(0, Launch.RESOLUTIONS.find(Launch.resolution))),
+			_launch_toggle("fullscreen", "launch.fullscreen", Launch.fullscreen),
+			_launch_toggle("vsync", "launch.vsync", Launch.vsync),
+			_launch_choice("max_fps", "launch.maxfps", rates,
+				maxi(0, Launch.MAX_FPS.find(Launch.max_fps))),
+			_launch_toggle("hide_panel", "launch.panel", Launch.hide_panel,
+				lang.text("launch.panel.hidden")),
+			_launch_choice("web_bind", "launch.access", addresses,
+				maxi(0, addresses.find(Launch.web_bind))),
+			_launch_port("web_port", "launch.webport", Launch.web_port),
+			_launch_choice("osc_bind", "launch.oscaccess", addresses,
+				maxi(0, addresses.find(Launch.osc_bind))),
+			_launch_port("osc_port", "launch.oscport", Launch.osc_port),
+		],
+	}
+
+
+func _launch_choice(key: String, label_key: String, choices: Array, index: int,
+		note: String = "") -> Dictionary:
+	return {"key": key, "label": lang.text(label_key), "type": "choice",
+		"choices": choices, "value": index, "note": note}
+
+
+## `caption` is the words beside the box rather than a warning under the row: the
+## launcher writes PANNEAU ☐ masqué pour tout le set, and a bare switch labelled
+## only PANNEAU would not say which way is which.
+func _launch_toggle(key: String, label_key: String, on: bool,
+		caption: String = "") -> Dictionary:
+	return {"key": key, "label": lang.text(label_key), "type": "bool",
+		"value": on, "caption": caption, "note": ""}
+
+
+func _launch_port(key: String, label_key: String, port: int) -> Dictionary:
+	return {"key": key, "label": lang.text(label_key), "type": "int",
+		"value": port, "min": 1024, "max": 65535, "note": ""}
 
 
 func _on_web_set(slug: String, value: float):
@@ -667,16 +762,146 @@ func _on_web_action(name: String):
 			circle.apply_glitch()
 		"randomize":
 			_randomize_all()
+		"restart":
+			_restart()
 
 
-func _describe(p: VJParam) -> Dictionary:
+## Start the show again on the start-up settings as they now stand.
+##
+## The saving is done on every keystroke of that tab rather than here, so a restart
+## by any other route — the panel, a power cut — still comes up on what was asked
+## for. Standing the old show down belongs to `Launch.relaunch()`, which is the only
+## place that knows whether this platform wants it.
+##
+## A machine that will not fork is told so on the surface that asked, rather than
+## by appearing to ignore the button: nothing has changed, and the operator needs
+## to know that before reaching for it again.
+func _restart():
+	if not Launch.relaunch():
+		push_warning("Web: this platform will not start a second process")
+		web.broadcast({"type": "restart_failed"})
+
+
+## A start-up setting, changed from the web surface.
+##
+## Written straight to disk. The tab is a way to set up the next start from across
+## the room — often from the sofa, minutes before the room fills — and a value that
+## only lived until the process ended would be exactly the wrong promise.
+##
+## Nothing here touches the running show. Every one of these is a setting Godot
+## fixes before a script runs, or binds before anything can listen; that is the
+## reason they are start-up settings at all.
+func _on_web_launch_set(key: String, value: Variant):
+	_external_touch()
+	var index := int(value) if typeof(value) != TYPE_BOOL else 0
+	match key:
+		"language":
+			Launch.language = clampi(index, 0, Lang.LANGUAGES.size() - 1)
+		"renderer":
+			Launch.rendering_method = "forward_plus" if index == 1 else "gl_compatibility"
+			# Antialiasing only exists under Forward+, and a value left behind by
+			# the other renderer would be applied the moment one switched back.
+			if not Launch.msaa_available():
+				Launch.msaa = 0
+		"msaa":
+			Launch.msaa = Launch.MSAA_SAMPLES[clampi(index, 0, Launch.MSAA_SAMPLES.size() - 1)]
+		"resolution":
+			Launch.resolution = Launch.RESOLUTIONS[clampi(index, 0, Launch.RESOLUTIONS.size() - 1)]
+		"fullscreen":
+			Launch.fullscreen = bool(value)
+		"vsync":
+			Launch.vsync = bool(value)
+		"max_fps":
+			Launch.max_fps = Launch.MAX_FPS[clampi(index, 0, Launch.MAX_FPS.size() - 1)]
+		"hide_panel":
+			Launch.hide_panel = bool(value)
+		"web_bind":
+			Launch.web_bind = _launch_address(index)
+		"osc_bind":
+			Launch.osc_bind = _launch_address(index)
+		"web_port":
+			Launch.web_port = clampi(index, 1024, 65535)
+		"osc_port":
+			Launch.osc_port = clampi(index, 1024, 65535)
+		_:
+			return
+	Launch.save()
+	# Two phones on the same show must not disagree about what the next start will
+	# be, and one row can move another: picking Compatibility empties the
+	# antialiasing beside it.
+	_send_schema()
+
+
+## The address behind an index in the list `_describe_launch()` offered. Out of
+## range reads as loopback rather than as the nearest guess: a stale index should
+## narrow what can reach the show, never widen it.
+func _launch_address(index: int) -> String:
+	if index <= 0:
+		return Launch.LOCAL
+	var addresses := Launch.local_addresses()
+	return addresses[index - 1] if index - 1 < addresses.size() else Launch.LOCAL
+
+
+# --------------------------------------------------------------------------
+# Describing the show to whatever builds against it
+# --------------------------------------------------------------------------
+
+## The path a generator asked us to write to, or "" for an ordinary run.
+##
+## After a bare `--`, Godot hands the rest to the project, so this reads the user
+## arguments rather than the engine's.
+func _dump_path() -> String:
+	var args := OS.get_cmdline_user_args()
+	var at := args.find("--dump-params")
+	if at == -1 or at + 1 >= args.size():
+		return ""
+	return args[at + 1]
+
+
+## Write everything a generator needs, then quit.
+##
+## The Chataigne module used to be built by running regular expressions over this
+## very file and over `lang.gd`, which made the *shape* of a declaration part of the
+## contract — a setting wrapped onto two lines would have been missed — and left the
+## tool keeping lists of its own beside it. One of those lists had already drifted in
+## both directions unnoticed.
+##
+## So the show describes itself instead. English throughout, like the API and for the
+## same reason: what reads this is a program, not a person in a room.
+func _dump(path: String):
+	var described: Array = []
+	for p in params:
+		described.append(_describe(p, Lang.EN))
+	var payload := {
+		"osc_prefix": OSC_PREFIX,
+		"params": described,
+		"actions": ACTIONS,
+		"presets": {"count": presets.SLOTS},
+	}
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		push_error("Cannot write the description to %s: %s"
+			% [path, error_string(FileAccess.get_open_error())])
+		get_tree().quit(1)
+		return
+	file.store_string(JSON.stringify(payload, "\t"))
+	file.close()
+	print("Described %d settings into %s" % [described.size(), path])
+	get_tree().quit()
+
+
+## The surfaces on screen speak whichever tongue the launcher was set to. The API
+## does not: its slugs, its actions and its OSC addresses are English, and a spec
+## whose labels changed with the room would be one nobody could write against.
+## So the tongue is named by the caller rather than read from the room.
+func _describe(p: VJParam, tongue: int) -> Dictionary:
 	var choices: Array = []
 	for c in p.choices:
-		choices.append(lang.text(c) if p.translate_choices else c)
+		choices.append(lang.text_in(c, tongue) if p.translate_choices else c)
 	return {
 		"slug": p.slug,
-		"label": p.label(),
-		"section": lang.text(p.section),
+		"label": p.label_in(tongue),
+		"section": lang.text_in(p.section, tongue),
 		"min": p.min_value,
 		"max": p.max_value,
 		"step": p.step,
