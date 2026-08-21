@@ -30,15 +30,6 @@ OUTPUT = ROOT / "chataigne" / "Deferlante"
 VERSION = "6.0.0"
 OSC_PORT = 9000
 
-# Settings that count in whole numbers rather than floats.
-INTEGERS = {
-    "lasers/count",
-    "sphere/count",
-    "color/mode",
-    "mirror/segments",
-    "global/language",
-}
-
 DECLARATION = re.compile(
     r'_(?:fn|prop)\("([^"]+)", ([-\d.]+), ([-\d.]+), ([\d.]+), ([-\w.]+)'
 )
@@ -77,6 +68,20 @@ def read_settings(source: str):
     return settings
 
 
+def is_whole(low: float, step: float) -> bool:
+    """Whether a setting only ever lands on whole numbers.
+
+    Read from the declaration rather than from a list kept here. The list drifted,
+    in both directions and unnoticed, which is the failure this whole script exists
+    to prevent: six settings that count in whole numbers were being offered to the
+    console as floats, and one that Godot no longer has was still named.
+
+    A step of 5 from a start of 20 is as whole as a step of 1 — what matters is that
+    nothing between the stops is reachable.
+    """
+    return float(step) >= 1 and float(low).is_integer()
+
+
 def callback(slug: str) -> str:
     """"sphere/spin" -> "sphereSpin": the name of the JS function."""
     section, name = slug.split("/")
@@ -102,7 +107,7 @@ def command_name(slug: str, labels: dict) -> str:
 def build(settings, labels):
     commands = collections.OrderedDict()
 
-    for slug, low, high, _step, default in settings:
+    for slug, low, high, step, default in settings:
         commands[command_name(slug, labels)] = collections.OrderedDict(
             [
                 ("menu", menu_of(slug, labels)),
@@ -112,7 +117,7 @@ def build(settings, labels):
                     {
                         "Value": collections.OrderedDict(
                             [
-                                ("type", "Integer" if slug in INTEGERS else "Float"),
+                                ("type", "Integer" if is_whole(low, step) else "Float"),
                                 ("ui", "slider"),
                                 ("min", low),
                                 ("max", high),
