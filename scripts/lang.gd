@@ -202,8 +202,19 @@ func set_language(value: int):
 
 
 func label(slug: String) -> String:
-	return LABELS[slug][current] if LABELS.has(slug) else slug
+	return label_in(slug, current)
 
 
 func text(key: String) -> String:
-	return TEXTS[key][current] if TEXTS.has(key) else key
+	return text_in(key, current)
+
+
+## The same words, in a tongue named rather than the one the room is set to. The
+## API answers in English whatever the launcher was told, so that a spec written
+## against it does not change meaning when somebody switches the screen to French.
+func label_in(slug: String, tongue: int) -> String:
+	return LABELS[slug][tongue] if LABELS.has(slug) else slug
+
+
+func text_in(key: String, tongue: int) -> String:
+	return TEXTS[key][tongue] if TEXTS.has(key) else key

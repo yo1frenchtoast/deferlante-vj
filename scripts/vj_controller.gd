@@ -97,7 +97,7 @@ func _ready():
 
 	api.find_param = param
 	api.all_params = func(): return params
-	api.describe = _describe
+	api.describe = func(p): return _describe(p, Lang.EN)
 	api.presets = presets
 	api.glitch = circle.apply_glitch
 	api.randomize = _randomize_all
@@ -626,20 +626,8 @@ func _randomize_all():
 func _send_schema():
 	var described: Array = []
 	for p in params:
-		var choices: Array = []
-		for c in p.choices:
-			choices.append(lang.text(c) if p.translate_choices else c)
-		described.append({
-			"slug": p.slug,
-			"label": p.label(),
-			"section": lang.text(p.section),
-			"min": p.min_value,
-			"max": p.max_value,
-			"step": p.step,
-			"value": p.value,
-			"choices": choices,
-			"bidirectional": p.bidirectional,
-		})
+		# In the room's own tongue: this one is read by a person, not a program.
+		described.append(_describe(p, lang.current))
 	web.broadcast({
 		"type": "schema",
 		"params": described,
@@ -839,14 +827,18 @@ func _launch_address(index: int) -> String:
 	return addresses[index - 1] if index - 1 < addresses.size() else Launch.LOCAL
 
 
-func _describe(p: VJParam) -> Dictionary:
+## The surfaces on screen speak whichever tongue the launcher was set to. The API
+## does not: its slugs, its actions and its OSC addresses are English, and a spec
+## whose labels changed with the room would be one nobody could write against.
+## So the tongue is named by the caller rather than read from the room.
+func _describe(p: VJParam, tongue: int) -> Dictionary:
 	var choices: Array = []
 	for c in p.choices:
-		choices.append(lang.text(c) if p.translate_choices else c)
+		choices.append(lang.text_in(c, tongue) if p.translate_choices else c)
 	return {
 		"slug": p.slug,
-		"label": p.label(),
-		"section": lang.text(p.section),
+		"label": p.label_in(tongue),
+		"section": lang.text_in(p.section, tongue),
 		"min": p.min_value,
 		"max": p.max_value,
 		"step": p.step,
