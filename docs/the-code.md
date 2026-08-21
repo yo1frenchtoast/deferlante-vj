@@ -5,6 +5,7 @@
 ```
 tools/
   build_chataigne_module.py   Regenerates the Chataigne module from the settings
+  listen-to-output.sh         Wraps the output's monitor as a source Godot will list
 scenes/
   launcher.tscn  Start-up settings, then hands over to main.tscn
   main.tscn      The show: WorldEnvironment + controller + UI
@@ -68,7 +69,10 @@ One Linux runner covers all three: Godot cross-exports from a single headless bi
 so a matrix of operating systems would buy nothing.
 
 Linux and Windows come out as **one self-contained file** each (`embed_pck=true`);
-Android as an APK for `arm64-v8a`, which is every tablet made in the last decade.
+Android as an APK carrying both `arm64-v8a` and `armeabi-v7a`. The second is not
+legacy padding: the projector this was last set up on runs Android 14, reports
+Vulkan, and still has nothing but `armeabi-v7a` in its ABI list. An arm64-only APK
+installs on it perfectly and launches into nothing.
 
 `export_presets.cfg` is committed on purpose — CI cannot export without it. Its
 export paths are relative (`build/linux/…`) so nothing machine-specific leaks. If you
@@ -83,21 +87,109 @@ refuses to run without a release key, and falling back to a debug build would co
 performance where it is least affordable. It is *not* suitable for a store listing:
 that needs a key you own, added as a repository secret.
 
-One thing to expect on a tablet, not tested on a device: the **web control surface
-and OSC still work** (`INTERNET` permission is set in the preset), so a tablet can
-run the visuals while a phone drives them.
+The **web control surface and OSC work there too** (`INTERNET` is set in the
+preset), so the box can run the visuals while a phone drives them.
 
 `GLOW` used to be listed here as doing nothing on a tablet, because the mobile
 renderer draws no 2D glow. It works now — the halo is ordinary geometry, and the
 desktop runs the same renderer as the tablet.
 
-### The one thing CI actually checks
+#### Measured on an Android TV projector
 
-Beyond "the export succeeded", the workflow launches the Linux build and fetches
-`http://127.0.0.1:7331/`. The control page ships through the export *filter*, not
-through the code, so it is the one piece that can silently go missing while every
-build still passes. If the page is absent, or the built-in "Page missing" fallback
-comes back instead, the build fails.
+A TCL ProjectorC1: Android 14, Mali-G52, 1080p, driven by nothing but the four
+arrows and OK on its remote. **60 fps, median 16.6 ms, p95 17.2 ms**, panel hidden,
+identical in the debug and release builds. With the panel up it drops to 30 in
+places — that is the posture for setting up, not for a set.
+
+To measure it at all, use SurfaceFlinger: `dumpsys gfxinfo` does not see Godot's
+SurfaceView, and F3 never reaches the app.
+
+```
+adb shell dumpsys SurfaceFlinger --latency "SurfaceView[<package>/com.godot.game.GodotApp](BLAST)#N"
+```
+
+Three things this platform needs that no other does:
+
+- **The gradle build is not optional.** `show_in_android_tv` is silently inert
+  without it: the prebuilt template's manifest carries no `LEANBACK_LAUNCHER`
+  category, and Godot cannot patch a new one into a binary manifest. The option is
+  accepted and dropped, and the app installs but never appears in the projector's
+  menu — only `adb` can start it, which is no use to somebody holding a remote.
+  Check the APK rather than the preset:
+  `aapt2 dump xmltree <apk> --file AndroidManifest.xml | grep -i leanback`.
+- **`rendering_method.mobile`** is what Android reads, not `rendering_method`. Its
+  default is Forward Mobile, so the engine came up on Vulkan while the saved file
+  asked for Compatibility, and the launcher relaunched the whole process to settle
+  it — fifteen seconds and a black screen on every start. It *worked*, which is
+  what made it easy to miss.
+- **The show cannot restart itself here.** `OS.create_process` on Android is not a
+  second process: it is this activity being told to restart itself, and the engine
+  tears the fragment down while the GL thread is still stepping it. The SIGSEGV
+  lands in `GodotLib_step` and kills the app before Android can bring it back, so
+  the show does not restart — it vanishes. Measured across repeated presses, with
+  and without quitting afterwards and with the render loop stopped first: a clean
+  restart is a coin toss. `Launch.can_relaunch()` therefore refuses outright, and
+  the surfaces ask it *before* drawing a button.
+
+Two `adb` traps worth knowing before losing an hour to either. `adb exec-out
+screencap -p` returns a corrupt PNG, because the device's shell prefixes a line of
+its own — go through a file and `adb pull`. And an export piped into `tail` never
+returns: the gradle daemon holds the pipe open long after the APK is finished and
+signed, so redirect to a file instead.
+
+### What CI actually checks, beyond "it exported"
+
+Two things, both chosen because they can go wrong while every build still passes.
+
+**The control page ships through the export *filter*, not through the code**, so it
+is the one piece that can silently go missing. The workflow launches the Linux build
+and fetches `http://127.0.0.1:7331/`; if the page is absent, or the built-in "Page
+missing" fallback comes back instead, the build fails.
+
+That check spent some time being incapable of failing, and the shape of the mistake
+is worth keeping. It was written as:
+
+```bash
+printf '%s' "$page" | grep -q "DÉFERLANTE" || { echo "control page missing"; exit 1; }
+```
+
+Under `set -euo pipefail`, `grep -q` exits the moment it matches, `printf` takes an
+EPIPE for the rest of the page, and `pipefail` then reports the pipeline as failed
+*because* the pattern was found. It only bites once the page outgrows a pipe buffer,
+so it sat there passing until the day the page grew — and the "Page missing" check
+beside it, written the same way, had never been able to fire at all. Both are `case`
+now, which cannot race and does not care about the locale.
+
+**The Chataigne module is generated**, so a setting added without regenerating it
+leaves the two describing different shows: a knob on the console that drives
+nothing, or bounds that have quietly drifted apart. `--check` rebuilds it from Godot
+and fails if what is committed does not match.
+
+## Describing the show to other tools
+
+Anything that needs to know what settings exist asks the show rather than reading
+it:
+
+```
+deferlante --headless -- --dump-params <file>
+```
+
+It builds its settings, writes them down and quits without drawing a frame. The file
+carries every setting with its bounds, step, default and English name, plus the OSC
+prefix, the one-shot actions and how many preset slots there are. English throughout,
+like the REST API and for the same reason: what reads it is a program, not a person
+standing in a room.
+
+That is where the Chataigne module comes from, and adding a setting therefore adds
+its slider, its keyboard row, its OSC address, its REST endpoint, its line on the
+phone *and* its console command — all from the one line in `_build_params()`.
+
+It used to come from regular expressions run over `vj_controller.gd` and `lang.gd`,
+which made the *shape* of a declaration part of the contract, and left the tool
+keeping lists of its own beside them. One of those lists had drifted in both
+directions unnoticed: six settings that only ever land on whole numbers were being
+offered to the console as floats, and one named there had not existed in Godot for
+months. Deriving costs a headless run and cannot drift.
 
 ## A note on the renderer
 

@@ -48,7 +48,7 @@ matters: Godot treats anything it does not recognise before that point as a fata
 argument error, and hands everything after it to the project.
 
 A `--headless` run skips it too, without being asked — there is nobody there to
-answer. That is what keeps [the CI check](the-code.md#the-one-thing-ci-actually-checks) working.
+answer. That is what keeps [the CI check](the-code.md#what-ci-actually-checks-beyond-it-exported) working.
 
 ## Drive it
 
