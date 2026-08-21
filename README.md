@@ -15,12 +15,14 @@ though it had seen something, then it leaves. It never lands on anyone. Everythi
 else — the lasers, the sphere, the glitches — happens around that deferral: a room
 swept by a light that is always about to arrive, and never does.
 
-![Lasers and circles sweeping a dark room](docs/demo.gif)
+![A run through the effects: lasers, sphere, spotlight, kaleidoscope](docs/demo.gif)
 
-*Eight seconds of it running: strokes crossing the frame, circles turning on a
-virtual sphere, the spotlight sweeping past. Recorded on the machine with a graphics
-card, in Forward+ with antialiasing on — the show ships on the other renderer, which
-is faster and where nothing antialiases at all.*
+*Eight seconds across most of what it does: strokes filling the frame, then lined up
+into a scrolling curtain, circles turning on a virtual sphere, the spotlight swelling
+and coming apart, everything folded into a kaleidoscope, one colour taking over, and
+all of it at once. Recorded in Forward+ with antialiasing on, on the machine that has
+a graphics card — the show ships on the other renderer, which is twice as fast here
+and antialiases nothing.*
 
 ![Lasers, the sphere and the spotlight, with the desk open](docs/screenshot.png)
 
