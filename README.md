@@ -2,6 +2,13 @@
 
 [![Build](https://github.com/yo1frenchtoast/deferlante-vj/actions/workflows/build.yml/badge.svg)](https://github.com/yo1frenchtoast/deferlante-vj/actions/workflows/build.yml)
 
+![Lasers and circles sweeping a dark room](docs/demo.gif)
+
+*Eight seconds of it running: strokes crossing the frame, circles turning on a
+virtual sphere, the spotlight sweeping past. Recorded on the machine with a graphics
+card, in Forward+ with antialiasing on — the show ships on the other renderer, which
+is faster and where nothing antialiases at all.*
+
 ![Lasers, the sphere and the spotlight, with the desk open](docs/screenshot.png)
 
 *The whole instrument in one frame: the room on the right, the desk on the left. The
