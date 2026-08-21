@@ -180,7 +180,7 @@ is fine on a private Wi-Fi and a bad idea on a public one.
 The same HTTP server that carries the control page also exposes the settings as a
 REST API, described by an OpenAPI 3.0 specification.
 
-| | |
+| Address | What it serves |
 | --- | --- |
 | `http://<machine-ip>:7331/docs` | Swagger UI, with *Try it out* wired up |
 | `http://<machine-ip>:7331/openapi.json` | the specification itself |

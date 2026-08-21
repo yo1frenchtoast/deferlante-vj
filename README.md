@@ -23,14 +23,12 @@ swept by a light that is always about to arrive, and never does.
 where it is meant to end up. One colour, folded twelve ways, the strokes long and
 thin so the mirror has something to repeat:*
 
-| | |
-| --- | --- |
-| MIRROR | `EFFECT 1` · `SEGMENTS 12` · `ROTATION 0.22` |
-| COLOR | `MODE MANUAL` · `RED 1` · `GREEN 0` · `BLUE 0` · `SATURATION 1` |
-| LASERS | `COUNT 18` · `WIDTH 1` · `LENGTH 2` · `SPIN -0.6` · `PARALLEL 0.58` · `SCROLL 1` |
-| SPOTLIGHT | `RADIUS 295` · `WIDTH 17` · `HOLD 0.6` · `FREQUENCY 13.5` |
-| SPHERE | `CIRCLES 18` · `GLASS 1` |
-| GLOBAL | `SPEED 0.4` · `CHAOS 0.56` · `GLOW 1.25` |
+- **MIRROR** — `EFFECT 1` · `SEGMENTS 12` · `ROTATION 0.22`
+- **COLOR** — `MODE MANUAL` · `RED 1` · `GREEN 0` · `BLUE 0` · `SATURATION 1`
+- **LASERS** — `COUNT 18` · `WIDTH 1` · `LENGTH 2` · `SPIN -0.6` · `PARALLEL 0.58` · `SCROLL 1`
+- **SPOTLIGHT** — `RADIUS 295` · `WIDTH 17` · `HOLD 0.6` · `FREQUENCY 13.5`
+- **SPHERE** — `CIRCLES 18` · `GLASS 1`
+- **GLOBAL** — `SPEED 0.4` · `CHAOS 0.56` · `GLOW 1.25`
 
 ![Lasers, the sphere and the spotlight, with the desk open](docs/screenshot.png)
 

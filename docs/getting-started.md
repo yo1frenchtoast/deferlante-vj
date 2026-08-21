@@ -11,7 +11,7 @@ Almost everything in this project is adjustable live, on purpose: a setting you
 cannot reach mid-set may as well not exist. The launcher holds the exceptions — the
 handful of things the engine will not let you change once the show is running.
 
-| | | |
+| Row | Choices | |
 | --- | --- | --- |
 | `LANGUAGE` | FRANÇAIS / ENGLISH | First, because it decides what every other row says. |
 | `RENDERER` | Compatibility / Forward+ | Compatibility is twice as fast; Forward+ is the only one that antialiases. **Restarts the app.** |
