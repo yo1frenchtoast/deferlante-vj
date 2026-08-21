@@ -73,6 +73,7 @@ jobs:
             echo "export/android/debug_keystore = \"${HOME}/debug.keystore\""
             echo 'export/android/debug_keystore_user = "androiddebugkey"'
             echo 'export/android/debug_keystore_pass = "android"'
+            echo "export/android/java_sdk_path = \"${JAVA_HOME_17_X64:-${JAVA_HOME}}\""
           } > ~/.config/godot/editor_settings-${minor}.tres
           cat ~/.config/godot/editor_settings-${minor}.tres
 
@@ -101,10 +102,17 @@ jobs:
           mkdir -p build/windows
           godot --headless --export-release "Windows" build/windows/deferlante.exe
 
+      # Android alone builds through gradle rather than from the prebuilt template.
+      # That is what puts the app in an Android TV menu: the LEANBACK_LAUNCHER
+      # category cannot be patched into the template's binary manifest, so
+      # `show_in_android_tv` is silently inert without a real build. The template
+      # for it lands in `android/`, which is gitignored and therefore absent from a
+      # fresh checkout — hence installing it here, in the same breath as the export.
       - name: Export Android
         run: |
           mkdir -p build/android
-          godot --headless --export-release "Android" build/android/deferlante.apk
+          godot --headless --install-android-build-template \
+            --export-release "Android" build/android/deferlante.apk
 
       # A build that starts but serves nothing is the failure mode that matters
       # here: the control page ships through the export filter, not the code.
