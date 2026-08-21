@@ -99,6 +99,12 @@ Below that, three pages.
 flow into as many columns as the screen can take: one on a phone held upright, three
 or four across a tablet in landscape. Nothing is nested and nothing scrolls sideways.
 
+Each card carries a small **roll button** in its title bar, which re-rolls that
+section alone — the lasers taking a new shape while the spotlight carries on doing
+what it was asked. It is the same move the auto-pilot makes on its own, aimed. The
+strips at the top of RÉGLAGES and SURFACES hold the whole-show version alongside
+GLITCH and the colours.
+
 The cards can be **reordered**: drag one by its title — the amber heading is the
 handle, since everything below it is a slider and a card that moved when you grabbed
 a fader would be unusable. The order is kept in that browser and reapplied on every
@@ -192,6 +198,8 @@ REST API, described by an OpenAPI 3.0 specification.
 | `PUT /api/params/{section}/{setting}` | body `{"value": 2.5}` |
 | `POST /api/actions/glitch` | fire one glitch |
 | `POST /api/actions/randomize` | redraw colours and trajectories |
+| `POST /api/actions/shuffle` | one move of the auto-pilot, now |
+| `POST /api/actions/shuffle:<section>` | the same, confined to one section |
 
 A `PUT` goes through `VJParam.set_value()` like everything else, so the value is
 clamped and snapped, the on-screen panel follows, and every connected phone follows
@@ -263,6 +271,8 @@ and have no business knowing that `spot/radius` runs from 20 to 600.
 | --- | --- |
 | `/deferlante/glitch_now` | fires one glitch (no argument needed) |
 | `/deferlante/randomize` | redraws colours and trajectories, and returns colour to random mode |
+| `/deferlante/shuffle` | one move of the auto-pilot, now, whatever pace it is set to |
+| `/deferlante/shuffle/<section>` | the same, confined to one section: `lasers`, `spot`, `sphere`, `mirror`, `color`, `global` |
 | `/deferlante/color/rgb` | three floats 0 → 1: the whole colour in one message, and switches to manual |
 
 ### Every address

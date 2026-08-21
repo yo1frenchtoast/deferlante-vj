@@ -15,8 +15,10 @@ var find_param: Callable
 var all_params: Callable
 var describe: Callable
 var presets: Node
-var glitch: Callable
-var randomize: Callable
+## Fires an action by name, answering false when the show has no such action. The
+## one door: this used to match on its own list beside the spec, and the two came
+## apart the moment an action was added.
+var fire: Callable
 ## The one-shot actions this API advertises, named by the controller so the spec
 ## cannot claim one the show does not have.
 var actions: Array = []
@@ -73,13 +75,8 @@ func handle(method: String, path: String, body: String) -> Dictionary:
 		if method != "POST":
 			return {"code": 405, "body": {"error": "use POST"}}
 		var action := path.substr("/api/actions/".length())
-		match action:
-			"glitch":
-				glitch.call()
-			"randomize":
-				randomize.call()
-			_:
-				return {"code": 404, "body": {"error": "unknown action", "action": action}}
+		if not fire.call(action):
+			return {"code": 404, "body": {"error": "unknown action", "action": action}}
 		return {"code": 200, "body": {"triggered": action}}
 
 	return {"code": 404, "body": {"error": "no such endpoint", "path": path}}
@@ -140,6 +137,8 @@ func _openapi() -> Dictionary:
 			},
 			"/api/actions/{action}": {"post": {
 				"summary": "Fire a one-shot action",
+				"description": "Also accepts shuffle:<section> — shuffle:lasers, "
+					+ "shuffle:spot — to re-roll one section instead of the show.",
 				"tags": ["Actions"],
 				"parameters": [{
 					"name": "action", "in": "path", "required": true,

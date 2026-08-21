@@ -101,6 +101,17 @@
     content: "\2059"; float: right; color: var(--line);
     letter-spacing: 0; font-size: .9rem; line-height: .8;
   }
+  /* Re-roll this section alone. It lives in the title bar, which is also the drag
+     handle — so it stops the press from reaching it, or every tap would pick the
+     card up instead. */
+  .card h2 .roll {
+    float: right; margin: -.15rem .5rem 0 0; padding: .1rem .4rem;
+    font-size: .62rem; letter-spacing: .08em;
+    background: transparent; color: var(--dim);
+    border: 1px solid var(--line); border-radius: .3rem;
+    cursor: pointer; touch-action: manipulation;
+  }
+  .card h2 .roll:active { background: var(--accent); color: #000; border-color: var(--accent); }
   .card.dragging {
     opacity: .9; border-color: var(--accent); box-shadow: 0 .5rem 1.5rem #000a;
     position: relative; z-index: 5;
@@ -488,6 +499,8 @@ function makeDraggable(card, grid) {
 }
 
 function build(schema) {
+  // Before the cards: each one carries a roll button labelled from this.
+  buildActions(schema.actions);
   params = new Map();
   rows = new Map();
   const grid = document.getElementById("grid");
@@ -504,6 +517,20 @@ function build(schema) {
       card.dataset.section = section;
       const h = document.createElement("h2");
       h.textContent = section;
+      // The slug prefix, not the heading: the heading is translated, the prefix is
+      // what every surface calls this section.
+      card.dataset.prefix = p.slug.split("/")[0];
+      const roll = document.createElement("button");
+      roll.className = "roll";
+      roll.textContent = shuffleLabel;
+      roll.title = shuffleLabel;
+      for (const stop of ["pointerdown", "mousedown", "touchstart"]) {
+        roll.addEventListener(stop, (e) => e.stopPropagation());
+      }
+      roll.addEventListener("click", () => {
+        send({ type: "action", name: "shuffle:" + card.dataset.prefix });
+      });
+      h.appendChild(roll);
       card.appendChild(h);
       grid.appendChild(card);
       makeDraggable(card, grid);
@@ -535,7 +562,6 @@ function build(schema) {
 
   defaultOrder = [...grid.children].map((card) => card.dataset.section);
   applyOrder(grid);
-  buildActions(schema.actions);
   lastLaunch = schema.launch;
   buildLaunch(schema.launch);
   buildPads(schema.params);
@@ -671,7 +697,13 @@ function buildPresets(info) {
 
 // One-shot actions. Godot names them; this only draws them, so an action added
 // there turns up here with no change to this file.
+// The word on the per-section roll buttons, taken from the shuffle action so the
+// two never disagree about what this is called.
+let shuffleLabel = "SHUFFLE";
+
 function buildActions(actions) {
+  const shuffle = (actions || []).find((a) => a.name === "shuffle");
+  if (shuffle) shuffleLabel = shuffle.label;
   for (const id of ["settings-actions", "surfaces-actions"]) {
     const holder = document.getElementById(id);
     if (!holder) continue;

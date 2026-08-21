@@ -42,25 +42,32 @@ func _process(delta: float):
 ## point: it makes the randomiser something you can hit rather than something you
 ## leave running. The clock is rearmed so a hit does not land moments before an
 ## automatic one and read as a double.
-func roll_now():
-	_roll()
+func roll_now(section: String = ""):
+	_roll(section)
 	if amount > 0.0:
 		_next_roll = _interval()
 
 
-func _roll():
+## `section` is a slug prefix — "lasers", "spot" — and empty means the whole show.
+## Narrowing it is what makes this usable during a set: re-rolling the lasers while
+## the spotlight keeps doing what it was asked is a musical decision, where rolling
+## everything at once is a scene change.
+func _roll(section: String = ""):
 	if not all_params.is_valid():
 		return
 	var candidates: Array = []
 	for p in all_params.call():
-		if p.randomizable:
-			candidates.append(p)
+		if not p.randomizable:
+			continue
+		if section != "" and not p.slug.begins_with(section + "/"):
+			continue
+		candidates.append(p)
 	if candidates.is_empty():
 		return
 
 	# One or two at a time: beyond that it stops reading as a gesture and starts
 	# reading as a malfunction.
-	for i in range(randi_range(1, 2)):
+	for i in range(randi_range(1, maxi(1, mini(2, candidates.size() - 1)))):
 		var p: VJParam = candidates.pick_random()
 		# Averaging two draws clusters values towards the middle of the range, so
 		# we avoid the extremes that either empty or saturate the screen.

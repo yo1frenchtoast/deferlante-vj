@@ -107,8 +107,7 @@ func _ready():
 	api.describe = func(p): return _describe(p, Lang.EN)
 	api.presets = presets
 	api.actions = ACTIONS
-	api.glitch = circle.apply_glitch
-	api.randomize = _randomize_all
+	api.fire = fire_action
 	web.api_handler = api.handle
 	web.client_connected.connect(_send_schema)
 	web.set_requested.connect(_on_web_set)
@@ -583,6 +582,11 @@ func _on_osc_message(address: String, args: Array):
 		"/deferlante/shuffle":
 			autopilot.roll_now()
 			return
+	if address.begins_with("/deferlante/shuffle/"):
+		_external_touch()
+		autopilot.roll_now(address.substr("/deferlante/shuffle/".length()))
+		return
+	match address:
 		"/deferlante/preset/recall":
 			if not args.is_empty():
 				presets.recall(int(args[0]))
@@ -758,13 +762,40 @@ func _on_web_set(slug: String, value: float):
 
 func _on_web_action(name: String):
 	_external_touch()
+	# Restarting is not a show action: it is not in `ACTIONS`, it is not offered
+	# over OSC, and it ends this process. It stays on the surface that has a button
+	# for it, behind a confirmation.
+	if name == "restart":
+		_restart()
+		return
+	fire_action(name)
+
+
+## Fire a one-shot action by name, or answer false if there is no such thing.
+##
+## Every surface routes through here, which is the point: the REST spec advertises
+## `ACTIONS`, and for a while the API itself matched on a hand-written list beside
+## it. They came apart the moment an action was added — the spec offered `shuffle`
+## and the endpoint answered "unknown action". One door now, and it is the same
+## list that describes it.
+func fire_action(name: String) -> bool:
 	if name.begins_with("preset:"):
 		var bits := name.split(":")
+		if bits.size() < 3:
+			return false
 		if bits[1] == "save":
 			presets.save_slot(int(bits[2]))
 		else:
 			presets.recall(int(bits[2]))
-		return
+		return true
+
+	# "shuffle:lasers" rolls one section; bare "shuffle" rolls the whole show.
+	if name.begins_with("shuffle:"):
+		autopilot.roll_now(name.substr("shuffle:".length()))
+		return true
+
+	if not ACTIONS.has(name):
+		return false
 	match name:
 		"glitch":
 			circle.apply_glitch()
@@ -772,8 +803,7 @@ func _on_web_action(name: String):
 			_randomize_all()
 		"shuffle":
 			autopilot.roll_now()
-		"restart":
-			_restart()
+	return true
 
 
 ## Start the show again on the start-up settings as they now stand.
