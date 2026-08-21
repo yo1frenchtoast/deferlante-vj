@@ -17,6 +17,9 @@ var describe: Callable
 var presets: Node
 var glitch: Callable
 var randomize: Callable
+## The one-shot actions this API advertises, named by the controller so the spec
+## cannot claim one the show does not have.
+var actions: Array = []
 var settings_count: int = 0
 
 
@@ -140,7 +143,7 @@ func _openapi() -> Dictionary:
 				"tags": ["Actions"],
 				"parameters": [{
 					"name": "action", "in": "path", "required": true,
-					"schema": {"type": "string", "enum": ["glitch", "randomize"]},
+					"schema": {"type": "string", "enum": actions},
 				}],
 				"responses": {"200": {"description": "Fired"}, "404": {"description": "No such action"}},
 			}},

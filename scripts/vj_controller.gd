@@ -7,6 +7,13 @@ extends Node2D
 ## they drive — adding a line to `_build_params()` creates the slider, the keyboard
 ## navigation and the OSC address in one go.
 
+## The one-shot actions every surface offers. Named once: the REST spec advertises
+## these, the Chataigne module is built from them, and `_on_web_action()` wires them.
+const ACTIONS := ["glitch", "randomize"]
+
+## Where OSC addresses and Chataigne callbacks are rooted.
+const OSC_PREFIX := "/deferlante/"
+
 @export var laser_scene: PackedScene = preload("res://scenes/laser.tscn")
 @export var laser_count: int = 3
 ## Where the D key ducks the panel to: readable up close, all but gone on a wall.
@@ -92,13 +99,14 @@ func _ready():
 	_initializing = false
 
 	for p in params:
-		osc_routes["/deferlante/" + p.slug] = p
+		osc_routes[OSC_PREFIX + p.slug] = p
 	osc.message_received.connect(_on_osc_message)
 
 	api.find_param = param
 	api.all_params = func(): return params
 	api.describe = func(p): return _describe(p, Lang.EN)
 	api.presets = presets
+	api.actions = ACTIONS
 	api.glitch = circle.apply_glitch
 	api.randomize = _randomize_all
 	web.api_handler = api.handle
@@ -111,6 +119,13 @@ func _ready():
 		p.changed.connect(func(v): web.broadcast({"type": "value", "slug": p.slug, "value": v}))
 
 	_refresh_status()
+
+	# Asked for by a generator rather than by an operator: describe the show and
+	# stand down without ever putting anything on screen.
+	var wanted := _dump_path()
+	if wanted != "":
+		_dump(wanted)
+		return
 
 	# A deliberate click hands the panel back, exactly like a keypress does.
 	panel.mouse_reclaimed.connect(func(): panel.set_external_control(false, discreet_brightness))
@@ -825,6 +840,54 @@ func _launch_address(index: int) -> String:
 		return Launch.LOCAL
 	var addresses := Launch.local_addresses()
 	return addresses[index - 1] if index - 1 < addresses.size() else Launch.LOCAL
+
+
+# --------------------------------------------------------------------------
+# Describing the show to whatever builds against it
+# --------------------------------------------------------------------------
+
+## The path a generator asked us to write to, or "" for an ordinary run.
+##
+## After a bare `--`, Godot hands the rest to the project, so this reads the user
+## arguments rather than the engine's.
+func _dump_path() -> String:
+	var args := OS.get_cmdline_user_args()
+	var at := args.find("--dump-params")
+	if at == -1 or at + 1 >= args.size():
+		return ""
+	return args[at + 1]
+
+
+## Write everything a generator needs, then quit.
+##
+## The Chataigne module used to be built by running regular expressions over this
+## very file and over `lang.gd`, which made the *shape* of a declaration part of the
+## contract — a setting wrapped onto two lines would have been missed — and left the
+## tool keeping lists of its own beside it. One of those lists had already drifted in
+## both directions unnoticed.
+##
+## So the show describes itself instead. English throughout, like the API and for the
+## same reason: what reads this is a program, not a person in a room.
+func _dump(path: String):
+	var described: Array = []
+	for p in params:
+		described.append(_describe(p, Lang.EN))
+	var payload := {
+		"osc_prefix": OSC_PREFIX,
+		"params": described,
+		"actions": ACTIONS,
+		"presets": {"count": presets.SLOTS},
+	}
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		push_error("Cannot write the description to %s: %s"
+			% [path, error_string(FileAccess.get_open_error())])
+		get_tree().quit(1)
+		return
+	file.store_string(JSON.stringify(payload, "\t"))
+	file.close()
+	print("Described %d settings into %s" % [described.size(), path])
+	get_tree().quit()
 
 
 ## The surfaces on screen speak whichever tongue the launcher was set to. The API

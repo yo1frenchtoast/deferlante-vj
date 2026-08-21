@@ -90,6 +90,14 @@ jobs:
       - name: Import the project
         run: godot --headless --import || true
 
+      # The console module is generated from the settings, so a setting added
+      # without regenerating it leaves the two describing different shows — the
+      # failure this catches is a knob on the console that drives nothing, or
+      # bounds that have quietly drifted apart. Godot is asked directly here, the
+      # same way the generator asks it locally.
+      - name: Check the Chataigne module still matches the settings
+        run: python3 tools/build_chataigne_module.py --check
+
       # One export per step: a failure names its own platform in the annotation,
       # instead of a single "Export failed" that could mean any of the three.
       - name: Export Linux
