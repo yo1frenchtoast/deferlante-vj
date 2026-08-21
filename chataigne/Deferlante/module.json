@@ -697,6 +697,83 @@
         }
       }
     },
+    "Shuffle Global": {
+      "menu": "Shuffle",
+      "callback": "shuffleGlobal",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Shuffle Color": {
+      "menu": "Shuffle",
+      "callback": "shuffleColor",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Shuffle Mirror": {
+      "menu": "Shuffle",
+      "callback": "shuffleMirror",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Shuffle Lasers": {
+      "menu": "Shuffle",
+      "callback": "shuffleLasers",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Shuffle Spotlight": {
+      "menu": "Shuffle",
+      "callback": "shuffleSpot",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Shuffle Audio": {
+      "menu": "Shuffle",
+      "callback": "shuffleAudio",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Shuffle Sphere": {
+      "menu": "Shuffle",
+      "callback": "shuffleSphere",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Trigger Glitch": {
       "menu": "Actions",
       "callback": "triggerGlitch",

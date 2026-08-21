@@ -165,6 +165,13 @@ leaves the two describing different shows: a knob on the console that drives
 nothing, or bounds that have quietly drifted apart. `--check` rebuilds it from Godot
 and fails if what is committed does not match.
 
+The generator also refuses to write a module that is not **level with the show** —
+every setting, every action, every section of the aimed shuffle, the presets and the
+colour picker — checked both ways, so an address the module sends that nothing in
+Godot answers fails just as loudly. The console is meant to stay a complete surface
+rather than a convenient subset, and that is the sort of promise which only holds if
+something enforces it.
+
 ## Describing the show to other tools
 
 Anything that needs to know what settings exist asks the show rather than reading

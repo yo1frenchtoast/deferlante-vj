@@ -198,6 +198,34 @@ function colorRgb(color) {
 	local.send("/deferlante/color/rgb", color[0], color[1], color[2]);
 }
 
+function shuffleGlobal(value) {
+	local.send("/deferlante/shuffle/global");
+}
+
+function shuffleColor(value) {
+	local.send("/deferlante/shuffle/color");
+}
+
+function shuffleMirror(value) {
+	local.send("/deferlante/shuffle/mirror");
+}
+
+function shuffleLasers(value) {
+	local.send("/deferlante/shuffle/lasers");
+}
+
+function shuffleSpot(value) {
+	local.send("/deferlante/shuffle/spot");
+}
+
+function shuffleAudio(value) {
+	local.send("/deferlante/shuffle/audio");
+}
+
+function shuffleSphere(value) {
+	local.send("/deferlante/shuffle/sphere");
+}
+
 function triggerGlitch(value) {
 	local.send("/deferlante/glitch_now");
 }

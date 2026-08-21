@@ -135,6 +135,15 @@ def ascii_only(text: str) -> str:
     return text
 
 
+def sections_of(settings) -> dict:
+    """Slug prefix -> the name it goes by, in the order Godot declared them."""
+    out = collections.OrderedDict()
+    for setting in settings:
+        prefix = setting["slug"].split("/")[0]
+        out.setdefault(prefix, ascii_only(setting["section"]).title())
+    return out
+
+
 def action_command(action: str):
     """Console name, JS function and OSC address for a one-shot action.
 
@@ -196,6 +205,20 @@ def build(described: dict):
                 ("default", 1), ("mappingIndex", 0),
             ])}),
         ])
+
+    # One command per section for the aimed shuffle. A single command taking the
+    # section as a parameter would read better, but no module on this machine uses
+    # an Enum parameter, and a module.json Chataigne dislikes fails at scan rather
+    # than at use. These reuse the trigger shape every action here already has.
+    if "shuffle" in described["actions"]:
+        for sec, label in sections_of(settings).items():
+            commands[f"Shuffle {label}"] = collections.OrderedDict([
+                ("menu", "Shuffle"),
+                ("callback", "shuffle" + sec.capitalize()),
+                ("parameters", {"Trigger": collections.OrderedDict([
+                    ("type", "Boolean"), ("default", True), ("mappingIndex", 0),
+                ])}),
+            ])
 
     for action in described["actions"]:
         name, function, _address = action_command(action)
@@ -262,6 +285,15 @@ def build(described: dict):
         "}",
         "",
     ]
+    if "shuffle" in described["actions"]:
+        for sec in sections_of(settings):
+            lines += [
+                f"function shuffle{sec.capitalize()}(value) {{",
+                f'\tlocal.send("{prefix}shuffle/{sec}");',
+                "}",
+                "",
+            ]
+
     for action in described["actions"]:
         _name, function, address = action_command(action)
         lines += [
@@ -271,6 +303,46 @@ def build(described: dict):
             "",
         ]
     return module, "\n".join(lines)
+
+
+def assert_complete(described: dict, javascript: str):
+    """Refuse to write a module that cannot reach everything the show offers.
+
+    The console is meant to stay level with the rest: every setting, every action,
+    every section of the aimed shuffle, the presets and the colour picker. Checked
+    against what Godot just said rather than against a list kept here, so a
+    capability added there fails this until the module carries it.
+    """
+    sent = set(re.findall(r'local\.send\("([^"]+)"', javascript))
+    prefix = described["osc_prefix"]
+    missing = []
+
+    missing += [f"setting {p['slug']}" for p in described["params"]
+                if prefix + p["slug"] not in sent]
+    for action in described["actions"]:
+        _name, _function, address = action_command(action)
+        if prefix + address not in sent:
+            missing.append(f"action {action}")
+    if "shuffle" in described["actions"]:
+        missing += [f"shuffle {sec}" for sec in sections_of(described["params"])
+                    if prefix + "shuffle/" + sec not in sent]
+    missing += [f"{extra}" for extra in ("preset/recall", "preset/save", "color/rgb")
+                if prefix + extra not in sent]
+
+    # An address nothing in Godot answers is the same failure the other way round.
+    known = {prefix + p["slug"] for p in described["params"]}
+    known |= {prefix + action_command(a)[2] for a in described["actions"]}
+    known |= {prefix + "shuffle/" + s for s in sections_of(described["params"])}
+    known |= {prefix + e for e in ("preset/recall", "preset/save", "color/rgb")}
+    stray = sorted(sent - known)
+
+    if missing or stray:
+        report = "The module is not level with the show:\n"
+        if missing:
+            report += "  it cannot reach: " + ", ".join(missing) + "\n"
+        if stray:
+            report += "  it sends addresses nothing answers: " + ", ".join(stray) + "\n"
+        sys.exit(report)
 
 
 def address_table(described: dict) -> str:
@@ -309,6 +381,8 @@ def main():
 
     module, javascript = build(described)
     module_text, script_text = render(module, javascript)
+
+    assert_complete(described, javascript)
 
     # Last safety net: every declared callback must have its JS function.
     functions = set(re.findall(r"function (\w+)\(", javascript))
