@@ -183,6 +183,16 @@
      brushing past it during a set would be unforgivable. */
   .launch-foot button.armed { background: var(--red); border-color: var(--red); color: #000; }
 
+  .launch-links {
+    max-width: 30rem; margin: 0 auto; padding: .2rem .8rem 1.4rem;
+    display: flex; gap: 1.2rem; justify-content: center;
+  }
+  .launch-links a {
+    font-size: .72rem; letter-spacing: .08em; color: var(--dim);
+    text-decoration: none; border-bottom: 1px solid var(--line); padding-bottom: .1rem;
+  }
+  .launch-links a:active { color: var(--accent); }
+
   /* Surfaces: the pads get the room, which is the whole point of a second page. */
   .surfaces { gap: .6rem; padding: .7rem; }
   .strip { flex: 0 0 auto; display: flex; gap: .5rem; }
@@ -286,7 +296,16 @@
     <button class="reorder-reset" id="reorder-reset" hidden>ordre par défaut</button>
   </section>
 
-  <section class="view launch" id="launch"><div class="launch-panel" id="launch-panel"></div></section>
+  <section class="view launch" id="launch">
+    <div class="launch-panel" id="launch-panel"></div>
+    <!-- Outside the panel above, which is emptied and rebuilt from every schema.
+         Both open in a tab of their own: this one is often the only thing driving
+         the show, and navigating away from it mid-set would be a poor trade. -->
+    <div class="launch-links">
+      <a href="/docs" target="_blank" rel="noopener">API · Swagger ↗</a>
+      <a href="https://github.com/yo1frenchtoast/deferlante-vj" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+  </section>
 
   <section class="view surfaces" id="surfaces">
     <div class="strip">
