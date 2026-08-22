@@ -135,6 +135,26 @@
   .row .top { display: flex; justify-content: space-between; font-size: .78rem; }
   .row .name { color: var(--dim); letter-spacing: .04em; }
   .row .val { font-variant-numeric: tabular-nums; }
+  /* A setting that has an explanation marks its name as the thing to reach for:
+     a dotted underline on the pointer side, and nothing at all where there is no
+     explanation written. */
+  .row .name.explains {
+    cursor: help; text-decoration: underline dotted currentColor; text-underline-offset: .18em;
+    user-select: none; -webkit-user-select: none;
+  }
+  .row .info {
+    display: none;
+    font-size: .68rem; line-height: 1.35; color: var(--dim);
+    padding: .18rem 0 .1rem; max-width: 46ch;
+  }
+  .row.explained .info { display: block; }
+  /* Hover is for the desk. A phone never reports it, and gets the hold instead.
+     It answers to the name alone, not to the whole row: the row grows by a line
+     when it opens, and a row that grows under a fader being dragged moves the
+     fader. */
+  @media (hover: hover) and (pointer: fine) {
+    .row:has(.name.explains:hover) .info { display: block; }
+  }
   .row.red .name { color: var(--red); }
   .row.green .name { color: var(--green); }
   .row.blue .name { color: var(--blue); }
@@ -498,6 +518,54 @@ function makeDraggable(card, grid) {
   });
 }
 
+// On a phone there is no hover, so the explanation comes from a hold on the
+// setting's name. It is deliberately not a tap: a tap lands next to a fader often
+// enough that it would open by accident all through a set. The hold cancels as
+// soon as the finger travels, so a scroll through the grid never fires it, and it
+// suppresses the click that follows so the gesture cannot also do something else.
+const HOLD_MS = 450;
+const HOLD_SLOP = 10;
+
+function explainOnHold(name, row) {
+  let timer = null, from = null, fired = false;
+
+  const cancel = () => {
+    if (timer) { clearTimeout(timer); timer = null; }
+    from = null;
+  };
+
+  name.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "mouse") return;   // the desk already has hover
+    from = { x: e.clientX, y: e.clientY };
+    fired = false;
+    timer = setTimeout(() => {
+      timer = null;
+      fired = true;
+      // One open at a time: the grid is narrow and two paragraphs at once push
+      // the sliders under the thumb that is reading them.
+      for (const other of document.querySelectorAll(".row.explained")) {
+        if (other !== row) other.classList.remove("explained");
+      }
+      row.classList.toggle("explained");
+    }, HOLD_MS);
+  });
+
+  name.addEventListener("pointermove", (e) => {
+    if (!from) return;
+    if (Math.abs(e.clientX - from.x) > HOLD_SLOP || Math.abs(e.clientY - from.y) > HOLD_SLOP) cancel();
+  });
+
+  name.addEventListener("pointerup", cancel);
+  name.addEventListener("pointercancel", cancel);
+  name.addEventListener("click", (e) => {
+    if (fired) { e.preventDefault(); e.stopPropagation(); fired = false; }
+  });
+  // Holding a word selects it on most touch browsers, which puts a selection
+  // handle over the row that then has to be dismissed before anything else works.
+  name.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+
+
 function build(schema) {
   // Before the cards: each one carries a roll button labelled from this.
   buildActions(schema.actions);
@@ -547,6 +615,15 @@ function build(schema) {
     val.className = "val"; val.textContent = format(p, p.value);
     top.append(name, val);
 
+    let info = null;
+    if (p.hint) {
+      name.classList.add("explains");
+      info = document.createElement("div");
+      info.className = "info";
+      info.textContent = p.hint;
+      explainOnHold(name, row);
+    }
+
     const slider = document.createElement("input");
     slider.type = "range";
     slider.min = p.min; slider.max = p.max; slider.step = p.step; slider.value = p.value;
@@ -557,6 +634,7 @@ function build(schema) {
     });
 
     row.append(top, slider);
+    if (info) row.appendChild(info);
     card.appendChild(row);
     rows.set(p.slug, { slider, val, p });
   }

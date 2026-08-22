@@ -941,6 +941,9 @@ func _describe(p: VJParam, tongue: int) -> Dictionary:
 	return {
 		"slug": p.slug,
 		"label": p.label_in(tongue),
+		# One line saying what the setting does, shown when the web surface's
+		# operator hovers or holds its name. Empty when none is written yet.
+		"hint": lang.hint_in(p.slug, tongue),
 		"section": lang.text_in(p.section, tongue),
 		"min": p.min_value,
 		"max": p.max_value,

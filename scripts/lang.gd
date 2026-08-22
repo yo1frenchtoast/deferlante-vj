@@ -199,6 +199,65 @@ const TEXTS := {
 	],
 }
 
+## One line per setting, shown when the operator hovers or holds its name on
+## the web surface. Keyed by slug like LABELS, for the same reason: rewording
+## one can never move an address. Say what the setting does and what its ends
+## mean — the page has room for a line, not for a paragraph.
+const HINTS := {
+	"global/speed": ["Vitesse de tout. 1 normal, 0 fige, négatif rembobine.", "Global speed. 1 is normal, 0 freezes, negative runs backwards."],
+	"global/chaos": ["Désordre du mouvement, par-dessus les autres réglages. Ne touche pas au GLITCH.", "Motion disorder, layered on top of the others. It does not touch GLITCH."],
+	"global/randomizer": ["Pilote automatique. 0 coupé, 1 environ un changement par seconde.", "Auto-pilot. 0 is off, 1 is about one change per second."],
+	"global/glow": ["Halo, dessiné par les traits eux-mêmes. Inutile dans la fumée : le halo y est déjà.", "Halo, drawn by the strokes themselves. Of no use in haze, which already spreads the beam."],
+	"global/recall": ["Durée du fondu quand on rappelle un preset. 0 coupe net.", "Crossfade time when you recall a preset. 0 snaps."],
+	"global/panel": ["Luminosité du panneau. Il est projeté au mur avec le reste.", "Panel brightness. The projector puts the panel on the wall with the rest."],
+	"global/autodim": ["Assombrit le panneau dès qu'une autre surface prend la main.", "Dims the panel as soon as another surface takes control."],
+
+	"color/mode": ["Chaque élément sa teinte, ou la couleur choisie pour tous.", "Each element takes its own hue, or all take the chosen color."],
+	"color/saturation": ["0 blanc pur, 1 couleur pleine. Vers 0.4 le faisceau perce mieux la fumée.", "0 is pure white, 1 is a full color. Near 0.4 the beam cuts through haze better."],
+	"color/red": ["Rouge de la couleur manuelle. Y toucher bascule en manuel.", "Red of the manual color. A touch here switches to manual."],
+	"color/green": ["Vert de la couleur manuelle. Y toucher bascule en manuel.", "Green of the manual color. A touch here switches to manual."],
+	"color/blue": ["Bleu de la couleur manuelle. Y toucher bascule en manuel.", "Blue of the manual color. A touch here switches to manual."],
+
+	"mirror/effect": ["Pliage kaléidoscope. À 0 la passe n'est pas payée.", "Kaleidoscope fold. At 0 the show does not pay for the pass."],
+	"mirror/segments": ["Nombre de quartiers du miroir. 6 donne l'étoile classique.", "Number of mirror wedges. 6 gives the classic star."],
+	"mirror/rotation": ["Fait tourner les miroirs. ← gauche, → droite.", "Turns the mirrors. ← left, → right."],
+
+	"lasers/count": ["Nombre de traits. Ajoutés et retirés en direct.", "Number of strokes. The show adds and removes them live."],
+	"lasers/width": ["Épaisseur des traits.", "Stroke width."],
+	"lasers/length": ["1 traverse le cadre quelle que soit la résolution. En dessous, les pointes entrent dans l'image.", "1 crosses the frame at every resolution. Below 1 the tips come into view."],
+	"lasers/spin": ["Sens et vitesse de rotation des traits. ← gauche, → droite.", "Direction and speed of rotation. ← leftwards, → rightwards."],
+	"lasers/parallel": ["0 une dispersion, 1 un éventail régulier. Avec SCROLL, cela fait des scanlines.", "0 is a scatter, 1 is an even fan. With SCROLL it makes scanlines."],
+	"lasers/scroll": ["Fait défiler l'éventail de côté. ← un sens, → l'autre.", "Walks the fan sideways. ← one way, → the other."],
+
+	"spot/radius": ["Rayon de la tache.", "Radius of the pool."],
+	"spot/pulse": ["Amplitude du battement du rayon. 0 le tient fixe.", "How far the radius swells. 0 holds it steady."],
+	"spot/width": ["Épaisseur du cercle.", "Circle stroke width."],
+	"spot/speed": ["Vitesse de balayage. Elle n'a pas de sens : une poursuite ne cherche pas à l'envers.", "Sweep speed. It has no direction: a followspot does not un-search."],
+	"spot/hold": ["Temps passé sur une cible. 0 balaie sans jamais s'arrêter.", "Time spent on a target. 0 sweeps without any stop."],
+	"spot/shake": ["Amplitude du tremblement à l'arrêt. 0 tient parfaitement immobile.", "Tremor amplitude at rest. 0 holds it perfectly still."],
+	"spot/frequency": ["Vitesse du tremblement, indépendante de la vitesse de balayage.", "Tremor rate, independent of the sweep speed."],
+	"spot/spread": ["Grossissement de la tache quand elle vise loin du centre, comme une vraie poursuite.", "How much the pool grows when it aims away from center, like a real followspot."],
+	"spot/glitch": ["Probabilité de glitch par image. 0.005 fait environ un toutes les 3 s.", "Glitch chance per frame. 0.005 gives about one every 3 s."],
+	"spot/manual": ["AUTO rend la main toute seule, STICK garde le faisceau à la manette.", "AUTO hands back on its own. STICK keeps the beam on the gamepad."],
+	"spot/track": ["Vitesse du faisceau à fond de manche. Trop lent on perd l'acteur, trop vite on ne le tient pas.", "Beam speed at full stick. Too slow and you lose your actor, too fast and you cannot hold them."],
+	"spot/handback": ["Délai avant que le balayage automatique ne reprenne le faisceau.", "Delay before the automatic sweep takes the beam back."],
+
+	"audio/reactivity": ["Dose générale de la réaction au son. À 0 rien ne bouge.", "Master amount of the sound response. At 0 nothing moves."],
+	"audio/punch": ["Courbe de réponse. Plus haut, seuls les coups ressortent.", "Response curve. Higher, and only the hits show."],
+	"audio/spot": ["Le kick pilote la poursuite : son rayon et son épaisseur.", "The kick drives the spotlight: its radius and its stroke width."],
+	"audio/lasers": ["Les médiums pilotent les lasers : leur longueur et leur épaisseur.", "Mids drive the lasers: their length and their stroke width."],
+	"audio/sphere": ["Les aigus pilotent la sphère : la taille des cercles et leur épaisseur.", "Treble drives the sphere: the circle size and the stroke width."],
+
+	"sphere/count": ["Nombre de cercles. 0 éteint l'effet.", "Number of circles. 0 switches the effect off."],
+	"sphere/size": ["Taille d'un cercle, en radians sur la sphère.", "Size of one circle, in radians on the sphere."],
+	"sphere/radius": ["Rayon de la sphère à l'écran.", "Sphere radius on screen."],
+	"sphere/spin": ["Sens et vitesse de rotation de la sphère. ← gauche, → droite.", "Direction and speed of the sphere. ← leftwards, → rightwards."],
+	"sphere/depth": ["Distance de l'œil. Petit donne une perspective forte.", "Eye distance. A small value gives strong perspective."],
+	"sphere/width": ["Épaisseur des cercles.", "Circle stroke width."],
+	"sphere/glass": ["0 sphère opaque, 1 laisse voir la face arrière au travers.", "0 is an opaque sphere, 1 shows the far side through it."],
+}
+
+
 ## The language names stay in their own tongue, as is customary.
 const LANGUAGES := ["FRANÇAIS", "ENGLISH"]
 
@@ -225,3 +284,14 @@ func label_in(slug: String, tongue: int) -> String:
 
 func text_in(key: String, tongue: int) -> String:
 	return TEXTS[key][tongue] if TEXTS.has(key) else key
+
+
+## The one-line explanation of a setting. Empty when none is written, so a new
+## setting can be tried out before it is described and the surfaces simply show
+## nothing rather than its slug.
+func hint_in(slug: String, tongue: int) -> String:
+	return HINTS[slug][tongue] if HINTS.has(slug) else ""
+
+
+func hint(slug: String) -> String:
+	return hint_in(slug, current)
