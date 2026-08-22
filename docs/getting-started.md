@@ -2,124 +2,131 @@
 
 ## Run
 
-Open the project in Godot 4.7+ and press F5. The main scene is `scenes/launcher.tscn`,
-which asks a handful of questions and then hands over to `scenes/main.tscn`.
+Open the project in Godot 4.7+. Press F5. The main scene is `scenes/launcher.tscn`.
+It asks a few questions, then it hands over to `scenes/main.tscn`.
 
 ## The launcher
 
-Almost everything in this project is adjustable live, on purpose: a setting you
-cannot reach mid-set may as well not exist. The launcher holds the exceptions — the
-handful of things the engine will not let you change once the show is running.
+You can adjust almost everything in this project while the show runs, on purpose. A
+setting that you cannot reach in the middle of a set is of no use. The launcher holds
+the exceptions. These are the few settings that the engine cannot change after the
+show starts.
 
 | Row | Choices | |
 | --- | --- | --- |
-| `LANGUAGE` | FRANÇAIS / ENGLISH | First, because it decides what every other row says. |
-| `RENDERER` | Compatibility / Forward+ | Compatibility is twice as fast; Forward+ is the only one that antialiases. **Restarts the app.** |
-| `ANTIALIASING` | none / MSAA 2× 4× 8× | Forward+ only — the Compatibility renderer ignores 2D MSAA entirely. |
+| `LANGUAGE` | FRANÇAIS / ENGLISH | This row is first, because it decides the words of every other row. |
+| `RENDERER` | Compatibility / Forward+ | Compatibility is two times as fast. Only Forward+ does antialiasing. **This row restarts the app.** |
+| `ANTIALIASING` | none / MSAA 2× 4× 8× | Forward+ only. The Compatibility renderer ignores 2D MSAA. |
 | `RESOLUTION` | the screen's own, or a fixed size | |
-| `FULLSCREEN` | | `F11` still toggles it during the show. |
+| `FULLSCREEN` | | `F11` also toggles it during the show. |
 | `VSYNC` | | |
-| `MAX FPS` | uncapped, or a refresh rate | Frames past the projector's refresh cost the same to draw and nobody sees them. |
-| `SOUND LISTENED TO` | the output playing at launch, a named output, or a named input | An output is tapped on its way past; an input is listened to as it is, for when something else on the machine sits in the middle. A live meter under the row says what the choice actually carries. Re-done at every launch, so it cannot be left pointing at last night's interface. Linux with PipeWire or PulseAudio. |
-| `AUDIO INPUT` | automatic, or a named source | The same row, on a machine where the sound cannot be routed from here — Windows, mainly. Greyed out where Godot ignores the choice too. Both are explained under [audio reactivity](external-control.md#audio-reactivity). |
-| `PANEL` | hidden for the whole set | For a machine that only projects, driven from a phone. `F3` still works. |
-| `WEB ACCESS` | this machine only, or one of its addresses | Loopback by default: the control surface has no password, so being reachable from the room is opt-in. Pick an address here to let a phone in. |
+| `MAX FPS` | uncapped, or a refresh rate | Frames above the refresh rate of the projector cost the same to draw. Nobody sees them. |
+| `SOUND LISTENED TO` | the output playing at launch, a named output, or a named input | The show taps an output on its way past. It listens to an input as it is, for when something else on the machine sits in the middle. A live meter under the row shows what the choice carries. The show does this again at every launch, thus it cannot point at last night's interface. Linux with PipeWire or PulseAudio only. |
+| `AUDIO INPUT` | automatic, or a named source | The same row, on a machine where the show cannot route the sound — Windows, mainly. The row is disabled where Godot ignores the choice too. [Audio reactivity](external-control.md#audio-reactivity) explains both rows. |
+| `PANEL` | hidden for the whole set | For a machine that only projects, and that a phone drives. `F3` still works. |
+| `WEB ACCESS` | this machine only, or one of its addresses | Loopback by default. The control surface has no password, thus you let the room in on purpose. To let a phone in, pick an address here. |
 | `OSC ACCESS` | this machine only, or one of its addresses | The same decision for OSC, answered separately. See [OSC](external-control.md#external-control-over-osc). |
-| `WEB PORT` · `OSC PORT` | | Bound at start-up, so they cannot be moved later. |
+| `WEB PORT` · `OSC PORT` | | The show binds these ports at start-up, thus you cannot move them later. |
 
-Answers are kept in `user://launch.cfg`, so the screen opens on last night's and
-`LANCER` is usually the only key. The `PANEL` and `LANGUAGE` rows used to be settings
-on the desk; they are decisions about the room and about who is standing in front of
-the machine, so they moved here — which also means `LANGUAGE` no longer has an OSC
-address.
+The show keeps the answers in `user://launch.cfg`. Thus the screen opens on last
+night's answers, and `LANCER` is usually the only key you press. The `PANEL` and
+`LANGUAGE` rows were settings on the panel before. They are decisions about the room
+and about who stands in front of the machine, thus they moved here. As a result,
+`LANGUAGE` no longer has an OSC address.
 
 ### Why the renderer restarts the app
 
-Godot fixes the renderer before a single script runs, so it cannot be swapped in
-place. Choosing the other one launches the process again with
-`--rendering-method`, and the new one skips this screen. If that relaunch fails, the
-show starts anyway on the renderer already running and says so in the console —
-a black screen ten minutes before doors is worse than the wrong renderer.
+Godot sets the renderer before the first script runs, thus the show cannot change it
+in place. If you choose the other renderer, the show starts the process again with
+`--rendering-method`, and the new process skips this screen. If that restart fails,
+the show starts on the renderer that already runs and says so in the console. A black
+screen ten minutes before the doors open is worse than the wrong renderer.
 
 ### Skipping it
 
-`-- --skip-launcher` goes straight to the show on the saved settings. The bare `--`
-matters: Godot treats anything it does not recognise before that point as a fatal
-argument error, and hands everything after it to the project.
+`-- --skip-launcher` goes directly to the show, on the saved settings. The bare `--`
+is necessary. Godot reads an argument that it does not know before that point as a
+fatal argument error. It gives everything after the `--` to the project.
 
-A `--headless` run skips it too, without being asked — there is nobody there to
-answer. That is what keeps [the CI check](the-code.md#what-ci-actually-checks-beyond-it-exported) working.
+A `--headless` run also skips the launcher, without an option, because there is
+nobody there to answer it. This is what keeps
+[the CI check](the-code.md#what-ci-actually-checks-beyond-it-exported) in operation.
 
 ## Drive it
 
-The panel sits in the bottom-left corner, in one or more columns depending on how many
-settings there are. The sliders **fade out on their own after 4 s of inactivity** (over 0.7 s) and come
-back on any key press or mouse move. `H` pins them on screen while you dial things in.
+The panel is in the bottom-left corner. It has one or more columns, related to the
+number of settings. The sliders **fade out after 4 s with no input** (across 0.7 s).
+They come back on a key press or a mouse move. `H` pins them on screen while you
+adjust the settings.
 
 | Key | Action |
 | --- | --- |
-| `↑` `↓` | Move between settings (the selected one is highlighted) |
+| `↑` `↓` | Move between settings (the panel highlights the selected one) |
 | `←` `→` | Adjust — a fortieth of the range per press |
 | `Shift` + `←` `→` | Fine adjust, one step at a time |
 | `Space` | Fire a glitch immediately |
-| `R` | Redraw every colour and trajectory |
+| `R` | Redraw every color and trajectory |
 | `1` – `9` | Recall a preset (also on the numeric keypad) |
 | `Ctrl` + `1` – `9` | Store the current look into that slot |
-| `H` | Pin / unpin the panel (stops it fading) |
-| `F2` | Duck the panel down to discreet, and back |
+| `H` | Pin or unpin the panel (it stops the fade) |
+| `F2` | Dim the panel to discreet, and back |
 | `F3` | FPS readout |
 | `F11` | Fullscreen |
 | `Esc` | Quit |
 
-The mouse works on the sliders too, but the keyboard is safer live: no aiming in
-the dark.
+The mouse also works on the sliders. But the keyboard is safer during a show, because
+you do not aim in the dark.
 
-Under the sliders sits a status line — **the web address to type into a phone**, the
-address a console has to aim OSC at, and which pad is plugged in — followed by the
-shortcuts. Both addresses are shown in full, host and port: since each is a choice
-made at the launcher, a bare port number would no longer tell anyone whether the
-phone or the desk across the room will be heard. They are what you look up rather
-than remember, so they belong on screen and not only in the console, where they
-scroll away long before anyone needs them.
+Below the sliders is a status line. It shows three things, then the shortcuts:
+
+- **The web address that you type into a phone.**
+- The address that a console must send OSC to.
+- The name of the gamepad that is connected.
+
+The line shows both addresses in full, with host and port. Each one is a choice made
+at the launcher. Thus a bare port number can no longer tell you whether the show hears
+the phone or the console across the room. You look these addresses up rather than
+remember them. Thus they belong on screen, and not only in the console, where they
+scroll away long before you need them.
 
 ## Settings
 
-The panel is arranged in six sections, the same as the Chataigne module's menus.
-Labels below are the English ones.
+The panel has six sections, the same as the menus of the Chataigne module. The labels
+that follow are the English ones.
 
 ### Global
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `SPEED` | -3 – 3 | Global speed. 1 is normal, 0 freezes, negative runs everything backwards. |
-| `CHAOS` | 0 – 1 | Motion disorder. Does not touch `GLITCH`. See [Chaos](effects.md#chaos). |
+| `SPEED` | -3 – 3 | Global speed. 1 is normal, 0 freezes. A negative value runs everything backwards. |
+| `CHAOS` | 0 – 1 | Motion disorder. It does not touch `GLITCH`. See [Chaos](effects.md#chaos). |
 | `RANDOMIZER` | 0 – 1 | Auto-pilot. 0 is off, 1 is about one change per second. |
-| `RECALL FADE` | 0 – 10 | Seconds a preset takes to crossfade in. 0 snaps. |
-| `PANEL` | 0.05 – 1 | Panel brightness. `F2` toggles it. See below. |
-| `AUTO DIM` | OFF / ON | Duck the panel automatically when something else takes over. |
+| `RECALL FADE` | 0 – 10 | The time in seconds for a preset to crossfade in. 0 snaps. |
+| `PANEL` | 0.05 – 1 | Panel brightness. `F2` toggles it. See [Working discreetly](#working-discreetly). |
+| `AUTO DIM` | OFF / ON | Dim the panel automatically when something else takes control. |
 | `GLOW` | 0 – 2 | Halo, drawn by the strokes themselves. **0 by default**, see [the halo](in-the-room.md#the-halo). |
 
-### Colour
+### Color
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `MODE` | RANDOM / MANUAL | Each element its own hue, or the chosen colour for all. |
-| `SATURATION` | 0 – 1 | 0 is pure white, 1 a full colour. Works in both modes. |
-| `RED` `GREEN` `BLUE` | 0 – 1 | The manual colour. Touching one switches to manual. |
+| `MODE` | RANDOM / MANUAL | Each element takes its own hue, or all elements take the chosen color. |
+| `SATURATION` | 0 – 1 | 0 is pure white, 1 is a full color. It works in both modes. |
+| `RED` `GREEN` `BLUE` | 0 – 1 | The manual color. If you move one, the mode changes to manual. |
 
 ### Mirror
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `EFFECT` | 0 – 1 | Kaleidoscope fold. 0 is off, and the pass is not paid for. |
+| `EFFECT` | 0 – 1 | Kaleidoscope fold. 0 is off, and the show does not pay for the pass. |
 | `SEGMENTS` | 2 – 16 | Number of wedges. 6 gives the classic star. |
 | `ROTATION` | -1 – 1 | Turns the mirrors. ← left, → right. |
 
 ### Lasers
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `COUNT` | 0 – 40 | Number of strokes. Added and removed live. Starts at 3. |
+| `COUNT` | 0 – 40 | Number of strokes. The show adds and removes them live. It starts at 3. |
 | `WIDTH` | 1 – 24 | Stroke width. |
-| `LENGTH` | 0.1 – 2 | **1 crosses the frame** whatever the resolution — twice its diagonal, so the ends stay outside wherever a stroke wanders. Below 1 the tips come into view, which is now something you ask for rather than something that happens. |
+| `LENGTH` | 0.1 – 2 | **1 crosses the frame** at every resolution. The stroke is two times the diagonal, thus its ends stay outside the frame wherever it goes. At less than 1 the tips come into view, which you now ask for rather than get by accident. |
 | `SPIN` | -1 – 1 | ← leftwards, → rightwards. |
-| `PARALLEL` | 0 – 1 | 0 a scatter, 1 an evenly spaced fan. See [Scanlines](effects.md#scanlines). |
+| `PARALLEL` | 0 – 1 | 0 is a scatter, 1 is a fan with equal spacing. See [Scanlines](effects.md#scanlines). |
 | `SCROLL` | -1 – 1 | Walks that fan sideways. ← one way, → the other. |
 
 ### Spotlight
@@ -128,79 +135,80 @@ Labels below are the English ones.
 | `RADIUS` | 20 – 600 | Radius of the pool. |
 | `PULSE` | 0 – 300 | How far the radius swells. 0 holds it steady. |
 | `WIDTH` | 1 – 24 | Circle stroke width. |
-| `SPEED` | 0 – 2 | Sweep speed (no direction to it). |
-| `HOLD` | 0 – 3 | How long it rests on target. 0 sweeps without stopping. |
-| `SHAKE` | 0 – 3 | Tremor amplitude at rest. 0 holds perfectly still. |
+| `SPEED` | 0 – 2 | Sweep speed (it has no direction). |
+| `HOLD` | 0 – 3 | How long it rests on a target. 0 sweeps without stops. |
+| `SHAKE` | 0 – 3 | Tremor amplitude at rest. 0 holds it perfectly still. |
 | `FREQUENCY` | 0 – 20 | Tremor rate, **independent of `SPEED`**. |
-| `SPREAD` | 0 – 1 | How much the pool grows when aiming off-centre. See [why the pool changes size](effects.md#why-the-pool-changes-size). |
+| `SPREAD` | 0 – 1 | How much the pool grows when the head aims away from center. See [why the pool changes size](effects.md#why-the-pool-changes-size). |
 | `GLITCH` | 0 – 0.05 | Glitch chance per frame. **0 by default.** Independent of `CHAOS`. 0.005 ≈ one every 3 s. |
 
 ### Audio
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `REACTIVITY` | 0 – 1 | Master amount. **0 by default** — nothing moves until asked. |
-| `PUNCH` | 0 – 1 | Response curve. Higher pushes the middle down so only hits show. |
+| `REACTIVITY` | 0 – 1 | Master amount. **0 by default.** Nothing moves until you ask for it. |
+| `PUNCH` | 0 – 1 | Response curve. A higher value pushes the middle down, thus only the hits show. |
 | `SPOT ← BASS` | 0 – 12 | The kick drives the spotlight. |
 | `LASERS ← MID` | 0 – 12 | Mids drive the laser strokes. |
 | `SPHERE ← TREBLE` | 0 – 12 | Treble drives the sphere. |
 
-The top of those three is deliberately past the point of good taste — see
-[how nervous it is](external-control.md#how-nervous-it-is). The middle is where a set lives.
+The top of those three ranges is deliberately past good taste. See
+[how nervous it is](external-control.md#how-nervous-it-is). A set lives in the middle
+of the range.
 
 ### Sphere
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `CIRCLES` | 0 – 80 | Number of circles. 0 switches the effect off. Starts at 14. |
+| `CIRCLES` | 0 – 80 | Number of circles. 0 switches the effect off. It starts at 14. |
 | `SIZE` | 0.03 – 0.8 | Size of one circle, in radians on the sphere. |
 | `RADIUS` | 100 – 800 | Sphere radius on screen. |
 | `SPIN` | -1 – 1 | ← leftwards, → rightwards. |
-| `DEPTH` | 1.2 – 10 | Eye distance. Small means strong perspective. |
+| `DEPTH` | 1.2 – 10 | Eye distance. A small value gives strong perspective. |
 | `WIDTH` | 1 – 24 | Circle stroke width. |
-| `GLASS` | 0 – 1 | 0 an opaque sphere, 1 shows the far side through it. |
+| `GLASS` | 0 – 1 | 0 is an opaque sphere, 1 shows the far side through it. |
 
-Adding a setting takes one line in `_build_params()` of `vj_controller.gd`: the
-section, the UI row, the slider, the number formatting, the keyboard handling and
-the OSC address all follow. Its label goes in `scripts/lang.gd`.
+To add a setting, write one line in `_build_params()` of `vj_controller.gd`. The
+section, the UI row, the slider, the number format, the keyboard handling and the OSC
+address all follow from it. Put its label in `scripts/lang.gd`.
 
 ### Working discreetly
 
-The panel is projected on the wall along with the visuals, so anything you do to it
-is on show. `PANEL` turns its brightness down: at the default **1** it looks as it
-always has, and `F2` ducks it to **0.15**, where it stays perfectly readable at
-arm's length on the operator's screen while the room barely registers it through the
-haze. The slider covers everything between if 0.15 is too far.
+The projector shows the panel on the wall with the visuals. Thus the audience sees
+everything that you do to it. `PANEL` decreases its brightness. At the default **1**
+the panel looks as it always has. `F2` dims it to **0.15**. At 0.15 it stays readable
+at arm's length on the operator's screen, and the room hardly sees it through the
+haze. If 0.15 is too dark, the slider gives every value between.
 
-It is a preference, not part of a look, so it is left out of presets and out of the
-auto-pilot's reach — recalling a preset will not light the panel back up on the wall
-after you have deliberately dimmed it.
+The brightness is a preference, not part of a look. Thus it stays out of presets and
+out of reach of the auto-pilot. A preset recall cannot light the panel up on the wall
+again after you dimmed it deliberately.
 
-`H` and `F2` answer different problems and combine: `H` keeps the panel from fading
-away while you work, `F2` makes that work invisible.
+`H` and `F2` answer different problems, and you can use them together. `H` prevents
+the panel from fading while you work. `F2` makes that work invisible.
 
 ### Getting out of the way on its own
 
-With `AUTO DIM` on — it is, by default — the panel ducks to discreet the moment
-**anything else moves a setting**: the phone, the gamepad, OSC, an API call. Any
-keypress takes the wheel back and restores the brightness you had chosen, not a
-blanket 1: if you were working at 0.5, 0.5 is what returns.
+`AUTO DIM` is on by default. With it on, the panel dims to discreet as soon as
+**something else moves a setting**: the phone, the gamepad, OSC, or an API call. A key
+press takes control back and restores the brightness that you chose, not a blanket 1.
+If you worked at 0.5, the panel returns to 0.5.
 
-While an external surface has control the panel also **stops accepting the mouse**.
-That is the half that matters: dimming alone hides the sliders without making them
-any harder to nudge by accident, and a stray brush on a projected panel is exactly
-the accident worth designing out.
+While an external surface has control, the panel also **refuses the mouse**. This is
+the half that matters. A dim panel hides the sliders, but it is no harder to move one
+by accident. A stray touch on a projected panel is exactly the accident to prevent.
 
-Moving the mouse does not end it — but **clicking does**, along with any keypress. A
-brush of the trackpad is not a decision; a click is. That first click is swallowed
-rather than passed on, so the gesture that takes the panel back cannot also move a
-slider, the same way clicking an unfocused window activates it without pressing
-whatever sits under the pointer.
+A mouse move does not end the override. A **click** ends it, and so does a key press.
+A brush of the trackpad is not a decision. A click is a decision. The panel absorbs
+that first click rather than passes it on. Thus the gesture that takes the panel back
+cannot also move a slider. A click on an unfocused window works the same way: it
+activates the window without a press on what is under the pointer.
 
-The `PANEL` setting keeps reading the brightness *you* chose while this is going on:
-the auto-dim is a temporary override, not a change to your preference.
+During the override, the `PANEL` setting continues to show the brightness that *you*
+chose. The auto-dim is a temporary override, not a change to your preference.
 
 ## Presets
 
-Nine slots hold a snapshot of every setting, saved to disk and recalled live.
+Nine slots hold a snapshot of every setting. The show writes them to disk and recalls
+them live.
 
 | Where | Recall | Save |
 | --- | --- | --- |
@@ -212,28 +220,28 @@ Nine slots hold a snapshot of every setting, saved to disk and recalled live.
 
 ### A recall is a crossfade
 
-Every setting slides from where it is to where the preset wants it, over
-`RECALL FADE` seconds. That is the difference between a preset being a scene change
-and a preset being an edit: at 4 seconds the room moves from one look to another and
-nobody sees a cut. Set it to **0** to snap, which is what you want for a stab.
+Every setting moves from its current value to the value in the preset, across
+`RECALL FADE` seconds. This is the difference between a preset that is a scene change
+and a preset that is an edit. At 4 seconds the room moves from one look to another and
+nobody sees a cut. For a stab, set it to **0** to snap.
 
-The curve is a smoothstep, not linear — a linear crossfade starts and stops abruptly,
-and on a slow move that beginning is exactly what gives it away.
+The curve is a smoothstep, not linear. A linear crossfade starts and stops abruptly,
+and on a slow move that start is exactly what the eye catches.
 
-The number keys are read by **physical position**, not by the character they type,
-so the top row works the same on AZERTY, QWERTY or Dvorak. (Read as characters, an
-AZERTY top row gives `& é " ' ( - è _ ç`, and only the three non-ASCII ones happened
-to fall through to a digit — six slots out of nine were unreachable.)
+The show reads the number keys by **physical position**, not by the character that
+they type. Thus the top row works the same on AZERTY, QWERTY and Dvorak. (Read as
+characters, an AZERTY top row gives `& é " ' ( - è _ ç`. Only the three non-ASCII keys
+fell through to a digit, thus six slots out of nine could not be reached.)
 
 ### What is and is not saved
 
-Every setting except `PANEL`, which is a preference rather than part of a look:
-recalling a preset must not light the panel back up on the wall after the operator
-has deliberately dimmed it.
+A preset holds every setting except `PANEL`, which is a preference rather than part of
+a look. A preset recall must not light the panel up on the wall again after the
+operator dimmed it deliberately.
 
-A preset saved before a setting existed simply leaves that setting alone, so old
-presets keep working after the project gains new ones.
+A preset saved before a setting existed leaves that setting alone. Thus old presets
+continue to work after the project gets new ones.
 
-Slots live in `user://presets.json` — on Linux,
+The slots are in `user://presets.json`. On Linux this is
 `~/.local/share/godot/app_userdata/Déferlante/`. They belong to the machine, not to
-the project, so they survive a rebuild and are not committed.
+the project. Thus they survive a rebuild, and git does not hold them.

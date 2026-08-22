@@ -19,8 +19,8 @@ swept by a light that is always about to arrive, and never does.
 
 ![A red kaleidoscope mandala folding and unfolding](docs/kaleidoscope.gif)
 
-*The same show, set up differently and filmed off the projector itself — which is
-where it is meant to end up. One colour, folded twelve ways, the strokes long and
+*The same show, set up differently and filmed off the projector itself, which is
+where it is meant to end up. One color, folded twelve ways, with the strokes long and
 thin so the mirror has something to repeat:*
 
 - **MIRROR** — `EFFECT 1` · `SEGMENTS 12` · `ROTATION 0.22`
@@ -30,20 +30,21 @@ thin so the mirror has something to repeat:*
 - **SPHERE** — `CIRCLES 18` · `GLASS 1`
 - **GLOBAL** — `SPEED 0.4` · `CHAOS 0.56` · `GLOW 1.25`
 
-![Lasers, the sphere and the spotlight, with the desk open](docs/screenshot.png)
+![Lasers, the sphere and the spotlight, with the panel open](docs/screenshot.png)
 
-*The whole instrument in one frame: the room on the right, the desk on the left. The
-desk dims itself the moment anything else takes over — a phone, a console, the pad —
-and comes back on the first keypress.*
+*The whole instrument in one frame: the room on the right, the panel on the left. The
+panel dims itself the moment that something else takes over — a phone, a console, the
+pad — and comes back on the first key press.*
 
 ## Documentation
 
 **[Getting started](docs/getting-started.md)** — [Run](docs/getting-started.md#run) · [Launcher](docs/getting-started.md#the-launcher) · [Drive it](docs/getting-started.md#drive-it) · [Settings](docs/getting-started.md#settings) · [Presets](docs/getting-started.md#presets)
 **[External control](docs/external-control.md)** — [Gamepad](docs/external-control.md#gamepad) · [Web surface](docs/external-control.md#web-control-surface) · [REST API](docs/external-control.md#rest-api) · [OSC](docs/external-control.md#external-control-over-osc) · [Audio reactivity](docs/external-control.md#audio-reactivity)
-**[The effects](docs/effects.md)** — [Spotlight](docs/effects.md#the-spotlight) · [Sphere](docs/effects.md#the-sphere-effect) · [Kaleidoscope](docs/effects.md#the-kaleidoscope) · [Scanlines](docs/effects.md#scanlines) · [Chaos](docs/effects.md#chaos) · [Two-way speeds](docs/effects.md#two-way-speeds) · [Colour](docs/effects.md#the-two-colour-modes) · [Auto-pilot](docs/effects.md#the-auto-pilot)
+**[The effects](docs/effects.md)** — [Spotlight](docs/effects.md#the-spotlight) · [Sphere](docs/effects.md#the-sphere-effect) · [Kaleidoscope](docs/effects.md#the-kaleidoscope) · [Scanlines](docs/effects.md#scanlines) · [Chaos](docs/effects.md#chaos) · [Two-way speeds](docs/effects.md#two-way-speeds) · [Color](docs/effects.md#the-two-color-modes) · [Auto-pilot](docs/effects.md#the-auto-pilot)
 **[In the room](docs/in-the-room.md)** — [A calm start](docs/in-the-room.md#a-calm-starting-point) · [What starts off](docs/in-the-room.md#what-starts-switched-off) · [Halo](docs/in-the-room.md#the-halo) · [Projection notes](docs/in-the-room.md#projection-notes) · [Performance](docs/in-the-room.md#measuring-performance-f3)
 **[Developing](docs/developing.md)** — [Architecture](docs/developing.md#the-shape-of-it) · [Recipes](docs/developing.md#recipes) · [Running it](docs/developing.md#running-it) · [Debugging](docs/developing.md#debugging)
 **[The code](docs/the-code.md)** — [Structure](docs/the-code.md#structure) · [Builds](docs/the-code.md#builds) · [Android TV](docs/the-code.md#android-specifics) · [Describing the show](docs/the-code.md#describing-the-show-to-other-tools) · [Renderer](docs/the-code.md#a-note-on-the-renderer)
 
-The on-screen interface speaks French or English — picked at the [launcher](docs/getting-started.md#the-launcher),
-before the show. Everything else (code, OSC addresses, this document) stays in English.
+The on-screen interface speaks French or English. You pick the language at the
+[launcher](docs/getting-started.md#the-launcher), before the show. Everything else
+stays in English: the code, the OSC addresses, and this document.
