@@ -25,6 +25,11 @@ It is a stance. You switch an effect that makes a statement on when you want it,
 the moment that you choose. You do not let it run in the background. A scene that
 starts sober leaves room to build. A scene that starts saturated has nowhere to go.
 
+The stance is about **the launch**. The show must not arrive with an opinion already
+formed. It does not bind the auto-pilot, which is the thing you hand that decision to
+on purpose, and which does switch these effects on. See
+[who may switch it on](effects.md#what-starts-off-and-who-may-switch-it-on).
+
 ## The halo
 
 With a haze machine the air diffuses the beam **physically**. A software halo then

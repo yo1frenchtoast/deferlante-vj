@@ -286,3 +286,47 @@ Three precautions make it usable for real:
   beam answers **while a hand is on the stick**, in the middle of a follow. A roll of
   the hand-back delay decides how long the beam then sits still. Neither shows on
   screen when nobody holds a pad, thus rolling them spends a move on nothing.
+
+### Where it lands
+
+The middle of a range is not always the middle of what the eye reads. Measured over
+200 000 draws of the same distribution the auto-pilot uses:
+
+| Setting | Default | Median pick | 10 – 90 % |
+| --- | --- | --- | --- |
+| `STARS` | 0 | 200 | 90 – 310 |
+| `CIRCLES` | 14 | 40 | 18 – 62 |
+| `COUNT` (lasers) | 3 | 20 | 9 – 31 |
+| `GLITCH` | 0 | 0.025 | 0.011 – 0.039 |
+
+The first three are looks. A field of 200 stars, or 20 strokes where there were 3, is
+a scene change, and a scene change is what you asked for when you moved `RANDOMIZER`
+off 0.
+
+**`GLITCH` is the one to know about.** Its range is a probability *per frame*, thus its
+middle is not tasteful the way the others are. At the 0.005 of the example above, the
+head erupts about **one time every 3 s**. At the 0.025 that the auto-pilot usually
+picks, it is **one time every 0.7 s**, and at the top of that band one time every
+0.4 s. That is no longer a head that erupts now and then. Ride `RANDOMIZER` with
+`GLITCH` in mind, or move `GLITCH` back down after a roll.
+
+The ceiling stays where it is. A slider top that is past good taste is deliberate here,
+as it is for the audio amounts: the top belongs to the hand of the operator, and a set
+lives in the middle.
+
+**Five settings can be picked and change nothing.** `PUNCH` and the four band amounts
+do nothing while `REACTIVITY` is 0, which is where it starts and where it stays unless
+you move it, because the auto-pilot cannot. On a night with no sound, five of the
+thirty-six candidates are silent moves.
+
+### What starts off, and who may switch it on
+
+`GLOW`, `GLITCH`, `RANDOMIZER`, `STARS` and the `EFFECT` of the mirror all start
+switched off. See [what starts switched off](in-the-room.md#what-starts-switched-off)
+for why. That stance is about **the launch**, not about the whole night. It says that
+the show must not arrive with an opinion already formed.
+
+The auto-pilot is the thing you hand that decision to on purpose. Thus it may switch
+these on, and it does: `STARS` lands at 200, and the mirror is a coin flip that throws
+the whole screen into wedges or out of them. If you want an effect to stay off for a
+whole set, leave `RANDOMIZER` at 0 and switch the effect on yourself.
