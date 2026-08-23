@@ -131,20 +131,43 @@ strokes or 40.
 The layer sits above the visuals but **below the settings panel**. Otherwise the fold
 would multiply the sliders across the screen too.
 
-Like the halo, at 0 the pass is genuinely switched off rather than left to run as an
+Like the halo, at OFF the pass is genuinely switched off rather than left to run as an
 identity transform.
 
-Between 0 and 1 it **cross-fades**: it mixes the frame as drawn and the fully folded
-frame. Both are continuous everywhere, thus their mixture is continuous too.
+### Why it has no middle
 
-Two other methods were tried and both broke in the middle of the range. This is worth
-a record, because each one looks obviously right. A blend of the sampled *coordinates*
-squeezes the whole screen into the one narrow sector that the fold maps onto. The
-middle then came out as a squashed amalgam in a corner. A blend of the **angle** avoids
-that squeeze and is the same thing algebraically, but `atan` cuts the circle along the
-left-hand axis. The angle jumps a full turn there. The jump cancels only at 0 and at 1,
-and every value between wore a seam that ran out from the center. Measured across that
-ray, the mismatch was four to six times what the cross-fade leaves.
+`EFFECT` is **off or on**. It was a 0 – 1 amount, and the middle of that range is gone
+on purpose.
+
+Three methods were tried for that middle. The first two broke on geometry, and this is
+worth a record, because each one looks obviously right. A blend of the sampled
+*coordinates* squeezes the whole screen into the one narrow sector that the fold maps
+onto. The middle then came out as a squashed amalgam in a corner. A blend of the
+**angle** avoids that squeeze and is the same thing algebraically, but `atan` cuts the
+circle along the left-hand axis. The angle jumps a full turn there. The jump cancels
+only at 0 and at 1, and every value between wore a seam that ran out from the center.
+Measured across that ray, the mismatch was four to six times what the third method
+leaves.
+
+The third method was a **cross-fade of the two images**: `mix(frame, folded, amount)`.
+Both are continuous everywhere, thus their mixture is too, and the seam went. It was
+the right answer to the question that was asked.
+
+It failed a different question. `mix` is an operator for opaque images, and these
+strokes are **additive light on black**. At 0.5 it does not give half a mirror. It
+gives the whole frame at half brightness, plus the whole fold at half brightness. On a
+monitor that passes for a mirror that opens. Through a projector into haze it is a
+washed-out ghost, and a projector has no contrast to spare. See
+[projection notes](in-the-room.md#projection-notes).
+
+Thus the middle went, and the pass got simpler with it. The shader no longer fetches
+the unfolded frame at all. The gamepad had already settled the question in practice:
+its `X` button has written 0 or 1 here since the day it got a mirror button.
+
+Two consequences to know. A preset that recalls the mirror now **cuts** rather than
+opens it, because a value that snaps has nothing to slide through. And the auto-pilot
+can still pick this setting, where a pick is now a coin flip that throws the whole
+screen into mirrors or out of them.
 
 Off the edge of the frame the lookup reflects rather than clamps. A clamp smears the
 last row of pixels into a flat dark panel, where a reflection carries the pattern on

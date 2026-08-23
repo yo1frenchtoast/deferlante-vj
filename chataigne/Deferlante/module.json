@@ -198,7 +198,7 @@
       "callback": "mirrorEffect",
       "parameters": {
         "Value": {
-          "type": "Float",
+          "type": "Integer",
           "ui": "slider",
           "min": 0.0,
           "max": 1.0,

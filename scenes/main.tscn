@@ -23,7 +23,6 @@ blend_mode = 1
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_kaleido"]
 shader = ExtResource("7_shader")
-shader_parameter/amount = 0.0
 shader_parameter/segments = 6
 shader_parameter/rotation = 0.0
 

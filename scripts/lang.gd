@@ -247,7 +247,7 @@ const HINTS := {
 	"color/green": ["Green of the manual color. A touch here switches to manual.", "Vert de la couleur manuelle. Y toucher bascule en manuel."],
 	"color/blue": ["Blue of the manual color. A touch here switches to manual.", "Bleu de la couleur manuelle. Y toucher bascule en manuel."],
 
-	"mirror/effect": ["Kaleidoscope fold. At 0 the show does not pay for the pass.", "Pliage kaléidoscope. À 0 la passe n'est pas payée."],
+	"mirror/effect": ["Kaleidoscope fold, off or on. At OFF the show does not pay for the pass.", "Pliage kaléidoscope, tout ou rien. À NON la passe n'est pas payée."],
 	"mirror/segments": ["Number of mirror wedges. 6 gives the classic star.", "Nombre de quartiers du miroir. 6 donne l'étoile classique."],
 	"mirror/rotation": ["Turns the mirrors. ← left, → right.", "Fait tourner les miroirs. ← gauche, → droite."],
 

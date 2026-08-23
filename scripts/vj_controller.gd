@@ -174,7 +174,14 @@ func _build_params():
 	_fn("color/blue", 0, 1, 0.02, 0.1, _set_channel.bind(2)).tint = Color(0.5, 0.65, 1)
 
 	_section("section.mirror")
-	_fn("mirror/effect", 0, 1, 0.02, 0.0, kaleido.set_amount)
+	# Off or on, with nothing in between. The cross-fade that used to live here was
+	# `mix(image, folded, amount)`, and on additive neon over black that is the wrong
+	# operator: at 0.5 it gives the whole image at half brightness plus the whole
+	# fold at half brightness. On a monitor that reads as a mirror opening. Through a
+	# projector into haze, which has no contrast to spare, it reads as a washed-out
+	# ghost. The pad has written 0 or 1 here since the day it got a mirror button.
+	var mirror := _fn("mirror/effect", 0, 1, 1, 0.0, kaleido.set_amount)
+	mirror.choices = PackedStringArray(["mode.off", "mode.on"])
 	_fn("mirror/segments", 2, 16, 1, 5.0, kaleido.set_segments)
 	_fn("mirror/rotation", -1, 1, 0.02, 0.0, kaleido.set_spin, true)
 

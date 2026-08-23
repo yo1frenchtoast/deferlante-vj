@@ -120,7 +120,7 @@ follow are the English ones.
 ### Mirror
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `EFFECT` | 0 – 1 | Kaleidoscope fold. 0 is off, and the show does not pay for the pass. |
+| `EFFECT` | OFF / ON | Kaleidoscope fold. At `OFF` the show does not pay for the pass. It has no middle: see [why](effects.md#why-it-has-no-middle). |
 | `SEGMENTS` | 2 – 16 | Number of wedges. It starts at 5. 6 gives the classic star. |
 | `ROTATION` | -1 – 1 | Turns the mirrors. ← left, → right. |
 

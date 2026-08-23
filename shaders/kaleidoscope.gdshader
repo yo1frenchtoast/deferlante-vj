@@ -8,7 +8,6 @@ shader_type canvas_item;
 // cost is one full-screen pass, whatever the number of strokes on screen.
 
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
-uniform float amount : hint_range(0.0, 1.0) = 0.0;
 uniform int segments : hint_range(2, 16) = 6;
 uniform float rotation = 0.0;
 
@@ -40,12 +39,23 @@ void fragment() {
 	folded = abs(mod(folded, 2.0));
 	folded = min(folded, 2.0 - folded);
 
-	// `amount` cross-fades between the frame as drawn and the fully folded one.
+	// The fold is off or on: `kaleidoscope.gd` hides the whole pass at 0, so by the
+	// time a fragment runs, the mirror is fully on. There is nothing to blend, and
+	// nothing to pay for the unfolded fetch.
 	//
-	// Not between their *coordinates*: that is the same thing as interpolating the
-	// angle, and `atan` cuts the circle along the left-hand axis, where its value
-	// jumps by a full turn. The jump cancels only at 0 and at 1, so every value in
-	// between wore a seam running out from the centre. Blending the two images has
-	// no such edge: both are continuous everywhere, so their mixture is too.
-	COLOR = mix(texture(screen_tex, uv), texture(screen_tex, folded), amount);
+	// There was a cross-fade here, and it is worth saying why it went rather than
+	// letting somebody put it back. It was never blended between the two sets of
+	// *coordinates*: that is the same thing as interpolating the angle, and `atan`
+	// cuts the circle along the left-hand axis, where its value jumps by a full
+	// turn. The jump cancels only at 0 and at 1, so every value in between wore a
+	// seam running out from the centre. Mixing the two images fixed that seam — both
+	// are continuous everywhere, so their mixture is too — and it was the right
+	// answer to the question that was asked.
+	//
+	// It died on a different one. `mix` is an operator for opaque images, and these
+	// strokes are additive light on black. At 0.5 it does not give half a mirror: it
+	// gives the whole image at half brightness plus the whole fold at half
+	// brightness. On a monitor that passes for a mirror opening. Through a projector
+	// into haze it is a washed-out ghost, and a projector has no contrast to spare.
+	COLOR = texture(screen_tex, folded);
 }

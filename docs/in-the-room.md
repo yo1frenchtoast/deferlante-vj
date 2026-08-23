@@ -13,7 +13,8 @@ hard to read over the top of it. Everything is one slider away from where it was
 ## What starts switched off
 
 `GLOW` and `GLITCH` start at 0, and both are genuinely off rather than set to zero
-intensity. The same is true for the `EFFECT` of the mirror and for `RANDOMIZER`.
+intensity. The same is true for `RANDOMIZER`, and for the `EFFECT` of the mirror, which
+starts at `OFF` and has no setting between `OFF` and `ON`.
 
 `STARS` starts at 0 as well, and for one more reason. This effect arrived after nine
 preset slots had been filled on machines already in use. A preset saved before it

@@ -36,13 +36,14 @@ func set_spin(value: float):
 
 
 func _apply():
-	# At 0 the pass is genuinely switched off rather than left running as an
-	# identity transform: it covers the whole screen, no reason to pay for nothing.
+	# The fold is off or on, so `amount` is the visibility of the pass and nothing
+	# else — the shader has no blend left to feed. At 0 the pass is genuinely
+	# switched off rather than left running as an identity transform: it covers the
+	# whole screen, no reason to pay for nothing.
 	rect.visible = amount > 0.0
 	if not rect.visible:
 		return
 	var material: ShaderMaterial = rect.material
-	material.set_shader_parameter("amount", amount)
 	material.set_shader_parameter("segments", segments)
 
 
