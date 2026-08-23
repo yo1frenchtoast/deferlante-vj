@@ -529,6 +529,20 @@
         }
       }
     },
+    "Audio Hyperspace \u2190 Bass": {
+      "menu": "Audio",
+      "callback": "audioWarp",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 12.0,
+          "default": 2.5,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Audio Lasers \u2190 Mid": {
       "menu": "Audio",
       "callback": "audioLasers",
@@ -655,6 +669,76 @@
         }
       }
     },
+    "Hyperspace Stars": {
+      "menu": "Hyperspace",
+      "callback": "warpCount",
+      "parameters": {
+        "Value": {
+          "type": "Integer",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 400.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Hyperspace Speed": {
+      "menu": "Hyperspace",
+      "callback": "warpSpeed",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 4.0,
+          "default": 1.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Hyperspace Streak": {
+      "menu": "Hyperspace",
+      "callback": "warpStreak",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 0.4,
+          "default": 0.12,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Hyperspace Width": {
+      "menu": "Hyperspace",
+      "callback": "warpWidth",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.5,
+          "max": 12.0,
+          "default": 2.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Hyperspace Spread": {
+      "menu": "Hyperspace",
+      "callback": "warpSpread",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.1,
+          "max": 2.0,
+          "default": 0.7,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Color Picker": {
       "menu": "Color",
       "callback": "colorRgb",
@@ -766,6 +850,17 @@
     "Shuffle Sphere": {
       "menu": "Shuffle",
       "callback": "shuffleSphere",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Shuffle Hyperspace": {
+      "menu": "Shuffle",
+      "callback": "shuffleWarp",
       "parameters": {
         "Trigger": {
           "type": "Boolean",

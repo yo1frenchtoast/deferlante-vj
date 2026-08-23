@@ -15,6 +15,11 @@ hard to read over the top of it. Everything is one slider away from where it was
 `GLOW` and `GLITCH` start at 0, and both are genuinely off rather than set to zero
 intensity. The same is true for the `EFFECT` of the mirror and for `RANDOMIZER`.
 
+`STARS` starts at 0 as well, and for one more reason. This effect arrived after nine
+preset slots had been filled on machines already in use. A preset saved before it
+existed carries no value for it. A star field that lit itself up on launch would thus
+appear in every one of those shows, uninvited, until each was saved again.
+
 It is a stance. You switch an effect that makes a statement on when you want it, at
 the moment that you choose. You do not let it run in the background. A scene that
 starts sober leaves room to build. A scene that starts saturated has nowhere to go.

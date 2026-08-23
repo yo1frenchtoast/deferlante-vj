@@ -149,6 +149,10 @@ function audioSpot(value) {
 	local.send("/deferlante/audio/spot", value);
 }
 
+function audioWarp(value) {
+	local.send("/deferlante/audio/warp", value);
+}
+
 function audioLasers(value) {
 	local.send("/deferlante/audio/lasers", value);
 }
@@ -183,6 +187,26 @@ function sphereWidth(value) {
 
 function sphereGlass(value) {
 	local.send("/deferlante/sphere/glass", value);
+}
+
+function warpCount(value) {
+	local.send("/deferlante/warp/count", value);
+}
+
+function warpSpeed(value) {
+	local.send("/deferlante/warp/speed", value);
+}
+
+function warpStreak(value) {
+	local.send("/deferlante/warp/streak", value);
+}
+
+function warpWidth(value) {
+	local.send("/deferlante/warp/width", value);
+}
+
+function warpSpread(value) {
+	local.send("/deferlante/warp/spread", value);
 }
 
 function recallPreset(slot) {
@@ -224,6 +248,10 @@ function shuffleAudio(value) {
 
 function shuffleSphere(value) {
 	local.send("/deferlante/shuffle/sphere");
+}
+
+function shuffleWarp(value) {
+	local.send("/deferlante/shuffle/warp");
 }
 
 function triggerGlitch(value) {

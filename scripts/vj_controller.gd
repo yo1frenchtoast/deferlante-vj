@@ -24,6 +24,7 @@ const OSC_PREFIX := "/deferlante/"
 
 @onready var circle: Line2D = $GlitchCircle
 @onready var sphere: Node2D = $SphereCircles
+@onready var warp: Node2D = $Hyperspace
 @onready var kaleido: CanvasLayer = $Kaleidoscope
 @onready var panel: CanvasLayer = $ControlPanel
 @onready var osc: Node = $OscServer
@@ -61,7 +62,7 @@ var _scroll_phase: float = 0.0
 
 # Audio reactivity. The master is zero by default, so nothing moves until asked.
 var _react: float = 0.0
-var _amounts := {"lasers": 2.5, "spot": 2.5, "sphere": 2.5}
+var _amounts := {"lasers": 2.5, "spot": 2.5, "sphere": 2.5, "warp": 2.5}
 var _modulations: Array = []
 
 enum { BASS, MID, TREBLE }
@@ -93,6 +94,7 @@ func _ready():
 	_build_modulations()
 	circle.use_palette(palette)
 	sphere.use_palette(palette)
+	warp.use_palette(palette)
 	_spawn_lasers(laser_count)
 	for p in params:
 		p.apply_current()
@@ -216,6 +218,12 @@ func _build_params():
 	# vu-metre draws them. They used to run mids, bass, treble — the order they were
 	# written in — and reading the panel meant translating every time.
 	_fn("audio/spot", 0, 12, 0.05, 2.5, func(v): _amounts["spot"] = v)
+	# The one band shared by two effects. Four effects and three bands leave no
+	# choice, and the kick is where a jump to light speed belongs. What the doc
+	# below warns against is two effects breathing on the same *property*: the
+	# spotlight takes the bass as a size, the star field takes it as a speed, and
+	# the two read as separate layers rather than as one pump.
+	_fn("audio/warp", 0, 12, 0.05, 2.5, func(v): _amounts["warp"] = v)
 	_fn("audio/lasers", 0, 12, 0.05, 2.5, func(v): _amounts["lasers"] = v)
 	_fn("audio/sphere", 0, 12, 0.05, 2.5, func(v): _amounts["sphere"] = v)
 
@@ -227,6 +235,17 @@ func _build_params():
 	_prop("sphere/depth", 1.2, 10, 0.1, 2.0, sphere, "eye_distance")
 	_prop("sphere/width", 1, 24, 0.5, 3.0, sphere, "line_width")
 	_prop("sphere/glass", 0, 1, 0.02, 0.0, sphere, "back_dim")
+
+	_section("section.warp")
+	# Off by default, unlike the sphere. This effect arrived after nine preset slots
+	# had been filled on machines already in use, and a preset saved before it
+	# existed carries no value for it. One that lit itself up on launch would appear
+	# in every one of those shows, uninvited, until each was saved again.
+	_prop("warp/count", 0, 400, 5, 0.0, warp, "star_count")
+	_prop("warp/speed", 0, 4, 0.05, 1.0, warp, "approach")
+	_prop("warp/streak", 0, 0.4, 0.01, 0.12, warp, "shutter")
+	_prop("warp/width", 0.5, 12, 0.5, 2.0, warp, "line_width")
+	_prop("warp/spread", 0.1, 2, 0.05, 0.7, warp, "field")
 
 	# Out of the auto-pilot's reach: tempo, glow and colour are decisions — the
 	# room, the track — rather than variations to be subjected to.
@@ -316,6 +335,7 @@ func _set_speed(value: float):
 	v_speed = value
 	circle.speed_scale = value
 	sphere.speed_scale = value
+	warp.speed_scale = value
 	kaleido.speed_scale = value
 	for l in lasers:
 		l.speed_scale = value
@@ -325,6 +345,7 @@ func _set_chaos(value: float):
 	v_chaos = value
 	circle.chaos = value
 	sphere.chaos = value
+	warp.chaos = value
 	for l in lasers:
 		l.chaos = value
 
@@ -336,6 +357,7 @@ func _set_glow(value: float):
 	v_halo = value
 	circle.set_halo(value)
 	sphere.halo_amount = value
+	warp.halo_amount = value
 	for l in lasers:
 		l.set_halo(value)
 
@@ -497,6 +519,10 @@ func _build_modulations():
 			"set": func(v: float): sphere.line_width = v},
 		{"slug": "sphere/size", "band": TREBLE, "amount": "sphere", "weight": 0.33,
 			"set": func(v: float): sphere.circle_size = v},
+		{"slug": "warp/speed", "band": BASS, "amount": "warp", "weight": 1.0,
+			"set": func(v: float): warp.approach = v},
+		{"slug": "warp/width", "band": BASS, "amount": "warp", "weight": 0.33,
+			"set": func(v: float): warp.line_width = v},
 	]
 
 
@@ -635,6 +661,7 @@ func _randomize_all():
 		_mode_param.set_value(Palette.RANDOM)
 	circle.randomize_look()
 	sphere.randomize_look()
+	warp.randomize_look()
 	for l in lasers:
 		l.randomize_look()
 

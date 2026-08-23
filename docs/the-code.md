@@ -33,6 +33,7 @@ scripts/
   web_server.gd     Serves the page and the WebSocket control channel
   rest_api.gd       The /api endpoints and the OpenAPI document
   sphere_circles.gd Circles projected onto a virtual sphere
+  hyperspace.gd     A star field rushing past the eye, drawn as streaks
   presets.gd        Nine slots on disk, recalled as a crossfade
   audio_reactor.gd  Captures the output, reads bass / mid / treble
   audio_routing.gd  Points the machine's capture at the output being played

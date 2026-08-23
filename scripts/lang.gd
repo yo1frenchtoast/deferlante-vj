@@ -79,6 +79,7 @@ const LABELS := {
 	"audio/reactivity": ["REACTIVITY", "RÉACTIVITÉ"],
 	"audio/punch": ["PUNCH", "NERVOSITÉ"],
 	"audio/spot": ["SPOT ← BASS", "POURSUITE ← GRAVES"],
+	"audio/warp": ["HYPERSPACE ← BASS", "HYPERESPACE ← GRAVES"],
 	"audio/lasers": ["LASERS ← MID", "LASERS ← MÉDIUMS"],
 	"audio/sphere": ["SPHERE ← TREBLE", "SPHÈRE ← AIGUS"],
 
@@ -89,6 +90,12 @@ const LABELS := {
 	"sphere/depth": ["DEPTH", "PROFONDEUR"],
 	"sphere/width": ["WIDTH", "ÉPAISSEUR"],
 	"sphere/glass": ["GLASS", "VERRE"],
+
+	"warp/count": ["STARS", "ÉTOILES"],
+	"warp/speed": ["SPEED", "VITESSE"],
+	"warp/streak": ["STREAK", "TRAÎNÉE"],
+	"warp/width": ["WIDTH", "ÉPAISSEUR"],
+	"warp/spread": ["SPREAD", "ÉTALEMENT"],
 }
 
 const TEXTS := {
@@ -99,6 +106,7 @@ const TEXTS := {
 	"section.spot": ["SPOTLIGHT", "POURSUITE"],
 	"section.audio": ["AUDIO", "SON"],
 	"section.sphere": ["SPHERE", "SPHÈRE"],
+	"section.warp": ["HYPERSPACE", "HYPERESPACE"],
 
 	"mode.random": ["RANDOM", "ALÉATOIRE"],
 	"mode.manual": ["MANUAL", "MANUEL"],
@@ -266,6 +274,7 @@ const HINTS := {
 	"audio/reactivity": ["Master amount of the sound response. At 0 nothing moves.", "Dose générale de la réaction au son. À 0 rien ne bouge."],
 	"audio/punch": ["Response curve. Higher, and only the hits show.", "Courbe de réponse. Plus haut, seuls les coups ressortent."],
 	"audio/spot": ["The kick drives the spotlight: its radius and its stroke width.", "Le kick pilote la poursuite : son rayon et son épaisseur."],
+	"audio/warp": ["The kick drives the star field: how fast it flies and how thick the streaks are.", "Le kick pilote le champ d'étoiles : sa vitesse et l'épaisseur des traînées."],
 	"audio/lasers": ["Mids drive the lasers: their length and their stroke width.", "Les médiums pilotent les lasers : leur longueur et leur épaisseur."],
 	"audio/sphere": ["Treble drives the sphere: the circle size and the stroke width.", "Les aigus pilotent la sphère : la taille des cercles et leur épaisseur."],
 
@@ -276,6 +285,12 @@ const HINTS := {
 	"sphere/depth": ["Eye distance. A small value gives strong perspective.", "Distance de l'œil. Petit donne une perspective forte."],
 	"sphere/width": ["Circle stroke width.", "Épaisseur des cercles."],
 	"sphere/glass": ["0 is an opaque sphere, 1 shows the far side through it.", "0 sphère opaque, 1 laisse voir la face arrière au travers."],
+
+	"warp/count": ["Number of stars. 0 switches the effect off.", "Nombre d'étoiles. 0 éteint l'effet."],
+	"warp/speed": ["How fast the field flies past. The global SPEED still catches it, and reverses it.", "Vitesse de défilement du champ. La VITESSE générale l'attrape aussi, et l'inverse."],
+	"warp/streak": ["Length of the trail, in seconds of travel. It is a shutter speed: faster stars streak further on their own.", "Longueur de la traînée, en secondes de trajet. C'est un temps de pose : une étoile rapide file plus loin d'elle-même."],
+	"warp/width": ["Streak thickness at the far plane. Near stars are drawn thicker.", "Épaisseur des traînées au fond. Les étoiles proches sont tracées plus épaisses."],
+	"warp/spread": ["Width of the tube. Small comes straight at you, large throws the stars past the corners.", "Largeur du tube. Petit arrive droit sur vous, grand jette les étoiles hors des coins."],
 }
 
 

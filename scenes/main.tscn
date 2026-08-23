@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://d2qogwwj75x77" path="res://scripts/glitch_circle.gd" id="1_x16oa"]
 [ext_resource type="Script" uid="uid://d4kegm87j06ne" path="res://scripts/vj_controller.gd" id="2_wjtrd"]
 [ext_resource type="Script" uid="uid://dhj8r6okm386c" path="res://scripts/sphere_circles.gd" id="3_sphere"]
+[ext_resource type="Script" uid="uid://0r3tskcm0bun" path="res://scripts/hyperspace.gd" id="14_hyper"]
 [ext_resource type="Script" uid="uid://grko7wg7oul1" path="res://scripts/osc_server.gd" id="4_osc"]
 [ext_resource type="Script" uid="uid://c7ds0h68455h4" path="res://scripts/control_panel.gd" id="5_panel"]
 [ext_resource type="Script" uid="uid://hyk3mrjde3i0" path="res://scripts/kaleidoscope.gd" id="6_kaleido"]
@@ -31,6 +32,9 @@ environment = SubResource("Environment_te0mf")
 
 [node name="VJController" type="Node2D" parent="." unique_id=1656945823]
 script = ExtResource("2_wjtrd")
+
+[node name="Hyperspace" type="Node2D" parent="VJController"]
+script = ExtResource("14_hyper")
 
 [node name="GlitchCircle" type="Line2D" parent="VJController" unique_id=183842512]
 material = SubResource("CanvasItemMaterial_wjtrd")

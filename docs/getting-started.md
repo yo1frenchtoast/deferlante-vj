@@ -150,6 +150,7 @@ that follow are the English ones.
 | `SPOT ← BASS` | 0 – 12 | The kick drives the spotlight. |
 | `LASERS ← MID` | 0 – 12 | Mids drive the laser strokes. |
 | `SPHERE ← TREBLE` | 0 – 12 | Treble drives the sphere. |
+| `HYPERSPACE ← BASS` | 0 – 12 | The kick drives the star field. |
 
 The top of those three ranges is deliberately past good taste. See
 [how nervous it is](external-control.md#how-nervous-it-is). A set lives in the middle
@@ -165,6 +166,15 @@ of the range.
 | `DEPTH` | 1.2 – 10 | Eye distance. A small value gives strong perspective. |
 | `WIDTH` | 1 – 24 | Circle stroke width. |
 | `GLASS` | 0 – 1 | 0 is an opaque sphere, 1 shows the far side through it. |
+
+### Hyperspace
+| Setting | Range | Effect |
+| --- | --- | --- |
+| `STARS` | 0 – 400 | Number of stars. **0 by default**, and 0 switches the effect off. |
+| `SPEED` | 0 – 4 | How fast the field flies past. The global `SPEED` catches it too, and reverses it. |
+| `STREAK` | 0 – 0.4 | Length of the trail, in **seconds of travel**. See [why it is a shutter speed](effects.md#streak-is-a-shutter-speed). |
+| `WIDTH` | 0.5 – 12 | Streak thickness at the far plane. Near stars are drawn thicker. |
+| `SPREAD` | 0.1 – 2 | Width of the tube. Small comes straight at you, large throws the stars past the corners. |
 
 To add a setting, write one line in `_build_params()` of `vj_controller.gd`. The
 section, the UI row, the slider, the number format, the keyboard handling and the OSC

@@ -67,6 +67,56 @@ a glass sphere, which is busier but stranger.
 Measured cost: **+0.32 ms** at 40 circles, **+0.77 ms** at 80. The show neither
 computes nor draws the circles past the horizon.
 
+## Hyperspace
+
+`STARS` fills a tube ahead of the eye and flies down it. Each star holds a fixed
+direction and a depth. Only the depth changes.
+
+The show projects a star at `xy / z`. A star that comes nearer thus runs away from the
+centre of the screen, slowly at first and then very fast. That acceleration is the
+whole effect.
+
+**Nothing here animates a streak that grows longer.** The streak grows because the
+star is nearer. The show draws a line between where the star is and where it was a
+moment ago, and the projection does the rest.
+
+### STREAK is a shutter speed
+
+`STREAK` is not a length. It is a **time**: how many seconds of travel to draw behind
+each star. A camera works the same way.
+
+That is one setting fewer to ride during a set. A field that flies fast streaks far on
+its own, and the same value gives short dashes when you slow it down. A length in
+pixels would need a correction every time you moved `SPEED`.
+
+It also comes free in reverse. `SPEED` runs from -3 to 3, and at a negative value the
+trail sits on the other side of the star with no special case, because the seconds of
+travel are signed too.
+
+### Two details that do the work
+
+**The stars spread over a disc, not over a square.** The show draws a radius as the
+square root of a random number. Without that square root the stars crowd the axis,
+where they also move the least, and the middle of the screen silts up.
+
+**A star fades in over the far quarter of the tube.** A star switched on at full
+brightness pops. With three hundred of them that recycle constantly, the back of the
+field twinkles like a fault. This is the same fade the sphere gives its circles at the
+horizon, for the same reason.
+
+`SPREAD` is the width of the tube at the far plane. A small value keeps the stars on
+the axis and they come straight at you. A large value starts them wide and throws them
+past the corners.
+
+### Why it is one node
+
+Every other effect gives each element its own `Line2D`. This one draws all of its
+stars in a single canvas item. At 300 stars that is 300 nodes and 300 halos saved, and
+a star is two points, thus there is no shape worth keeping between frames.
+
+The halo is drawn here rather than hung off a `Halo` node, which needs a `Line2D` to
+echo. It reads the same `RINGS` constant, thus the two cannot drift apart.
+
 ## The kaleidoscope
 
 `EFFECT` folds the image into symmetrical wedges around the center, like the mirrors
@@ -139,6 +189,9 @@ What it does, effect by effect:
   two different pictures.
 - **Sphere.** Each circle slides along its longitude at its own pace and its size
   starts to throb. The sphere stays legible, but its surface is no longer of a piece.
+- **Hyperspace.** The vanishing point wanders, and each star takes its own pace. This
+  is what stops the field reading as a screensaver: a ship on a heading rather than a
+  fixed tunnel.
 
 ## Two-way speeds
 
