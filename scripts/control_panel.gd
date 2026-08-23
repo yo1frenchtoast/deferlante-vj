@@ -26,6 +26,11 @@ var pinned: bool = false
 
 var _lang: Lang
 var _sliders: Array[HSlider] = []
+## Setting indices in the order the panel puts them on screen, which is no longer
+## the order they were declared in. `↑` and `↓` walk this rather than `params`: the
+## arrows have to move to the row under the one you are looking at, and a section
+## that reads third down the first column may well be declared sixth.
+var _reading_order: PackedInt32Array = []
 var _name_labels: Array[Label] = []
 var _value_labels: Array[Label] = []
 var _section_labels: Array[Label] = []
@@ -65,6 +70,18 @@ const HELP_KEYS := ["help.params", "help.actions", "help.keys", "help.pad"]
 ## Section header colour: warm, so it stands apart from the white values without
 ## pulling more attention than the settings themselves.
 const SECTION_COLOR := Color(1.0, 0.72, 0.35)
+
+## The panel's reading order, which is deliberately not the order the settings are
+## declared in. `_build_params()` is grouped by what drives what; the panel is
+## grouped by when you touch it.
+##
+## SETUP is what you settle before a set and then leave alone — the room, the track,
+## the colour. It gets the first column to itself, so the hand goes to the same place
+## every night whatever effects the show has gained since.
+##
+## PLAY is the instruments, and it spreads over the columns after it.
+const SETUP_SECTIONS := ["section.global", "section.color", "section.mirror", "section.audio"]
+const PLAY_SECTIONS := ["section.spot", "section.lasers", "section.sphere", "section.warp"]
 
 # Rough heights, used only to decide where to break into a new column. They do not
 # have to be exact — being a few pixels out costs nothing, and the alternative is
@@ -116,6 +133,66 @@ func _build_columns():
 	var groups := _group_by_section()
 	var budget := get_viewport().get_visible_rect().size.y - vertical_margin - HELP_HEIGHT
 
+	# A widget per setting, put in place by the setting's own index rather than
+	# appended. The panel no longer builds the settings in the order they were
+	# declared, and `select()` reads these arrays alongside `params`.
+	_name_labels.resize(params.size())
+	_sliders.resize(params.size())
+	_value_labels.resize(params.size())
+	_reading_order.clear()
+
+	var columns := HBoxContainer.new()
+	columns.add_theme_constant_override("separation", 28)
+	# Columns run left to right from the screen edge; each one is bottom-aligned
+	# inside itself, so the whole panel sits in the bottom-left corner as before.
+	columns.alignment = BoxContainer.ALIGNMENT_BEGIN
+	columns.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	rows.add_child(columns)
+
+	var play := _ordered(groups, PLAY_SECTIONS, true)
+	var setup_height := _lay_out(_ordered(groups, SETUP_SECTIONS), columns, budget)
+
+	# The setup column sets the height of the panel, and the instruments spread
+	# sideways rather than tower over it. Without this cap they make one column as
+	# tall as the screen allows: legal, and it puts the top of the panel level with
+	# the help text while the width beside it stays empty. The panel belongs in the
+	# bottom band of the screen, which is where the hand and the eye both go.
+	#
+	# Floored at the tallest single section, because a column shorter than that
+	# could hold nothing, and a setup list that ever shrank would otherwise drive
+	# the count of columns up without limit.
+	var tallest := 0.0
+	for group in play:
+		tallest = maxf(tallest, _height_of(group))
+	# Anything the two lists do not name goes in with the instruments, at the end. A
+	# section added to the show and forgotten here then reads oddly, which is a bug
+	# somebody reports — where a section quietly dropped from the panel is not.
+	_lay_out(play, columns, clampf(setup_height, tallest, budget))
+
+
+## The groups this list names, in the order it names them. With `rest`, everything
+## it does not name follows, in the order the show declared it.
+func _ordered(groups: Array, wanted: Array, rest: bool = false) -> Array:
+	var out: Array = []
+	for key in wanted:
+		for group in groups:
+			if group["key"] == key:
+				out.append(group)
+	for group in groups:
+		if rest and not SETUP_SECTIONS.has(group["key"]) and not wanted.has(group["key"]):
+			out.append(group)
+	return out
+
+
+## Fills as many columns as this run of sections needs, breaking only between them so
+## a section is never split in two. Called once per run, so the setup sections keep a
+## column of their own however tall the instruments grow.
+## Hands back the height of its tallest column, which is what the next run is
+## measured against.
+func _lay_out(groups: Array, columns: HBoxContainer, budget: float) -> float:
+	if groups.is_empty():
+		return 0.0
+
 	var total := 0.0
 	for group in groups:
 		total += _height_of(group)
@@ -126,18 +203,10 @@ func _build_columns():
 	var wanted := maxi(1, ceili(total / maxf(1.0, budget)))
 	var target := total / wanted
 
-	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 28)
-	# Columns run left to right from the screen edge; each one is bottom-aligned
-	# inside itself, so the whole panel sits in the bottom-left corner as before.
-	columns.alignment = BoxContainer.ALIGNMENT_BEGIN
-	columns.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	rows.add_child(columns)
-
 	_column = _new_column(columns)
 	var used := 0.0
 	var remaining := wanted
-	var index := 0
+	var tallest := 0.0
 
 	for group in groups:
 		var height := _height_of(group)
@@ -149,9 +218,12 @@ func _build_columns():
 			remaining -= 1
 		_build_section_header(group["key"], used > 0.0)
 		for p in group["params"]:
+			var index := params.find(p)
+			_reading_order.append(index)
 			_build_row(p, index)
-			index += 1
 		used += height
+		tallest = maxf(tallest, used)
+	return tallest
 
 
 func _height_of(group: Dictionary) -> float:
@@ -243,9 +315,9 @@ func _build_row(p: VJParam, index: int):
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_column.add_child(value_label)
 
-	_name_labels.append(name_label)
-	_sliders.append(slider)
-	_value_labels.append(value_label)
+	_name_labels[index] = name_label
+	_sliders[index] = slider
+	_value_labels[index] = value_label
 
 	p.changed.connect(_on_param_changed.bind(index))
 
@@ -298,6 +370,15 @@ func _on_slider_moved(value: float, index: int):
 func _on_param_changed(value: float, index: int):
 	_sliders[index].set_value_no_signal(value)
 	_value_labels[index].text = params[index].format_value()
+
+
+## The setting one row up or down the panel from the selected one, wrapping at the
+## end of the last column.
+func _step(direction: int) -> int:
+	var at := _reading_order.find(selected)
+	if at < 0:
+		return selected
+	return _reading_order[wrapi(at + direction, 0, _reading_order.size())]
 
 
 func select(index: int):
@@ -388,9 +469,9 @@ func _unhandled_input(event: InputEvent):
 		return
 	match event.keycode:
 		KEY_UP:
-			select(selected - 1)
+			select(_step(-1))
 		KEY_DOWN:
-			select(selected + 1)
+			select(_step(1))
 		KEY_LEFT:
 			params[selected].nudge(-1, event.shift_pressed)
 		KEY_RIGHT:

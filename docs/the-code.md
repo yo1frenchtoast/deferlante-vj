@@ -55,6 +55,22 @@ balances the columns rather than fills the first one to the brim. The panel grew
 row per setting, and it had started to run off the bottom of a 1080p screen. This way
 it cannot, at any number of settings.
 
+**The panel is grouped by when you touch a setting, not by what it drives.** The first
+column holds GLOBAL, COLOR, MIRROR and AUDIO — what you settle before a set and then
+leave alone. The instruments follow: SPOTLIGHT, LASERS, SPHERE, HYPERSPACE. Thus the
+hand goes to the same place every night, whatever effects the show has gained since.
+The two runs are named in `control_panel.gd`, and a section in neither list joins the
+instruments at the end rather than disappears.
+
+The instrument columns are **capped at the height of the first column**, and spread
+sideways past it rather than grow taller. Without the cap they make one column as tall
+as the screen allows. That is legal, and it puts the top of the panel level with the
+help text while the width beside it stays empty. The panel belongs in the bottom band
+of the screen, where the hand and the eye both go.
+
+`↑` and `↓` walk the panel in the order it reads on screen, which is no longer the
+order the settings are declared in.
+
 A setting that only writes a property is one line
 (`_prop("spot/pulse", 0, 300, 5, 50.0, circle, "fluctuation_range")`). Only the
 settings that need logic get their own function. `VJParam` is the single point that
