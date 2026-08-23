@@ -256,9 +256,16 @@ func _build_params():
 
 	# Out of the auto-pilot's reach: tempo, glow and colour are decisions — the
 	# room, the track — rather than variations to be subjected to.
+	#
+	# `spot/track` and `spot/handback` are here for a second reason: they are the
+	# feel of the operator's handle, not a look. Rolling the tracking speed while a
+	# hand is on the stick changes how the beam answers mid-follow, and rolling the
+	# hand-back delay decides how long the beam sits still afterwards. `spot/manual`
+	# was already out for the same reason; these two were left behind.
 	for slug in ["global/speed", "global/glow", "global/recall", "global/panel",
 			"global/autodim", "audio/reactivity", "color/saturation",
-			"color/mode", "color/red", "color/green", "color/blue"]:
+			"color/mode", "color/red", "color/green", "color/blue",
+			"spot/track", "spot/handback"]:
 		param(slug).randomizable = false
 
 

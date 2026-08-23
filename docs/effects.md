@@ -273,9 +273,16 @@ Three precautions make it usable for real:
   starts reading as a malfunction.
 - **Values group towards the middle** of each range (the average of two draws), which
   avoids the extremes that either empty or saturate the screen.
-- **Thirteen settings are out of its reach**: `SPEED`, `GLOW`, `RECALL FADE`,
-  `PANEL`, `AUTO DIM`, `RANDOMIZER`, `REACTIVITY`, `AIMING`, and the whole COLOR
-  section (`MODE`, `SATURATION`, `RED`, `GREEN`, `BLUE`). Those are decisions — the
-  tempo of the track, the contrast of the room, who holds the beam — not variations to
-  be subjected to. COLOR has no randomizable setting left at all, thus its card on the
+- **Fifteen settings are out of its reach**: `SPEED`, `GLOW`, `RECALL FADE`,
+  `PANEL`, `AUTO DIM`, `RANDOMIZER`, `REACTIVITY`, the three spotlight rows that only
+  matter with a pad (`AIMING`, `TRACKING`, `HAND BACK`), and the whole COLOR section
+  (`MODE`, `SATURATION`, `RED`, `GREEN`, `BLUE`). Those are decisions — the tempo of
+  the track, the contrast of the room, who holds the beam — not variations to be
+  subjected to. COLOR has no randomizable setting left at all, thus its card on the
   phone carries no roll button.
+
+  `TRACKING` and `HAND BACK` are there for a reason worth stating. They are not a
+  look, they are the feel of the handle. A roll of the tracking speed changes how the
+  beam answers **while a hand is on the stick**, in the middle of a follow. A roll of
+  the hand-back delay decides how long the beam then sits still. Neither shows on
+  screen when nobody holds a pad, thus rolling them spends a move on nothing.
