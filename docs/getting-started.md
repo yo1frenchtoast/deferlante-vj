@@ -77,10 +77,11 @@ adjust the settings.
 The mouse also works on the sliders. But the keyboard is safer during a show, because
 you do not aim in the dark.
 
-Below the sliders is a status line. It shows three things, then the shortcuts:
+Below the sliders is a status line. It shows four things, then the shortcuts:
 
 - **The web address that you type into a phone.**
 - The address that a console must send OSC to.
+- What the sound capture hears. See [telling whether it hears anything](external-control.md#telling-whether-it-hears-anything).
 - The name of the gamepad that is connected.
 
 The line shows both addresses in full, with host and port. Each one is a choice made
@@ -91,8 +92,12 @@ scroll away long before you need them.
 
 ## Settings
 
-The panel has six sections, the same as the menus of the Chataigne module. The labels
-that follow are the English ones.
+The panel has eight sections. It groups them by **when you touch a setting**, not by
+what the setting drives. The four that you settle before a set come first: GLOBAL,
+COLOR, MIRROR and AUDIO. The four instruments follow: SPOTLIGHT, LASERS, SPHERE and
+HYPERSPACE. `↑` and `↓` walk the panel in that order. The Chataigne module carries the
+same eight sections as menus, in the order that the code declares them. The labels that
+follow are the English ones.
 
 ### Global
 | Setting | Range | Effect |
@@ -100,10 +105,10 @@ that follow are the English ones.
 | `SPEED` | -3 – 3 | Global speed. 1 is normal, 0 freezes. A negative value runs everything backwards. |
 | `CHAOS` | 0 – 1 | Motion disorder. It does not touch `GLITCH`. See [Chaos](effects.md#chaos). |
 | `RANDOMIZER` | 0 – 1 | Auto-pilot. 0 is off, 1 is about one change per second. |
+| `GLOW` | 0 – 2 | Halo, drawn by the strokes themselves. **0 by default**, see [the halo](in-the-room.md#the-halo). |
 | `RECALL FADE` | 0 – 10 | The time in seconds for a preset to crossfade in. 0 snaps. |
 | `PANEL` | 0.05 – 1 | Panel brightness. `F2` toggles it. See [Working discreetly](#working-discreetly). |
 | `AUTO DIM` | OFF / ON | Dim the panel automatically when something else takes control. |
-| `GLOW` | 0 – 2 | Halo, drawn by the strokes themselves. **0 by default**, see [the halo](in-the-room.md#the-halo). |
 
 ### Color
 | Setting | Range | Effect |
@@ -116,18 +121,25 @@ that follow are the English ones.
 | Setting | Range | Effect |
 | --- | --- | --- |
 | `EFFECT` | 0 – 1 | Kaleidoscope fold. 0 is off, and the show does not pay for the pass. |
-| `SEGMENTS` | 2 – 16 | Number of wedges. 6 gives the classic star. |
+| `SEGMENTS` | 2 – 16 | Number of wedges. It starts at 5. 6 gives the classic star. |
 | `ROTATION` | -1 – 1 | Turns the mirrors. ← left, → right. |
 
-### Lasers
+### Audio
+The rows run in the order that the ear takes the bands, low to high. That is also the
+order that the vu-meter draws them.
+
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `COUNT` | 0 – 40 | Number of strokes. The show adds and removes them live. It starts at 3. |
-| `WIDTH` | 1 – 24 | Stroke width. |
-| `LENGTH` | 0.1 – 2 | **1 crosses the frame** at every resolution. The stroke is two times the diagonal, thus its ends stay outside the frame wherever it goes. At less than 1 the tips come into view, which you now ask for rather than get by accident. |
-| `SPIN` | -1 – 1 | ← leftwards, → rightwards. |
-| `PARALLEL` | 0 – 1 | 0 is a scatter, 1 is a fan with equal spacing. See [Scanlines](effects.md#scanlines). |
-| `SCROLL` | -1 – 1 | Walks that fan sideways. ← one way, → the other. |
+| `REACTIVITY` | 0 – 1 | Master amount. **0 by default.** Nothing moves until you ask for it. |
+| `PUNCH` | 0 – 1 | Response curve. A higher value pushes the middle down, thus only the hits show. |
+| `SPOT ← BASS` | 0 – 12 | The kick drives the spotlight. |
+| `HYPERSPACE ← BASS` | 0 – 12 | The kick drives the star field. |
+| `LASERS ← MID` | 0 – 12 | Mids drive the laser strokes. |
+| `SPHERE ← TREBLE` | 0 – 12 | Treble drives the sphere. |
+
+The top of those four ranges is deliberately past good taste. See
+[how nervous it is](external-control.md#how-nervous-it-is). A set lives in the middle
+of the range.
 
 ### Spotlight
 | Setting | Range | Effect |
@@ -141,20 +153,22 @@ that follow are the English ones.
 | `FREQUENCY` | 0 – 20 | Tremor rate, **independent of `SPEED`**. |
 | `SPREAD` | 0 – 1 | How much the pool grows when the head aims away from center. See [why the pool changes size](effects.md#why-the-pool-changes-size). |
 | `GLITCH` | 0 – 0.05 | Glitch chance per frame. **0 by default.** Independent of `CHAOS`. 0.005 ≈ one every 3 s. |
+| `AIMING` | AUTO / STICK | `AUTO` hands the beam back on its own. `STICK` keeps it on the gamepad. |
+| `TRACKING` | 0.2 – 3 | Beam speed at full stick. See [the gamepad](external-control.md#gamepad). |
+| `HAND BACK` | 2 – 120 | Seconds before the automatic sweep takes the beam back. It starts at 30. |
 
-### Audio
+The last three rows only matter with a pad connected. See
+[Handing back](external-control.md#handing-back-progressively).
+
+### Lasers
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `REACTIVITY` | 0 – 1 | Master amount. **0 by default.** Nothing moves until you ask for it. |
-| `PUNCH` | 0 – 1 | Response curve. A higher value pushes the middle down, thus only the hits show. |
-| `SPOT ← BASS` | 0 – 12 | The kick drives the spotlight. |
-| `LASERS ← MID` | 0 – 12 | Mids drive the laser strokes. |
-| `SPHERE ← TREBLE` | 0 – 12 | Treble drives the sphere. |
-| `HYPERSPACE ← BASS` | 0 – 12 | The kick drives the star field. |
-
-The top of those three ranges is deliberately past good taste. See
-[how nervous it is](external-control.md#how-nervous-it-is). A set lives in the middle
-of the range.
+| `COUNT` | 0 – 40 | Number of strokes. The show adds and removes them live. It starts at 3. |
+| `WIDTH` | 1 – 24 | Stroke width. |
+| `LENGTH` | 0.1 – 2 | **1 crosses the frame** at every resolution. The stroke is two times the diagonal, thus its ends stay outside the frame wherever it goes. At less than 1 the tips come into view, which you now ask for rather than get by accident. |
+| `SPIN` | -1 – 1 | ← leftwards, → rightwards. |
+| `PARALLEL` | 0 – 1 | 0 is a scatter, 1 is a fan with equal spacing. See [Scanlines](effects.md#scanlines). |
+| `SCROLL` | -1 – 1 | Walks that fan sideways. ← one way, → the other. |
 
 ### Sphere
 | Setting | Range | Effect |
@@ -241,7 +255,7 @@ and on a slow move that start is exactly what the eye catches.
 The show reads the number keys by **physical position**, not by the character that
 they type. Thus the top row works the same on AZERTY, QWERTY and Dvorak. (Read as
 characters, an AZERTY top row gives `& é " ' ( - è _ ç`. Only the three non-ASCII keys
-fell through to a digit, thus six slots out of nine could not be reached.)
+fell through to a digit, thus the show never saw six slots out of nine.)
 
 ### What is and is not saved
 

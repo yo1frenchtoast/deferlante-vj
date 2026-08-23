@@ -125,7 +125,7 @@ and it puts the order of Godot back.
 
 - **Two XY pads**, now full height instead of squeezed under the sliders. You assign
   their axes from dropdowns. Each entry names its section as well as the setting
-  (`X · SPOTLIGHT WIDTH`). Three sections have a `WIDTH`, and on a pad you pick blind
+  (`X · SPOTLIGHT WIDTH`). Four sections have a `WIDTH`, and on a pad you pick blind
   from a list rather than read a labeled row. They default to chaos × speed and to
   spotlight radius × pulse.
 - **GLITCH** and **COLORS**.
@@ -244,8 +244,8 @@ Chataigne, TouchOSC, a sequencer, or any script at all.
 
 ### How an address is built
 
-`/deferlante/<section>/<setting>` — the section is part of the path because three
-sections have a `WIDTH` and two have a `ROTATION`. Without it the addresses would
+`/deferlante/<section>/<setting>` — the section is part of the path because four
+sections have a `WIDTH` and three have a `SPEED`. Without the section, those addresses
 collide.
 
 The address and the label are **decoupled** in the code. `slug` carries the address and
@@ -280,7 +280,7 @@ TouchOSC. They have no business with the knowledge that `spot/radius` runs from 
 | `/deferlante/glitch_now` | fires one glitch (no argument needed) |
 | `/deferlante/randomize` | redraws colors and trajectories, and returns color to random mode |
 | `/deferlante/shuffle` | one move of the auto-pilot, now, whatever pace it is set to |
-| `/deferlante/shuffle/<section>` | the same, confined to one section: `lasers`, `spot`, `sphere`, `mirror`, `color`, `global` |
+| `/deferlante/shuffle/<section>` | the same, confined to one section: `global`, `color`, `mirror`, `lasers`, `spot`, `audio`, `sphere`, `warp` |
 | `/deferlante/color/rgb` | three floats 0 → 1: the whole color in one message, and a switch to manual |
 
 ### Every address
@@ -329,6 +329,7 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/audio/reactivity` | 0 – 1 | 0 | AUDIO › REACTIVITY |
 | `/deferlante/audio/punch` | 0 – 1 | 0.35 | AUDIO › PUNCH |
 | `/deferlante/audio/spot` | 0 – 12 | 2.5 | AUDIO › SPOT ← BASS |
+| `/deferlante/audio/warp` | 0 – 12 | 2.5 | AUDIO › HYPERSPACE ← BASS |
 | `/deferlante/audio/lasers` | 0 – 12 | 2.5 | AUDIO › LASERS ← MID |
 | `/deferlante/audio/sphere` | 0 – 12 | 2.5 | AUDIO › SPHERE ← TREBLE |
 | `/deferlante/sphere/count` | 0 – 80 | 14 | SPHERE › CIRCLES |
@@ -338,6 +339,11 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/sphere/depth` | 1.2 – 10 | 2 | SPHERE › DEPTH |
 | `/deferlante/sphere/width` | 1 – 24 | 3 | SPHERE › WIDTH |
 | `/deferlante/sphere/glass` | 0 – 1 | 0 | SPHERE › GLASS |
+| `/deferlante/warp/count` | 0 – 400 | 0 | HYPERSPACE › STARS |
+| `/deferlante/warp/speed` | 0 – 4 | 1 | HYPERSPACE › SPEED |
+| `/deferlante/warp/streak` | 0 – 0.4 | 0.12 | HYPERSPACE › STREAK |
+| `/deferlante/warp/width` | 0.5 – 12 | 2 | HYPERSPACE › WIDTH |
+| `/deferlante/warp/spread` | 0.1 – 2 | 0.7 | HYPERSPACE › SPREAD |
 
 
 ### What it does not do
@@ -548,18 +554,25 @@ under `--write-movie` either, which takes the audio driver over to write its `.w
 
 ### What the sound drives
 
-Three bands, one per effect: **the kick drives the spotlight**, mids drive the lasers,
-and treble drives the sphere. Three effects that breathe on one envelope read as a
-single thing that pumps. On separate bands they pick out different parts of the track
-and the picture comes apart into layers. The kick goes to the spotlight because the
-spotlight is the biggest shape on screen, thus it is what carries the beat.
+Three bands and four destinations: **the kick drives the spotlight and the star
+field**, mids drive the lasers, and treble drives the sphere. Effects that breathe on
+one envelope read as a single thing that pumps. On separate bands they pick out
+different parts of the track and the picture comes apart into layers. The kick goes to
+the spotlight because the spotlight is the biggest shape on screen, thus it is what
+carries the beat.
+
+Four effects and three bands leave no choice about the fourth, and the kick is where a
+jump to light speed belongs. The two that share the bass do not share a *property*.
+The spotlight takes it as a size and the star field takes it as a speed. Thus they read
+as two layers rather than as one pump. Each destination has its own amount, and one of
+them at 0 takes that effect out of the sound entirely.
 
 Each amount moves both the **thickness and the size** of its effect: the stroke width,
 and the radius of the spotlight, the circle size of the sphere, the length of the
 lasers. Thickness alone tops out quickly. A stroke two times as wide is still the same
 shape in the same place. A spotlight that swells on the kick changes the whole picture.
 Size moves at a third of the amount, because a radius reads far more strongly than a
-width. Measured at the default 1.5: laser strokes 6.1–10.6 px, spotlight radius
+width. Measured at an amount of 1.5: laser strokes 6.1–10.6 px, spotlight radius
 208–274 px, spotlight stroke 3.4–6.4 px.
 
 The sound **adds to** the widths rather than sets them. The sliders continue to mean

@@ -24,6 +24,10 @@ freezes everything.
 On top of that is the motor profile: a brisk start, a long brake, and a small damped
 overshoot at the end of travel as the head settles.
 
+A gamepad takes the head off this behavior and aims it by hand. `AIMING`, `TRACKING`
+and `HAND BACK` are that half of the spotlight. See
+[the gamepad](external-control.md#gamepad).
+
 ### Why the pool changes size
 
 The pool of a real followspot grows as it aims away from center, because the beam
@@ -215,8 +219,8 @@ when everything else runs backwards.
 
 ## The two color modes
 
-**RANDOM** (the default) — every laser, every sphere circle and the spotlight draw
-their own hue. `R` redraws them.
+**RANDOM** (the default) — every laser, every sphere circle, every star and the
+spotlight draw their own hue. `R` redraws them.
 
 **MANUAL** — every element takes the color set by `RED` / `GREEN` / `BLUE`.
 
@@ -246,6 +250,9 @@ Three precautions make it usable for real:
   starts reading as a malfunction.
 - **Values group towards the middle** of each range (the average of two draws), which
   avoids the extremes that either empty or saturate the screen.
-- **Six settings are out of its reach**: `SPEED`, `GLOW`, `SATURATION` and the three
-  colors. Those are decisions — the tempo of the track, the contrast of the room —
-  not variations to be subjected to.
+- **Thirteen settings are out of its reach**: `SPEED`, `GLOW`, `RECALL FADE`,
+  `PANEL`, `AUTO DIM`, `RANDOMIZER`, `REACTIVITY`, `AIMING`, and the whole COLOR
+  section (`MODE`, `SATURATION`, `RED`, `GREEN`, `BLUE`). Those are decisions — the
+  tempo of the track, the contrast of the room, who holds the beam — not variations to
+  be subjected to. COLOR has no randomizable setting left at all, thus its card on the
+  phone carries no roll button.

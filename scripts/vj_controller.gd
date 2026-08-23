@@ -291,8 +291,6 @@ func _append(p: VJParam):
 	params.append(p)
 
 
-## The cursor the operator can set: locked to the stick, or free to go hunting
-## again after the hand-back delay.
 ## The line under the panel: where to reach this machine, and what is plugged in.
 ## It is looked up rather than remembered, so it belongs on screen and not only in
 ## the console, where it scrolls away before anyone needs it.
@@ -327,6 +325,8 @@ func _external_touch():
 		panel.set_external_control(true, discreet_brightness)
 
 
+## The cursor the operator can set: locked to the stick, or free to go hunting
+## again after the hand-back delay.
 func _set_manual_lock(value: float):
 	circle.manual_lock = value >= 0.5
 

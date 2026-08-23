@@ -14,6 +14,7 @@ chataigne/
   Deferlante/    Chataigne module, ready to install
 web/
   index.html     Touch control surface, built from the schema Godot sends
+  docs.html      Swagger UI for the REST API, served at /docs
 shaders/
   kaleidoscope.gdshader   Polar fold into symmetrical wedges
 scripts/
@@ -22,7 +23,7 @@ scripts/
   gamepad.gd        Xbox pad: aims the spotlight, drives the rest through VJParam
   lang.gd           On-screen translations, keyed by OSC address
   kaleidoscope.gd   Drives the mirror's full-screen pass
-  palette.gd        Color state, shared by reference with the three effects
+  palette.gd        Color state, shared by reference with the four effects
   vj_controller.gd  Settings declaration, lasers, OSC routing
   vj_param.gd       One setting: bounds, step, application, formatting
   control_panel.gd  Panel: rows, keyboard, auto-hide, FPS readout
@@ -47,7 +48,7 @@ list them all — and are otherwise self-contained. That is what keeps the contr
 about a show rather than about JSON.
 
 The show builds the UI at runtime from the list of settings. The scene holds nothing
-but an empty `VBoxContainer`, not 35 pairs of nodes to maintain by hand.
+but an empty `VBoxContainer`, not 51 pairs of nodes to maintain by hand.
 
 The panel also **lays itself out in as many columns as it takes to fit the screen**.
 It breaks only between sections, thus it never splits a section in two. It also

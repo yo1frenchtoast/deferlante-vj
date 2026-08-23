@@ -29,18 +29,32 @@ The module defaults to `127.0.0.1:9000`, which works as it is when Chataigne and
 run on the same machine. Otherwise, set `remoteHost` to the IP of the machine that
 shows the visuals, and make sure that nothing blocks UDP port 9000.
 
-On the Godot side, the port is on the `OscServer` node in `scenes/main.tscn`.
+On the Godot side, the port is the `OSC PORT` row of the launcher. Its default is
+9000. The show binds it at start-up, thus you cannot move it while the show runs.
+
+The `OSC ACCESS` row decides whether the show hears another machine at all. Its default
+is loopback. If Chataigne runs on a second computer, set that row to an address of the
+machine that shows the visuals.
 
 ## Use
 
 Every setting is a command, filed by menu (Global, Color, Mirror, Lasers, Spotlight,
-Sphere), with the **same bounds as the on-screen sliders**. Thus a Chataigne mapping
-sweeps exactly the same range, with no conversion.
+Audio, Sphere, Hyperspace), with the **same bounds as the on-screen sliders**. Thus a
+Chataigne mapping sweeps exactly the same range, with no conversion. The module carries
+every setting that the show has, and the generator fails the build if one goes
+missing.
 
 Every command carries `mappingIndex: 0`, thus you can use it directly as the target of
 a Mapping, an LFO, a MIDI fader or an audio follower.
 
-Two commands are in the **Actions** menu: `Trigger Glitch` and `Randomize Colors`.
+Three more menus hold what is not a setting:
+
+- **Actions** — `Trigger Glitch`, `Randomize Colors` and `Shuffle`. `Shuffle` makes one
+  move of the auto-pilot, whatever pace it is set to.
+- **Shuffle** — the same move, confined to one section. There is one command per
+  section, from `Shuffle Global` to `Shuffle Hyperspace`.
+- **Presets** — `Recall Preset` and `Save Preset`, each taking a slot number.
+
 `Color Picker`, in the Color menu, is a real color picker that sends its three
 components in one message.
 
@@ -49,7 +63,9 @@ scene from tidy to overflowing. **Mirror Effect** opens and closes the kaleidosc
 
 For audio reactivity, the **Audio** module of Chataigne does the spectral analysis, and
 its bands map straight onto any of these commands. There is nothing to add on the Godot
-side.
+side. The show also listens on its own. If you use that instead, the Audio menu here
+holds the same amounts. See
+[Audio reactivity](../../docs/external-control.md#audio-reactivity).
 
 ## Without this module
 
