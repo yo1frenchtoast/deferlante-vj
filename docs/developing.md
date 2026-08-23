@@ -78,11 +78,15 @@ Two edits, then regenerate.
    fault in this list that looks like a broken effect rather than a misspelled
    setting.
 
-2. Write its words in `Lang.LABELS`, French first and English second:
+2. Write its words in `Lang.LABELS`, English first and French second:
 
    ```gdscript
-   "sphere/wobble": ["OSCILLATION", "WOBBLE"],
+   "sphere/wobble": ["WOBBLE", "OSCILLATION"],
    ```
+
+   English is first in every table because the source is English throughout.
+   Which tongue the operator meets first is a different question, and `Lang.ORDER`
+   answers it: the launcher still lists FRANÇAIS at the top.
 
    A missing label falls back to the slug rather than crashes. Thus you can try a
    setting out before you name it, but it reads `sphere/wobble` on screen and in the

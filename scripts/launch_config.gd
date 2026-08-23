@@ -75,9 +75,11 @@ var web_port: int = 7331
 ## letting one in is no reason to let the other.
 var osc_bind: String = LOCAL
 var osc_port: int = 9000
-## `Lang.FR` / `Lang.EN`. Held here so the launcher speaks the same tongue as the
-## show it is about to start.
-var language: int = 0
+## `Lang.EN` / `Lang.FR`. Held here so the launcher speaks the same tongue as the
+## show it is about to start. Written to disk as a code rather than as the enum
+## value: the value is a position, and a position means nothing to a file that
+## outlives the order it was written in.
+var language: int = Lang.FR
 
 
 func _ready():
@@ -103,7 +105,14 @@ func load_from_disk():
 	osc_bind = cfg.get_value("io", "osc_bind", osc_bind)
 	osc_port = cfg.get_value("io", "osc_port", osc_port)
 	hide_panel = cfg.get_value("ui", "hide_panel", hide_panel)
-	language = cfg.get_value("ui", "language", language)
+	# Files written before this was a code hold the old enum value, where 0 meant
+	# French and 1 meant English. Reading them as the enum stands now would open
+	# the show in the other tongue, so an int is migrated rather than trusted.
+	var stored = cfg.get_value("ui", "language", Lang.code_of(language))
+	if stored is String:
+		language = Lang.value_of_code(stored, language)
+	else:
+		language = Lang.EN if int(stored) == 1 else Lang.FR
 
 
 ## The private addresses this machine answers on. The same test the web surface has
@@ -142,7 +151,7 @@ func save():
 	cfg.set_value("io", "osc_bind", osc_bind)
 	cfg.set_value("io", "osc_port", osc_port)
 	cfg.set_value("ui", "hide_panel", hide_panel)
-	cfg.set_value("ui", "language", language)
+	cfg.set_value("ui", "language", Lang.code_of(language))
 	cfg.save(PATH)
 
 

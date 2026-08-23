@@ -705,7 +705,7 @@ func _describe_launch() -> Dictionary:
 		# can never work is worse than a sentence saying so.
 		"can_restart": Launch.can_relaunch(),
 		"settings": [
-			_launch_choice("language", "launch.language", Lang.LANGUAGES, Launch.language),
+			_launch_choice("language", "launch.language", Lang.LANGUAGES, Lang.choice_of(Launch.language)),
 			_launch_choice("renderer", "launch.renderer", [
 				lang.text("launch.renderer.compat"), lang.text("launch.renderer.forward"),
 			], 1 if Launch.rendering_method == "forward_plus" else 0),
@@ -836,7 +836,7 @@ func _on_web_launch_set(key: String, value: Variant):
 	var index := int(value) if typeof(value) != TYPE_BOOL else 0
 	match key:
 		"language":
-			Launch.language = clampi(index, 0, Lang.LANGUAGES.size() - 1)
+			Launch.language = Lang.value_of(index)
 		"renderer":
 			Launch.rendering_method = "forward_plus" if index == 1 else "gl_compatibility"
 			# Antialiasing only exists under Forward+, and a value left behind by

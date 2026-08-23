@@ -425,7 +425,7 @@ func _load_values():
 	_web_port.value = Launch.web_port
 	_osc_access.selected = maxi(0, _access_addresses.find(Launch.osc_bind) + 1)
 	_osc_port.value = Launch.osc_port
-	_language.selected = Launch.language
+	_language.selected = Lang.choice_of(Launch.language)
 	_refresh_renderer_dependants()
 
 
@@ -478,7 +478,7 @@ func _collect():
 	Launch.osc_bind = (Launch.LOCAL if _osc_access.selected == 0
 		else _access_addresses[_osc_access.selected - 1])
 	Launch.osc_port = int(_osc_port.value)
-	Launch.language = _language.selected
+	Launch.language = Lang.value_of(_language.selected)
 
 
 ## Two things follow from the renderer, and both are the kind of surprise that costs
@@ -495,12 +495,12 @@ func _refresh_renderer_dependants():
 
 
 func _on_language_picked(index: int):
-	lang.set_language(index)
+	lang.set_language(Lang.value_of(index))
 	# Relabelling every control in place would mean holding a reference to each
 	# label; there are twelve rows and the screen is not yet doing anything, so it
 	# is cheaper — in code and in reading — to build it again.
 	_collect()
-	Launch.language = index
+	Launch.language = Lang.value_of(index)
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
