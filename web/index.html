@@ -149,12 +149,9 @@
   }
   .row.explained .info { display: block; }
   /* Hover is for the desk. A phone never reports it, and gets the hold instead.
-     It answers to the name alone, not to the whole row: the row grows by a line
-     when it opens, and a row that grows under a fader being dragged moves the
-     fader. */
-  @media (hover: hover) and (pointer: fine) {
-    .row:has(.name.explains:hover) .info { display: block; }
-  }
+     Both are opened from script rather than from :hover, because the desk waits
+     the same beat the phone does before it opens — see explainOnHover. */
+  .row.hovered .info { display: block; }
   .row.red .name { color: var(--red); }
   .row.green .name { color: var(--green); }
   .row.blue .name { color: var(--blue); }
@@ -518,14 +515,47 @@ function makeDraggable(card, grid) {
   });
 }
 
+// How long either gesture waits before a paragraph opens. One number for both:
+// the desk and the phone should agree on what lingering on a name means.
+const HOLD_MS = 450;
+const HOLD_SLOP = 10;
+
+// Hover is the desk's half of the same gesture, and it waits the same beat. A
+// pointer crossing a column passes over every name on the way to the one it
+// wants; opening on contact grew a paragraph under each of them in turn, and
+// every row below jumped down a line and back. Waiting means only the name the
+// pointer settles on ever opens.
+//
+// It answers to the name alone, not to the whole row: the row grows by a line
+// when it opens, and a row that grows under a fader being dragged moves the
+// fader. Closing is immediate — the delay is there to keep paragraphs from
+// opening, not to keep them on screen.
+function explainOnHover(name, row) {
+  let timer = null;
+
+  const shut = () => {
+    if (timer) { clearTimeout(timer); timer = null; }
+    row.classList.remove("hovered");
+  };
+
+  name.addEventListener("pointerenter", (e) => {
+    if (e.pointerType !== "mouse") return;   // a phone has the hold below
+    timer = setTimeout(() => {
+      timer = null;
+      row.classList.add("hovered");
+    }, HOLD_MS);
+  });
+
+  name.addEventListener("pointerleave", shut);
+  // A drag that starts on the name must not leave a paragraph open behind it.
+  name.addEventListener("pointerdown", shut);
+}
+
 // On a phone there is no hover, so the explanation comes from a hold on the
 // setting's name. It is deliberately not a tap: a tap lands next to a fader often
 // enough that it would open by accident all through a set. The hold cancels as
 // soon as the finger travels, so a scroll through the grid never fires it, and it
 // suppresses the click that follows so the gesture cannot also do something else.
-const HOLD_MS = 450;
-const HOLD_SLOP = 10;
-
 function explainOnHold(name, row) {
   let timer = null, from = null, fired = false;
 
@@ -621,6 +651,7 @@ function build(schema) {
       info = document.createElement("div");
       info.className = "info";
       info.textContent = p.hint;
+      explainOnHover(name, row);
       explainOnHold(name, row);
     }
 
