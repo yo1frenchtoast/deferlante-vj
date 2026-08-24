@@ -50,6 +50,8 @@ var v_laser_width: float = 5.0
 var v_halo: float = 0.0
 var _audio_was_active: bool = false
 var _status_tick: float = 0.0
+## What moved since the last frame, slug -> value, waiting to go out in one message.
+var _pending_values: Dictionary = {}
 var _meter_tick: float = 0.0
 var v_length: float = 1.0
 var v_spin: float = 1.0
@@ -115,9 +117,13 @@ func _ready():
 	web.set_requested.connect(_on_web_set)
 	web.action_requested.connect(_on_web_action)
 	web.launch_set_requested.connect(_on_web_launch_set)
-	# A phone must see what the keyboard, OSC or the auto-pilot just did.
+	# A phone must see what the keyboard, OSC or the auto-pilot just did. The value
+	# is noted here and sent once a frame rather than the moment it moves: a preset
+	# crossfade and the auto-pilot both write every setting on every frame, and one
+	# message per setting per frame is a few thousand a second down a wifi link to
+	# a phone — which the phone then has to parse before it can draw anything.
 	for p in params:
-		p.changed.connect(func(v): web.broadcast({"type": "value", "slug": p.slug, "value": v}))
+		p.changed.connect(func(v): _pending_values[p.slug] = v)
 
 	_refresh_status()
 
@@ -314,6 +320,19 @@ func param(slug: String) -> VJParam:
 func _append(p: VJParam):
 	p.section = _current_section
 	params.append(p)
+
+
+## One message a frame, carrying whatever moved in it. A fade that touches fifty
+## settings therefore costs one message rather than fifty. The buffer is emptied
+## even with nobody listening, so that a phone connecting later is not handed a
+## backlog of values from a fade that finished minutes ago — it asks for the whole
+## schema on connect anyway.
+func _flush_values():
+	if _pending_values.is_empty():
+		return
+	if web.has_clients():
+		web.broadcast({"type": "values", "values": _pending_values})
+	_pending_values = {}
 
 
 ## The line under the panel: where to reach this machine, and what is plugged in.
@@ -590,6 +609,7 @@ func _reset_modulations():
 
 func _process(delta: float):
 	_apply_audio()
+	_flush_values()
 
 	# The meter has to be refreshed on a clock: the status line is otherwise only
 	# rebuilt on events, and levels are not events.

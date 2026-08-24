@@ -378,7 +378,9 @@ function connect() {
   socket.onmessage = (event) => {
     const msg = JSON.parse(event.data);
     if (msg.type === "schema") build(msg);
-    else if (msg.type === "value") apply(msg.slug, msg.value);
+    // One frame's worth of movement in one message. See _flush_values() in
+    // vj_controller.gd for why the show does not send them one at a time.
+    else if (msg.type === "values") { for (const slug in msg.values) apply(slug, msg.values[slug]); }
     else if (msg.type === "audio") meter(msg);
     else if (msg.type === "restart_failed") restartFailed(lastLaunch && lastLaunch.failed);
   };
