@@ -134,6 +134,16 @@ func _ready():
 	presets.all_params = func(): return params
 	presets.slots_changed.connect(_send_schema)
 
+	# The state the show comes up in, settled at the launcher. This is the one
+	# decision no surface can make for us: at this moment nothing is connected, no
+	# console has sent anything, and there is nobody at the keyboard — which is the
+	# whole situation the row exists for. Instant rather than a crossfade: a fade
+	# from the defaults is a fade from a look nobody chose, and there is no audience
+	# yet to fade for. A slot that was never saved simply leaves the defaults
+	# standing, the same way an empty slot does everywhere else.
+	if Launch.auto_start > 0:
+		presets.recall(Launch.auto_start, true)
+
 	pad.connection_changed.connect(_refresh_status)
 	# Wrapping the lookup catches every pad interaction in one place.
 	pad.find_param = func(slug): _external_touch(); return param(slug)
@@ -764,6 +774,9 @@ func _describe_launch() -> Dictionary:
 				maxi(0, Launch.MAX_FPS.find(Launch.max_fps))),
 			_launch_toggle("hide_panel", "launch.panel", Launch.hide_panel,
 				lang.text("launch.panel.hidden")),
+			_launch_choice("auto_start", "launch.autostart", _auto_start_choices(),
+				clampi(Launch.auto_start, 0, presets.SLOTS),
+				lang.text("launch.autostart.hint")),
 			_launch_choice("web_bind", "launch.access", addresses,
 				maxi(0, addresses.find(Launch.web_bind))),
 			_launch_port("web_port", "launch.webport", Launch.web_port),
@@ -772,6 +785,18 @@ func _describe_launch() -> Dictionary:
 			_launch_port("osc_port", "launch.oscport", Launch.osc_port),
 		],
 	}
+
+
+## The same nine rows the launcher offers, each saying whether it holds anything.
+## Read live rather than from disk: this show has the slots in memory, and a slot
+## saved from a phone a moment ago must appear here without a restart.
+func _auto_start_choices() -> Array:
+	var used: Array = presets.used_slots()
+	var choices: Array = [lang.text("launch.autostart.none")]
+	for i in range(1, presets.SLOTS + 1):
+		var key := "launch.autostart.slot" if used.has(i) else "launch.autostart.empty"
+		choices.append(lang.text(key) % i)
+	return choices
 
 
 func _launch_choice(key: String, label_key: String, choices: Array, index: int,
@@ -896,6 +921,8 @@ func _on_web_launch_set(key: String, value: Variant):
 			Launch.max_fps = Launch.MAX_FPS[clampi(index, 0, Launch.MAX_FPS.size() - 1)]
 		"hide_panel":
 			Launch.hide_panel = bool(value)
+		"auto_start":
+			Launch.auto_start = clampi(index, 0, presets.SLOTS)
 		"web_bind":
 			Launch.web_bind = _launch_address(index)
 		"osc_bind":

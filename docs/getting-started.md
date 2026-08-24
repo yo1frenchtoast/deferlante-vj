@@ -24,6 +24,7 @@ show starts.
 | `SOUND LISTENED TO` | the output playing at launch, a named output, or a named input | The show taps an output on its way past. It listens to an input as it is, for when something else on the machine sits in the middle. A live meter under the row shows what the choice carries. The show does this again at every launch, thus it cannot point at last night's interface. Linux with PipeWire or PulseAudio only. |
 | `AUDIO INPUT` | automatic, or a named source | The same row, on a machine where the show cannot route the sound — Windows, mainly. The row is disabled where Godot ignores the choice too. [Audio reactivity](external-control.md#audio-reactivity) explains both rows. |
 | `PANEL` | hidden for the whole set | For a machine that only projects, and that a phone drives. `F3` still works. |
+| `START ON` | the defaults, or a preset slot | The state the show comes up in. See [starting on a preset](#starting-on-a-preset). |
 | `WEB ACCESS` | this machine only, or one of its addresses | Loopback by default. The control surface has no password, thus you let the room in on purpose. To let a phone in, pick an address here. |
 | `OSC ACCESS` | this machine only, or one of its addresses | The same decision for OSC, answered separately. See [OSC](external-control.md#external-control-over-osc). |
 | `WEB PORT` · `OSC PORT` | | The show binds these ports at start-up, thus you cannot move them later. |
@@ -41,6 +42,31 @@ in place. If you choose the other renderer, the show starts the process again wi
 `--rendering-method`, and the new process skips this screen. If that restart fails,
 the show starts on the renderer that already runs and says so in the console. A black
 screen ten minutes before the doors open is worse than the wrong renderer.
+
+### Starting on a preset
+
+Every other row here answers *how* the machine runs. `START ON` answers **what the
+show is doing when it comes up**, which is the one decision no surface can make. At
+that moment no console has sent anything, no phone has connected, and nobody is at the
+keyboard.
+
+Pick a slot and the show recalls it at start-up, before the first frame. Save a slot
+with `RANDOMIZER` up and the machine starts a show that runs itself. Save one with a
+look you like and it starts there instead. Both matter on a projector on a shelf, or
+on an Android box with a remote and no keyboard.
+
+The recall is **instant, not a crossfade**, whatever `RECALL FADE` says. A fade from
+the defaults is a fade from a look that nobody chose, and there is no audience yet to
+fade for.
+
+The row names the nine slots and says which ones are empty. An empty slot is still
+offered, because you can save into it once the show is up. If the chosen slot holds
+nothing when the show starts, the defaults stand and nothing is said about it. A
+preset saved before a setting existed leaves that setting alone, exactly as a recall
+during the show does.
+
+`START ON` is not a copy of the `RANDOMIZER` slider. That slider stays where it always
+was, reachable from every surface at any moment. This row decides where it starts.
 
 ### Skipping it
 
@@ -265,6 +291,9 @@ operator dimmed it deliberately.
 
 A preset saved before a setting existed leaves that setting alone. Thus old presets
 continue to work after the project gets new ones.
+
+A slot can also be what the show starts on. See
+[starting on a preset](#starting-on-a-preset).
 
 The slots are in `user://presets.json`. On Linux this is
 `~/.local/share/godot/app_userdata/Déferlante/`. They belong to the machine, not to

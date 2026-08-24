@@ -1,3 +1,4 @@
+class_name Presets
 extends Node
 
 ## Named snapshots of every setting, saved to disk and recalled live.
@@ -45,6 +46,24 @@ func has_slot(slot: int) -> bool:
 	return _slots.has(str(slot))
 
 
+## Which slots are on disk, read without a node. The launcher runs in its own
+## scene, long before this one exists, and it has to say which slots it can offer
+## to start on. It reads the file rather than keeps a list beside it: the path and
+## the shape of the file stay knowledge of this script alone.
+static func slots_on_disk() -> Array:
+	if not FileAccess.file_exists(PATH):
+		return []
+	var text := FileAccess.get_file_as_string(PATH)
+	var parsed = JSON.parse_string(text)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return []
+	var used: Array = []
+	for i in range(1, SLOTS + 1):
+		if parsed.has(str(i)):
+			used.append(i)
+	return used
+
+
 func used_slots() -> Array:
 	var used: Array = []
 	for i in range(1, SLOTS + 1):
@@ -84,7 +103,10 @@ func clear_slot(slot: int) -> bool:
 # Recalling
 # --------------------------------------------------------------------------
 
-func recall(slot: int) -> bool:
+## `instant` lands the preset in one frame whatever `recall_time` says. The show
+## uses it to start on a slot: a crossfade from the defaults is a fade from a look
+## nobody chose, and there is no audience yet to fade for.
+func recall(slot: int, instant: bool = false) -> bool:
 	if not has_slot(slot) or not all_params.is_valid():
 		return false
 
@@ -98,7 +120,7 @@ func recall(slot: int) -> bool:
 			_from[p.slug] = p.value
 			_to[p.slug] = float(target[p.slug])
 
-	if recall_time <= 0.0:
+	if instant or recall_time <= 0.0:
 		_apply(1.0)
 		_fade = -1.0
 	else:

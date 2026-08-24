@@ -65,6 +65,12 @@ var audio_device: String = ""
 ## The settings panel never appears at all. For a machine that only projects, where
 ## the panel would be on the wall and the driving happens from a phone.
 var hide_panel: bool = false
+## The preset slot to start the show on, or 0 for none. Not a duplicate of the
+## RANDOMIZER slider or of any other setting: it is the *state* the show comes up
+## in, and the one thing no surface can reach, because none of them is connected
+## yet. A machine on a shelf with nobody at it starts on the look it was left with,
+## and a slot saved with RANDOMIZER up starts a show that runs itself.
+var auto_start: int = 0
 ## The address the web surface binds to. Loopback by default: the control surface
 ## has no password, so being reachable from the whole room is something one turns
 ## on, knowing the room. The launcher offers the machine's own addresses.
@@ -105,6 +111,7 @@ func load_from_disk():
 	osc_bind = cfg.get_value("io", "osc_bind", osc_bind)
 	osc_port = cfg.get_value("io", "osc_port", osc_port)
 	hide_panel = cfg.get_value("ui", "hide_panel", hide_panel)
+	auto_start = clampi(int(cfg.get_value("ui", "auto_start", auto_start)), 0, 9)
 	# Files written before this was a code hold the old enum value, where 0 meant
 	# French and 1 meant English. Reading them as the enum stands now would open
 	# the show in the other tongue, so an int is migrated rather than trusted.
@@ -151,6 +158,7 @@ func save():
 	cfg.set_value("io", "osc_bind", osc_bind)
 	cfg.set_value("io", "osc_port", osc_port)
 	cfg.set_value("ui", "hide_panel", hide_panel)
+	cfg.set_value("ui", "auto_start", auto_start)
 	cfg.set_value("ui", "language", Lang.code_of(language))
 	cfg.save(PATH)
 

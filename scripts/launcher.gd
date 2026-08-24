@@ -35,6 +35,7 @@ var _vsync: CheckBox
 var _max_fps: OptionButton
 var _audio: OptionButton
 var _hide_panel: CheckBox
+var _auto_start: OptionButton
 var _web_access: OptionButton
 var _web_port: SpinBox
 var _osc_access: OptionButton
@@ -161,6 +162,10 @@ func _build():
 		_audio.disabled = true
 		_note(grid).text = lang.text("launch.audio.blind")
 	_hide_panel = _check(grid, "launch.panel", "launch.panel.hidden")
+	# Beside PANEL on purpose: both answer the same question, which is whether
+	# anybody is standing in front of this machine tonight.
+	_auto_start = _option(grid, "launch.autostart", _auto_start_choices())
+	_note(grid).text = lang.text("launch.autostart.hint")
 	_web_access = _option(grid, "launch.access", _access_choices())
 	# A saved address the network has taken back would fail to bind and leave the
 	# surface silently off. It falls back to this machine; the row says so rather
@@ -199,6 +204,20 @@ func _heading(grid: GridContainer, key: String):
 	label.text = lang.text(key)
 	label.add_theme_color_override("font_color", HEADING)
 	grid.add_child(label)
+
+
+## The nine slots, each saying whether it holds anything. An empty slot is still
+## offered rather than hidden — you can save into it after the show is up, and a
+## list whose length changed with the disk would be a puzzle. But it says it is
+## empty, because a row that quietly does nothing is the failure this launcher
+## keeps trying to avoid.
+func _auto_start_choices() -> Array:
+	var used := Presets.slots_on_disk()
+	var choices: Array = [lang.text("launch.autostart.none")]
+	for i in range(1, Presets.SLOTS + 1):
+		var key := "launch.autostart.slot" if used.has(i) else "launch.autostart.empty"
+		choices.append(lang.text(key) % i)
+	return choices
 
 
 func _option(grid: GridContainer, key: String, choices) -> OptionButton:
@@ -421,6 +440,7 @@ func _load_values():
 	_max_fps.selected = maxi(0, Launch.MAX_FPS.find(Launch.max_fps))
 	_audio.selected = _audio_selection()
 	_hide_panel.button_pressed = Launch.hide_panel
+	_auto_start.selected = clampi(Launch.auto_start, 0, Presets.SLOTS)
 	_web_access.selected = maxi(0, _access_addresses.find(Launch.web_bind) + 1)
 	_web_port.value = Launch.web_port
 	_osc_access.selected = maxi(0, _access_addresses.find(Launch.osc_bind) + 1)
@@ -472,6 +492,7 @@ func _collect():
 		Launch.audio_device = ("" if _audio.disabled or _audio.selected == 0
 			else _audio_devices[_audio.selected - 1])
 	Launch.hide_panel = _hide_panel.button_pressed
+	Launch.auto_start = _auto_start.selected
 	Launch.web_bind = (Launch.LOCAL if _web_access.selected == 0
 		else _access_addresses[_web_access.selected - 1])
 	Launch.web_port = int(_web_port.value)
