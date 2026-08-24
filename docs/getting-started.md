@@ -199,12 +199,13 @@ The last three rows only matter with a pad connected. See
 ### Sphere
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `CIRCLES` | 0 – 80 | Number of circles. 0 switches the effect off. It starts at 14. |
-| `SIZE` | 0.03 – 0.8 | Size of one circle, in radians on the sphere. |
+| `COUNT` | 0 – 80 | Number of shapes. 0 switches the effect off. It starts at 14. |
+| `SIZE` | 0.03 – 0.8 | Size of one shape, in radians on the sphere. |
+| `SIDES` | 0 – 12 | 0 draws circles, 3 and above polygons of that many sides. **0 by default.** |
 | `RADIUS` | 100 – 800 | Sphere radius on screen. |
 | `SPIN` | -1 – 1 | ← leftwards, → rightwards. |
 | `DEPTH` | 1.2 – 10 | Eye distance. A small value gives strong perspective. |
-| `WIDTH` | 1 – 24 | Circle stroke width. |
+| `WIDTH` | 1 – 24 | Shape stroke width. |
 | `GLASS` | 0 – 1 | 0 is an opaque sphere, 1 shows the far side through it. |
 
 ### Hyperspace

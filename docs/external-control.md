@@ -334,8 +334,9 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/audio/warp` | 0 – 12 | 2.5 | AUDIO › HYPERSPACE ← BASS |
 | `/deferlante/audio/lasers` | 0 – 12 | 2.5 | AUDIO › LASERS ← MID |
 | `/deferlante/audio/sphere` | 0 – 12 | 2.5 | AUDIO › SPHERE ← TREBLE |
-| `/deferlante/sphere/count` | 0 – 80 | 14 | SPHERE › CIRCLES |
+| `/deferlante/sphere/count` | 0 – 80 | 14 | SPHERE › COUNT |
 | `/deferlante/sphere/size` | 0.03 – 0.8 | 0.13 | SPHERE › SIZE |
+| `/deferlante/sphere/sides` | 0 – 12 | 0 | SPHERE › SIDES |
 | `/deferlante/sphere/radius` | 100 – 800 | 400 | SPHERE › RADIUS |
 | `/deferlante/sphere/spin` | -1 – 1 | 0.6 | SPHERE › SPIN |
 | `/deferlante/sphere/depth` | 1.2 – 10 | 2 | SPHERE › DEPTH |

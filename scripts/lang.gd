@@ -83,8 +83,9 @@ const LABELS := {
 	"audio/lasers": ["LASERS ← MID", "LASERS ← MÉDIUMS"],
 	"audio/sphere": ["SPHERE ← TREBLE", "SPHÈRE ← AIGUS"],
 
-	"sphere/count": ["CIRCLES", "CERCLES"],
+	"sphere/count": ["COUNT", "NOMBRE"],
 	"sphere/size": ["SIZE", "TAILLE"],
+	"sphere/sides": ["SIDES", "CÔTÉS"],
 	"sphere/radius": ["RADIUS", "RAYON"],
 	"sphere/spin": ["SPIN", "ROTATION"],
 	"sphere/depth": ["DEPTH", "PROFONDEUR"],
@@ -105,6 +106,13 @@ const TEXTS := {
 	"section.lasers": ["LASERS", "LASERS"],
 	"section.spot": ["SPOTLIGHT", "POURSUITE"],
 	"section.audio": ["AUDIO", "SON"],
+	# SPHERE names the projection, not what is projected. It was shown as SHAPES for
+	# a while, on the ground that what is laid on the sphere stopped being circles
+	# the day SIDES arrived. That is true of the shapes and beside the point for the
+	# section: RADIUS, DEPTH, SPIN and GLASS all describe the surface, and under
+	# SHAPES they had nothing to belong to. The settings that do count and size the
+	# drawn things say "shape" in their own labels and hints, which is where the
+	# distinction belongs.
 	"section.sphere": ["SPHERE", "SPHÈRE"],
 	"section.warp": ["HYPERSPACE", "HYPERESPACE"],
 
@@ -284,14 +292,15 @@ const HINTS := {
 	"audio/spot": ["The kick drives the spotlight: its radius and its stroke width.", "Le kick pilote la poursuite : son rayon et son épaisseur."],
 	"audio/warp": ["The kick drives the star field: how fast it flies and how thick the streaks are.", "Le kick pilote le champ d'étoiles : sa vitesse et l'épaisseur des traînées."],
 	"audio/lasers": ["Mids drive the lasers: their length and their stroke width.", "Les médiums pilotent les lasers : leur longueur et leur épaisseur."],
-	"audio/sphere": ["Treble drives the sphere: the circle size and the stroke width.", "Les aigus pilotent la sphère : la taille des cercles et leur épaisseur."],
+	"audio/sphere": ["Treble drives the sphere: the shape size and the stroke width.", "Les aigus pilotent la sphère : la taille des formes et leur épaisseur."],
 
-	"sphere/count": ["Number of circles. 0 switches the effect off.", "Nombre de cercles. 0 éteint l'effet."],
-	"sphere/size": ["Size of one circle, in radians on the sphere.", "Taille d'un cercle, en radians sur la sphère."],
+	"sphere/count": ["Number of shapes. 0 switches the effect off.", "Nombre de formes. 0 éteint l'effet."],
+	"sphere/size": ["Size of one shape, in radians on the sphere.", "Taille d'une forme, en radians sur la sphère."],
+	"sphere/sides": ["0 draws circles, 3 and above draw polygons of that many sides.", "0 dessine des cercles, 3 et plus des polygones à autant de côtés."],
 	"sphere/radius": ["Sphere radius on screen.", "Rayon de la sphère à l'écran."],
 	"sphere/spin": ["Direction and speed of the sphere. ← leftwards, → rightwards.", "Sens et vitesse de rotation de la sphère. ← gauche, → droite."],
 	"sphere/depth": ["Eye distance. A small value gives strong perspective.", "Distance de l'œil. Petit donne une perspective forte."],
-	"sphere/width": ["Circle stroke width.", "Épaisseur des cercles."],
+	"sphere/width": ["Shape stroke width.", "Épaisseur des formes."],
 	"sphere/glass": ["0 is an opaque sphere, 1 shows the far side through it.", "0 sphère opaque, 1 laisse voir la face arrière au travers."],
 
 	"warp/count": ["Number of stars. 0 switches the effect off.", "Nombre d'étoiles. 0 éteint l'effet."],

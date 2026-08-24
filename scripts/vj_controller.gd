@@ -247,6 +247,7 @@ func _build_params():
 	_section("section.sphere")
 	_prop("sphere/count", 0, 80, 1, 14.0, sphere, "circle_count")
 	_prop("sphere/size", 0.03, 0.8, 0.01, 0.13, sphere, "circle_size")
+	_prop("sphere/sides", 0, 12, 1, 0.0, sphere, "sides")
 	_prop("sphere/radius", 100, 800, 10, 400.0, sphere, "sphere_radius")
 	_prop("sphere/spin", -1, 1, 0.05, 0.6, sphere, "spin", true)
 	_prop("sphere/depth", 1.2, 10, 0.1, 2.0, sphere, "eye_distance")

@@ -169,6 +169,10 @@ function sphereSize(value) {
 	local.send("/deferlante/sphere/size", value);
 }
 
+function sphereSides(value) {
+	local.send("/deferlante/sphere/sides", value);
+}
+
 function sphereRadius(value) {
 	local.send("/deferlante/sphere/radius", value);
 }

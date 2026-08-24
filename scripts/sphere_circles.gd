@@ -19,6 +19,11 @@ extends Node2D
 @export var sphere_radius: float = 400.0
 ## Angular radius of a circle on the sphere, in radians.
 @export var circle_size: float = 0.13
+## Number of sides of each shape. 0 gives circles; 3 and above give regular
+## polygons inscribed in the same ellipse, so a triangle reaches as far from its
+## centre as the circle it replaces, while covering less ground. 1 and 2 cannot
+## close a shape and are read as circles.
+@export var sides: int = 0
 @export var spin: float = 0.6
 ## Eye distance, in sphere radii. Small means strong perspective, large means a
 ## near-orthographic projection where circles no longer shrink.
@@ -151,9 +156,19 @@ func _project(line: Line2D, v: Vector3, center: Vector2, tangential: float, hue:
 	radial = radial.normalized() if radial.length() > 0.001 else Vector2.RIGHT
 	var tangent := Vector2(-radial.y, radial.x)
 
+	# A circle is sampled finely enough to look smooth; a polygon wants exactly its
+	# own vertices, and nothing between them. The same loop serves both: `segments`
+	# is a resolution in the first case, a side count in the second.
+	var steps := segments if sides < 3 else sides
+	# A circle looks the same whichever way it is turned, a polygon does not: with a
+	# common phase every shape would point at the sphere's centre in step, which
+	# reads as a pattern rather than as a surface. The hue already gives each shape
+	# a number of its own, so it serves as the angle too.
+	var phase := 0.0 if sides < 3 else hue * TAU
+
 	line.clear_points()
-	for j in range(segments + 1):
-		var angle := TAU * float(j) / segments
+	for j in range(steps + 1):
+		var angle := phase + TAU * float(j) / steps
 		line.add_point(
 			origin + tangent * (semi_major * cos(angle)) + radial * (semi_minor * sin(angle))
 		)

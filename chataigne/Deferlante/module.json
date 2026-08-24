@@ -571,7 +571,7 @@
         }
       }
     },
-    "Sphere Circles": {
+    "Sphere Count": {
       "menu": "Sphere",
       "callback": "sphereCount",
       "parameters": {
@@ -595,6 +595,20 @@
           "min": 0.03,
           "max": 0.8,
           "default": 0.13,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Sphere Sides": {
+      "menu": "Sphere",
+      "callback": "sphereSides",
+      "parameters": {
+        "Value": {
+          "type": "Integer",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 12.0,
+          "default": 0.0,
           "mappingIndex": 0
         }
       }

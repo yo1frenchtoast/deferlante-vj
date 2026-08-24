@@ -27,7 +27,7 @@ thin so the mirror has something to repeat:*
 - **COLOR** — `MODE MANUAL` · `RED 1` · `GREEN 0` · `BLUE 0` · `SATURATION 1`
 - **LASERS** — `COUNT 18` · `WIDTH 1` · `LENGTH 2` · `SPIN -0.6` · `PARALLEL 0.58` · `SCROLL 1`
 - **SPOTLIGHT** — `RADIUS 295` · `WIDTH 17` · `HOLD 0.6` · `FREQUENCY 13.5`
-- **SPHERE** — `CIRCLES 18` · `GLASS 1`
+- **SPHERE** — `COUNT 18` · `SIDES 6` · `GLASS 1`
 - **GLOBAL** — `SPEED 0.4` · `CHAOS 0.56` · `GLOW 1.25`
 
 ![Lasers, the sphere and the spotlight, with the panel open](docs/screenshot.png)
