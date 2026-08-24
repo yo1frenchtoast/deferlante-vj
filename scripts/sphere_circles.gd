@@ -13,7 +13,15 @@ extends Node2D
 
 @export var circle_count: int = 14:
 	set(value):
-		circle_count = maxi(0, value)
+		# Only a real change rebuilds. A preset crossfade writes every setting on
+		# every frame, and most of those writes land on the number already there:
+		# without this every circle was freed and built again sixty times a second,
+		# and since a rebuild draws fresh hues the sphere flickered through random
+		# colours for the length of the fade.
+		var wanted := maxi(0, value)
+		if wanted == circle_count:
+			return
+		circle_count = wanted
 		if is_inside_tree():
 			_rebuild()
 @export var sphere_radius: float = 400.0
@@ -66,17 +74,18 @@ func _ready():
 	_rebuild()
 
 
+## Builds or frees the difference, never the whole sphere. A crossfade walks the
+## count up one at a time, and rebuilding outright at each step cost a frame and
+## drew fresh hues with it, so the sphere jumped to new colours on its way across.
 func _rebuild():
-	for c in _circles:
-		c.queue_free()
-	_circles.clear()
-	# The echoes are children of their circle, so they go with it; the list only
-	# has to forget them.
-	_halos.clear()
-	_dirs.clear()
-	_hues.clear()
+	while _circles.size() > circle_count:
+		# The echo is a child of its circle, so it goes with it; the list only has
+		# to forget it.
+		_circles.pop_back().queue_free()
+		_halos.pop_back()
+		_hues.remove_at(_hues.size() - 1)
 
-	for i in range(circle_count):
+	while _circles.size() < circle_count:
 		var line := Line2D.new()
 		line.material = _material
 		line.width = line_width
@@ -85,8 +94,14 @@ func _rebuild():
 		var halo := Halo.attach(line)
 		halo.amount = halo_amount
 		_halos.append(halo)
-		_dirs.append(_fibonacci_point(i, circle_count))
 		_hues.append(randf())
+
+	# Every direction is recomputed even so: a Fibonacci point is placed against
+	# the total, so the circles that stay do shift when a new one joins them. That
+	# is array arithmetic, not a node being born.
+	_dirs.resize(circle_count)
+	for i in range(circle_count):
+		_dirs[i] = _fibonacci_point(i, circle_count)
 
 
 ## Fibonacci distribution: evenly spaced points over the sphere, without the

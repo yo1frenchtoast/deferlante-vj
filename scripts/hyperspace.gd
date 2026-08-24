@@ -20,7 +20,14 @@ const NEAR := 0.04
 ## Number of stars. 0 switches the effect off outright — no work, no draw.
 @export var star_count: int = 0:
 	set(value):
-		star_count = maxi(0, value)
+		# Only a real change rebuilds. A preset crossfade writes every setting on
+		# every frame, and most of those writes land on the number already there:
+		# without this the whole field was thrown away and respawned sixty times a
+		# second, which cost the frame and restarted the stars as it went.
+		var wanted := maxi(0, value)
+		if wanted == star_count:
+			return
+		star_count = wanted
 		if is_inside_tree():
 			_rebuild()
 ## Depths crossed per second. At 1 a star takes about a second to come the whole way.
@@ -59,13 +66,17 @@ func _ready():
 	_rebuild()
 
 
+## Only the stars that are new get placed. Resizing keeps what the arrays already
+## hold, so a field that grows during a crossfade keeps flying: respawning all of
+## them teleported the whole sky every time the count moved by one.
 func _rebuild():
+	var had := _x.size()
 	_x.resize(star_count)
 	_y.resize(star_count)
 	_z.resize(star_count)
 	_hues.resize(star_count)
 	_wobble.resize(star_count)
-	for i in range(star_count):
+	for i in range(had, star_count):
 		_spawn(i, randf())
 	# A field of nought stars must not cost a frame of anything.
 	set_process(star_count > 0)
