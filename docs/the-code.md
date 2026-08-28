@@ -12,6 +12,8 @@ scenes/
   laser.tscn     One stroke, instanced N times by the controller
 chataigne/
   Deferlante/    Chataigne module, ready to install
+addons/
+  godot-spout/   The Spout GDExtension, DLLs included (Windows exports only)
 web/
   index.html     Touch control surface, built from the schema Godot sends
   docs.html      Swagger UI for the REST API, served at /docs
@@ -40,6 +42,7 @@ scripts/
   audio_routing.gd  Points the machine's capture at the output being played
   audio_probe.gd    Meters a source for the launcher, without the engine's help
   autopilot.gd      Moves settings on its own, at the pace you set
+  spout_sender.gd   Sends the show out as a Spout source, where the platform allows it
 ```
 
 The controller is the only script that knows that the others exist. `rest_api.gd`,
@@ -219,6 +222,30 @@ lists of its own beside them. One of those lists had drifted in both directions
 unnoticed. Six settings that only ever land on whole numbers were offered to the console
 as floats. And one named there had not existed in Godot for months. To derive the list
 costs a headless run and cannot drift.
+
+## The show has its own viewport
+
+The visuals draw into a `SubViewport` (`ShowLayer` in `main.tscn`), and the panel sits
+above it on its own `CanvasLayer`. The projector shows both, one on top of the other.
+`SpoutSender` is given the texture of that viewport, thus what leaves the machine is
+the show without a slider on it.
+
+The container has to be inside a `CanvasLayer` of its own. A `SubViewportContainer`
+put directly under `VJController` — a `Node2D`, not a `CanvasLayer` — draws nothing at
+all. `ControlPanel` and the kaleidoscope were already wrapped the same way.
+
+The kaleidoscope keeps its `hint_screen_texture` pass unchanged. It stayed in the same
+viewport as the strokes that it folds.
+
+`SpoutSender` never names `SpoutOutput` as a type. It asks `ClassDB` for the class and
+stays off where there is none, the same way `audio_routing.gd` guards the other
+platform-only surface here. Thus the Linux and Android exports, which never get the
+DLLs, load `main.tscn` with nothing missing.
+
+The addon's own OpenGL backend was measured on this project and does not work: it
+fails with `Could not get OpenGL texture handle` on every frame. Thus the sender asks
+`RenderingServer.get_rendering_device()` first, which is null under Compatibility, and
+it starts on Forward+ only.
 
 ## A note on the renderer
 

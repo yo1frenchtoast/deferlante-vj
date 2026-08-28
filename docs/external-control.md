@@ -136,10 +136,10 @@ a shelf, or it is an Android box with a remote and no keyboard. Yet every one of
 rows has to be answered *before* the show starts, which is precisely when nobody
 stands at it.
 
-The tab offers the renderer, antialiasing, resolution, fullscreen, vsync, max FPS, the
-panel, the preset to start on, both access rows, both ports and the language. The list
-of slots is read from the show rather than from disk, thus a slot saved from a phone a
-moment ago can be chosen without a restart. It saves each one to
+The tab offers the renderer, antialiasing, resolution, fullscreen, vsync, max FPS,
+Spout, the panel, the preset to start on, both access rows, both ports and the
+language. The list of slots is read from the show rather than from disk, thus a slot
+saved from a phone a moment ago can be chosen without a restart. It saves each one to
 `launch.cfg` the moment that you touch it, thus a restart by any route comes up on
 what you asked for. The audio rows are deliberately absent. Which output the show
 listens to is bound when capture opens, and cannot be moved afterwards. An honest

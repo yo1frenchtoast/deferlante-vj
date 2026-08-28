@@ -72,7 +72,32 @@ haze, decrease `SATURATION` towards 0.4–0.5. A near-white beam cuts through ha
 better than a heavily saturated color.
 
 Before the audience arrives, press `H` and then let the panel fade. The sliders are in
-a `CanvasLayer`, thus the projector puts them on the wall with everything else.
+a `CanvasLayer`, thus the projector puts them on the wall with everything else. The
+Spout feed is the one place where they do not appear.
+
+A screen that is not 16:9 gets the whole image. The show fills a 16:10 panel or a
+1200-line laptop instead of putting black borders at the top and the bottom. The
+effects take the extra canvas: nothing is stretched, and nothing is cut off.
+
+## Sending the show out
+
+Turn `SPOUT` on at the launcher and the show becomes a live source named
+`Déferlante`. Resolume, TouchDesigner and OBS take it directly, thus you do not
+capture the window and you do not point a second machine at the projector.
+
+Two conditions, both of them said at the launcher rather than found out at the
+venue:
+
+- Windows only. Spout is a Windows standard, and the Linux and Android builds ship
+  without the extension. The row is disabled there.
+- The Forward+ renderer. Under Compatibility the sender stays off and says so once in
+  the console. This project ships on Compatibility, thus SPOUT usually means one more
+  row changed, and one restart.
+
+What goes out is the show alone. The visuals live in their own `SubViewport`, and the
+panel sits above it, thus the sliders never reach the tool downstream.
+
+Verified end to end with OBS 32 and the `obs-spout2-plugin`.
 
 ## Measuring performance (F3)
 

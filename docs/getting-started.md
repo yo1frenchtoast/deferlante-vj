@@ -17,12 +17,13 @@ show starts.
 | `LANGUAGE` | FRANÇAIS / ENGLISH | This row is first, because it decides the words of every other row. |
 | `RENDERER` | Compatibility / Forward+ | Compatibility is two times as fast. Only Forward+ does antialiasing. **This row restarts the app.** |
 | `ANTIALIASING` | none / MSAA 2× 4× 8× | Forward+ only. The Compatibility renderer ignores 2D MSAA. |
-| `RESOLUTION` | the screen's own, or a fixed size | |
+| `RESOLUTION` | the screen's own, or a fixed size | 16:9 and 16:10 sizes, from 720p to 4K. The show fills the shape that it is given, thus a 16:10 screen gets no black borders. |
 | `FULLSCREEN` | | `F11` also toggles it during the show. |
 | `VSYNC` | | |
 | `MAX FPS` | uncapped, or a refresh rate | Frames above the refresh rate of the projector cost the same to draw. Nobody sees them. |
 | `SOUND LISTENED TO` | the output playing at launch, a named output, or a named input | The show taps an output on its way past. It listens to an input as it is, for when something else on the machine sits in the middle. A live meter under the row shows what the choice carries. The show does this again at every launch, thus it cannot point at last night's interface. Linux with PipeWire or PulseAudio only. |
 | `AUDIO INPUT` | automatic, or a named source | The same row, on a machine where the show cannot route the sound — Windows, mainly. The row is disabled where Godot ignores the choice too. [Audio reactivity](external-control.md#audio-reactivity) explains both rows. |
+| `SPOUT` | off, or the show sent out | Windows only, and only on the Forward+ renderer. The show becomes a Spout source named `Déferlante`, which Resolume, TouchDesigner or OBS take live. The row says so where the build has no Spout extension. See [sending the show out](in-the-room.md#sending-the-show-out). |
 | `PANEL` | hidden for the whole set | For a machine that only projects, and that a phone drives. `F3` still works. |
 | `START ON` | the defaults, or a preset slot | The state the show comes up in. See [starting on a preset](#starting-on-a-preset). |
 | `WEB ACCESS` | this machine only, or one of its addresses | Loopback by default. The control surface has no password, thus you let the room in on purpose. To let a phone in, pick an address here. |
