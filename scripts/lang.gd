@@ -191,6 +191,12 @@ const TEXTS := {
 		"this Godot build ignores the choice — see tools/listen-to-output.sh",
 		"ce Godot ignore ce choix — voir tools/listen-to-output.sh",
 	],
+	"launch.spout": ["SPOUT", "SPOUT"],
+	"launch.spout.on": ["send the show out (Windows only)", "envoyer le show en sortie (Windows uniquement)"],
+	"launch.spout.unavailable": [
+		"this build has no Spout extension — export for Windows to get one",
+		"cet export n'a pas l'extension Spout — exportez pour Windows pour l'avoir",
+	],
 	"launch.panel": ["PANEL", "PANNEAU"],
 	"launch.autostart": ["START ON", "DÉMARRER SUR"],
 	"launch.autostart.none": ["the defaults", "les valeurs par défaut"],

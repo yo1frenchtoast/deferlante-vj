@@ -34,6 +34,7 @@ var _fullscreen: CheckBox
 var _vsync: CheckBox
 var _max_fps: OptionButton
 var _audio: OptionButton
+var _spout: CheckBox
 var _hide_panel: CheckBox
 var _auto_start: OptionButton
 var _web_access: OptionButton
@@ -161,6 +162,12 @@ func _build():
 		# operational. Whether it can is probed, not assumed — see `_input_honoured()`.
 		_audio.disabled = true
 		_note(grid).text = lang.text("launch.audio.blind")
+	_spout = _check(grid, "launch.spout", "launch.spout.on")
+	if not ClassDB.class_exists("SpoutOutput"):
+		# A checkbox that can never do anything on this build has to say so, the
+		# same way the audio row does when this backend cannot route sound either.
+		_spout.disabled = true
+		_note(grid).text = lang.text("launch.spout.unavailable")
 	_hide_panel = _check(grid, "launch.panel", "launch.panel.hidden")
 	# Beside PANEL on purpose: both answer the same question, which is whether
 	# anybody is standing in front of this machine tonight.
@@ -439,6 +446,7 @@ func _load_values():
 	_vsync.button_pressed = Launch.vsync
 	_max_fps.selected = maxi(0, Launch.MAX_FPS.find(Launch.max_fps))
 	_audio.selected = _audio_selection()
+	_spout.button_pressed = Launch.spout_enabled and not _spout.disabled
 	_hide_panel.button_pressed = Launch.hide_panel
 	_auto_start.selected = clampi(Launch.auto_start, 0, Presets.SLOTS)
 	_web_access.selected = maxi(0, _access_addresses.find(Launch.web_bind) + 1)
@@ -491,6 +499,7 @@ func _collect():
 		# leave a setting in the file that quietly does nothing on the next launch.
 		Launch.audio_device = ("" if _audio.disabled or _audio.selected == 0
 			else _audio_devices[_audio.selected - 1])
+	Launch.spout_enabled = _spout.button_pressed
 	Launch.hide_panel = _hide_panel.button_pressed
 	Launch.auto_start = _auto_start.selected
 	Launch.web_bind = (Launch.LOCAL if _web_access.selected == 0

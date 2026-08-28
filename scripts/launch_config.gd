@@ -66,6 +66,10 @@ var audio_sink: String = ""
 ## is honoured, which the PulseAudio backend does not — there `audio_sink` is the
 ## row the launcher shows instead. Empty leaves `audio_reactor.gd` its automatic pick.
 var audio_device: String = ""
+## Send the show out as a Spout source, for Resolume/TouchDesigner/OBS downstream.
+## Windows only, bound when `SpoutSender` opens the sender — see the note there.
+## Off by default: a sender nobody is receiving still costs the frame it copies.
+var spout_enabled: bool = false
 ## The settings panel never appears at all. For a machine that only projects, where
 ## the panel would be on the wall and the driving happens from a phone.
 var hide_panel: bool = false
@@ -110,6 +114,7 @@ func load_from_disk():
 	max_fps = cfg.get_value("render", "max_fps", max_fps)
 	audio_sink = cfg.get_value("io", "audio_sink", audio_sink)
 	audio_device = cfg.get_value("io", "audio_device", audio_device)
+	spout_enabled = cfg.get_value("io", "spout_enabled", spout_enabled)
 	web_bind = cfg.get_value("io", "web_bind", web_bind)
 	web_port = cfg.get_value("io", "web_port", web_port)
 	osc_bind = cfg.get_value("io", "osc_bind", osc_bind)
@@ -157,6 +162,7 @@ func save():
 	cfg.set_value("render", "max_fps", max_fps)
 	cfg.set_value("io", "audio_sink", audio_sink)
 	cfg.set_value("io", "audio_device", audio_device)
+	cfg.set_value("io", "spout_enabled", spout_enabled)
 	cfg.set_value("io", "web_bind", web_bind)
 	cfg.set_value("io", "web_port", web_port)
 	cfg.set_value("io", "osc_bind", osc_bind)

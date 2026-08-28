@@ -22,10 +22,13 @@ const OSC_PREFIX := "/deferlante/"
 ## adding a software halo on top only softens the edges.
 @export_range(0.0, 2.0, 0.01) var default_glow: float = 0.0
 
-@onready var circle: Line2D = $GlitchCircle
-@onready var sphere: Node2D = $SphereCircles
-@onready var warp: Node2D = $Hyperspace
-@onready var kaleido: CanvasLayer = $Kaleidoscope
+## Every purely-visual node lives inside this SubViewport, kept separate from
+## the control panel so the two can be captured independently (see SpoutSender).
+@onready var show_viewport: SubViewport = $ShowLayer/ShowViewportContainer/ShowViewport
+@onready var circle: Line2D = $ShowLayer/ShowViewportContainer/ShowViewport/GlitchCircle
+@onready var sphere: Node2D = $ShowLayer/ShowViewportContainer/ShowViewport/SphereCircles
+@onready var warp: Node2D = $ShowLayer/ShowViewportContainer/ShowViewport/Hyperspace
+@onready var kaleido: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Kaleidoscope
 @onready var panel: CanvasLayer = $ControlPanel
 @onready var osc: Node = $OscServer
 @onready var web: Node = $WebServer
@@ -34,6 +37,7 @@ const OSC_PREFIX := "/deferlante/"
 @onready var audio: Node = $Audio
 @onready var api: Node = $RestApi
 @onready var autopilot: Node = $Autopilot
+@onready var spout: Node = $SpoutSender
 
 var lang := Lang.new()
 ## Shared colour state, held by reference by every effect.
@@ -124,6 +128,9 @@ func _ready():
 	# a phone — which the phone then has to parse before it can draw anything.
 	for p in params:
 		p.changed.connect(func(v): _pending_values[p.slug] = v)
+
+	if Launch.spout_enabled:
+		spout.start(show_viewport.get_texture())
 
 	_refresh_status()
 
@@ -473,7 +480,7 @@ func _spawn_lasers(count: int):
 	var screen_size := get_viewport_rect().size
 	for i in range(count):
 		var laser: Line2D = laser_scene.instantiate()
-		add_child(laser)
+		show_viewport.add_child(laser)
 		laser.position = Vector2(
 			randf_range(0, screen_size.x),
 			randf_range(0, screen_size.y)
@@ -793,6 +800,8 @@ func _describe_launch() -> Dictionary:
 			_launch_toggle("vsync", "launch.vsync", Launch.vsync),
 			_launch_choice("max_fps", "launch.maxfps", rates,
 				maxi(0, Launch.MAX_FPS.find(Launch.max_fps))),
+			_launch_toggle("spout_enabled", "launch.spout", Launch.spout_enabled,
+				lang.text("launch.spout.on")),
 			_launch_toggle("hide_panel", "launch.panel", Launch.hide_panel,
 				lang.text("launch.panel.hidden")),
 			_launch_choice("auto_start", "launch.autostart", _auto_start_choices(),
@@ -940,6 +949,8 @@ func _on_web_launch_set(key: String, value: Variant):
 			Launch.vsync = bool(value)
 		"max_fps":
 			Launch.max_fps = Launch.MAX_FPS[clampi(index, 0, Launch.MAX_FPS.size() - 1)]
+		"spout_enabled":
+			Launch.spout_enabled = bool(value)
 		"hide_panel":
 			Launch.hide_panel = bool(value)
 		"auto_start":

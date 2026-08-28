@@ -14,6 +14,7 @@
 [ext_resource type="Script" uid="uid://c8527sjb6svlb" path="res://scripts/audio_reactor.gd" id="11_audio"]
 [ext_resource type="Script" uid="uid://cw6cyk8leuob0" path="res://scripts/rest_api.gd" id="12_api"]
 [ext_resource type="Script" uid="uid://bmc4vofsmn7sx" path="res://scripts/autopilot.gd" id="13_auto"]
+[ext_resource type="Script" path="res://scripts/spout_sender.gd" id="15_spout"]
 
 [sub_resource type="Environment" id="Environment_te0mf"]
 background_mode = 3
@@ -32,15 +33,41 @@ environment = SubResource("Environment_te0mf")
 [node name="VJController" type="Node2D" parent="." unique_id=1656945823]
 script = ExtResource("2_wjtrd")
 
-[node name="Hyperspace" type="Node2D" parent="VJController"]
+[node name="ShowLayer" type="CanvasLayer" parent="VJController"]
+
+[node name="ShowViewportContainer" type="SubViewportContainer" parent="VJController/ShowLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+
+[node name="ShowViewport" type="SubViewport" parent="VJController/ShowLayer/ShowViewportContainer"]
+handle_input_locally = false
+size = Vector2i(1920, 1080)
+render_target_update_mode = 4
+
+[node name="Hyperspace" type="Node2D" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport"]
 script = ExtResource("14_hyper")
 
-[node name="GlitchCircle" type="Line2D" parent="VJController" unique_id=183842512]
+[node name="GlitchCircle" type="Line2D" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport" unique_id=183842512]
 material = SubResource("CanvasItemMaterial_wjtrd")
 script = ExtResource("1_x16oa")
 
-[node name="SphereCircles" type="Node2D" parent="VJController" unique_id=964563705]
+[node name="SphereCircles" type="Node2D" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport" unique_id=964563705]
 script = ExtResource("3_sphere")
+
+[node name="Kaleidoscope" type="CanvasLayer" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport" unique_id=170079016]
+script = ExtResource("6_kaleido")
+
+[node name="Rect" type="ColorRect" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport/Kaleidoscope" unique_id=1772031414]
+material = SubResource("ShaderMaterial_kaleido")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="OscServer" type="Node" parent="VJController" unique_id=2147229394]
 script = ExtResource("4_osc")
@@ -63,16 +90,8 @@ script = ExtResource("10_presets")
 [node name="Gamepad" type="Node" parent="VJController" unique_id=1699424218]
 script = ExtResource("9_pad")
 
-[node name="Kaleidoscope" type="CanvasLayer" parent="VJController" unique_id=170079016]
-script = ExtResource("6_kaleido")
-
-[node name="Rect" type="ColorRect" parent="VJController/Kaleidoscope" unique_id=1772031414]
-material = SubResource("ShaderMaterial_kaleido")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="SpoutSender" type="Node" parent="VJController"]
+script = ExtResource("15_spout")
 
 [node name="ControlPanel" type="CanvasLayer" parent="VJController" unique_id=385245453]
 layer = 2
