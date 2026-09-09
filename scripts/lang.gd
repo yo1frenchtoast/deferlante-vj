@@ -56,6 +56,8 @@ const LABELS := {
 	"mirror/segments": ["SEGMENTS", "SEGMENTS"],
 	"mirror/rotation": ["ROTATION", "ROTATION"],
 
+	"blur/amount": ["TRAIL", "RÉMANENCE"],
+
 	"lasers/count": ["COUNT", "NOMBRE"],
 	"lasers/width": ["WIDTH", "ÉPAISSEUR"],
 	"lasers/length": ["LENGTH", "LONGUEUR"],
@@ -71,6 +73,9 @@ const LABELS := {
 	"spot/shake": ["SHAKE", "TREMBLEMENT"],
 	"spot/frequency": ["FREQUENCY", "FRÉQUENCE"],
 	"spot/spread": ["SPREAD", "ÉTALEMENT"],
+	"spot/arcs": ["ARCS", "ARCS"],
+	"spot/length": ["LENGTH", "LONGUEUR"],
+	"spot/spin": ["SPIN", "ROTATION"],
 	"spot/glitch": ["GLITCH", "GLITCH"],
 	"spot/manual": ["AIMING", "PILOTAGE"],
 	"spot/track": ["TRACKING", "SUIVI"],
@@ -103,6 +108,7 @@ const TEXTS := {
 	"section.global": ["GLOBAL", "GLOBAL"],
 	"section.color": ["COLOR", "COULEUR"],
 	"section.mirror": ["MIRROR", "MIROIR"],
+	"section.blur": ["MOTION BLUR", "FLOU CINÉTIQUE"],
 	"section.lasers": ["LASERS", "LASERS"],
 	"section.spot": ["SPOTLIGHT", "POURSUITE"],
 	"section.audio": ["AUDIO", "SON"],
@@ -132,12 +138,17 @@ const TEXTS := {
 		"ESPACE glitch    R couleurs    1-9 preset    Ctrl+1-9 enregistrer",
 	],
 	"help.keys": [
-		"H pin UI    F2 dim    F3 fps    F11 fullscreen    ESC quit",
-		"H figer l'UI    F2 discrétion    F3 fps    F11 plein écran    ÉCHAP quitter",
+		"H pin UI    F2 dim    F3 fps    F4 console    F11 fullscreen    ESC quit",
+		"H figer l'UI    F2 discrétion    F3 fps    F4 console    F11 plein écran    ÉCHAP quitter",
 	],
 	"help.pad": [
 		"pad: left stick aims    triggers size    A glitch    LB/RB freeze/boost",
 		"manette : stick gauche vise    gâchettes taille    A glitch    LB/RB gel/boost",
+	],
+	"console.title": ["Déferlante — console", "Déferlante — console"],
+	"console.none": [
+		"this platform has one window and no more",
+		"cette plateforme n'a qu'une fenêtre, pas deux",
 	],
 	"status.web": ["web surface", "surface web"],
 	"status.pad": ["pad", "manette"],
@@ -198,6 +209,19 @@ const TEXTS := {
 		"cet export n'a pas l'extension Spout — exportez pour Windows pour l'avoir",
 	],
 	"launch.panel": ["PANEL", "PANNEAU"],
+	"launch.console": ["CONSOLE", "CONSOLE"],
+	"launch.console.on": [
+		"panel and preview in a window of their own",
+		"panneau et prévisualisation dans une fenêtre à part",
+	],
+	"launch.console.hint": [
+		"for two screens: this window projects, the console drives. F4 opens it mid-set",
+		"pour deux écrans : cette fenêtre projette, la console pilote. F4 l'ouvre en cours de set",
+	],
+	"launch.console.unavailable": [
+		"this platform has one window and no more",
+		"cette plateforme n'a qu'une fenêtre, pas deux",
+	],
 	"launch.autostart": ["START ON", "DÉMARRER SUR"],
 	"launch.autostart.none": ["the defaults", "les valeurs par défaut"],
 	"launch.autostart.slot": ["preset %d", "preset %d"],
@@ -216,6 +240,13 @@ const TEXTS := {
 	"launch.webport": ["WEB PORT", "PORT WEB"],
 	"launch.oscaccess": ["OSC ACCESS", "ACCÈS OSC"],
 	"launch.oscport": ["OSC PORT", "PORT OSC"],
+	"launch.midi": ["MIDI", "MIDI"],
+	"launch.midi.auto": ["whatever is plugged in", "ce qui est branché"],
+	"launch.midi.off": ["off", "aucun"],
+	"launch.midi.hint": [
+		"a profile forces that one, plugged in or not",
+		"un profil force celui-là, branché ou non",
+	],
 	"launch.language": ["LANGUAGE", "LANGUE"],
 	"launch.go": ["START", "LANCER"],
 	"launch.restart": [
@@ -271,7 +302,8 @@ const HINTS := {
 
 	"mirror/effect": ["Kaleidoscope fold, off or on. At OFF the show does not pay for the pass.", "Pliage kaléidoscope, tout ou rien. À NON la passe n'est pas payée."],
 	"mirror/segments": ["Number of mirror wedges. 6 gives the classic star.", "Nombre de quartiers du miroir. 6 donne l'étoile classique."],
-	"mirror/rotation": ["Turns the mirrors. ← left, → right.", "Fait tourner les miroirs. ← gauche, → droite."],
+	"mirror/rotation": ["Turns the mirrors. ← left, → right. CHAOS unsettles the pace.", "Fait tourner les miroirs. ← gauche, → droite. Le CHAOS en dérègle l'allure."],
+	"blur/amount": ["Keeps the previous frames under the new one: what moves smears, what stands still does not. 0 switches the pass off.", "Garde les images précédentes sous la nouvelle : ce qui bouge file, ce qui reste net reste net. 0 coupe la passe."],
 
 	"lasers/count": ["Number of strokes. The show adds and removes them live.", "Nombre de traits. Ajoutés et retirés en direct."],
 	"lasers/width": ["Stroke width.", "Épaisseur des traits."],
@@ -288,6 +320,9 @@ const HINTS := {
 	"spot/shake": ["Tremor amplitude at rest. 0 holds it perfectly still.", "Amplitude du tremblement à l'arrêt. 0 tient parfaitement immobile."],
 	"spot/frequency": ["Tremor rate, independent of the sweep speed.", "Vitesse du tremblement, indépendante de la vitesse de balayage."],
 	"spot/spread": ["How much the pool grows when it aims away from center, like a real followspot.", "Grossissement de la tache quand elle vise loin du centre, comme une vraie poursuite."],
+	"spot/arcs": ["How many pieces the ring is cut into. 1 is a whole circle.", "En combien de morceaux l'anneau est coupé. 1 fait un cercle entier."],
+	"spot/length": ["How much of each piece is lit. 0.5 is a half, 0.25 a quarter.", "Quelle part de chaque morceau est allumée. 0.5 fait une moitié, 0.25 un quart."],
+	"spot/spin": ["Turns the shutter around the pool, without moving the head.", "Fait tourner le volet autour de la tache, sans déplacer la tête."],
 	"spot/glitch": ["Glitch chance per frame. 0.005 gives about one every 3 s.", "Probabilité de glitch par image. 0.005 fait environ un toutes les 3 s."],
 	"spot/manual": ["AUTO hands back on its own. STICK keeps the beam on the gamepad.", "AUTO rend la main toute seule, STICK garde le faisceau à la manette."],
 	"spot/track": ["Beam speed at full stick. Too slow and you lose your actor, too fast and you cannot hold them.", "Vitesse du faisceau à fond de manche. Trop lent on perd l'acteur, trop vite on ne le tient pas."],

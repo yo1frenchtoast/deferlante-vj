@@ -8,6 +8,8 @@
 [ext_resource type="Script" uid="uid://c7ds0h68455h4" path="res://scripts/control_panel.gd" id="5_panel"]
 [ext_resource type="Script" uid="uid://hyk3mrjde3i0" path="res://scripts/kaleidoscope.gd" id="6_kaleido"]
 [ext_resource type="Shader" uid="uid://12bsdtb2wo1s" path="res://shaders/kaleidoscope.gdshader" id="7_shader"]
+[ext_resource type="Script" uid="uid://b76r06fscxf41" path="res://scripts/motion_blur.gd" id="17_blur"]
+[ext_resource type="Shader" uid="uid://dmr7woid10fbb" path="res://shaders/motion_blur.gdshader" id="18_blur_shader"]
 [ext_resource type="Script" uid="uid://lj1vhqus3h5" path="res://scripts/web_server.gd" id="8_web"]
 [ext_resource type="Script" uid="uid://cqj2ao6ebwa2y" path="res://scripts/gamepad.gd" id="9_pad"]
 [ext_resource type="Script" uid="uid://qaqatliylqe6" path="res://scripts/presets.gd" id="10_presets"]
@@ -15,12 +17,20 @@
 [ext_resource type="Script" uid="uid://cw6cyk8leuob0" path="res://scripts/rest_api.gd" id="12_api"]
 [ext_resource type="Script" uid="uid://bmc4vofsmn7sx" path="res://scripts/autopilot.gd" id="13_auto"]
 [ext_resource type="Script" path="res://scripts/spout_sender.gd" id="15_spout"]
+[ext_resource type="Script" uid="uid://bhey5tmq50rqv" path="res://scripts/midi_input.gd" id="16_midi"]
+[ext_resource type="Script" uid="uid://bmnm57vufhast" path="res://scripts/console_window.gd" id="19_console"]
 
 [sub_resource type="Environment" id="Environment_te0mf"]
 background_mode = 3
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_wjtrd"]
 blend_mode = 1
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_blur"]
+shader = ExtResource("18_blur_shader")
+shader_parameter/keep = 0.0
+shader_parameter/bias = 0.006
+shader_parameter/ceiling = 0.5
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_kaleido"]
 shader = ExtResource("7_shader")
@@ -47,6 +57,31 @@ stretch = true
 handle_input_locally = false
 size = Vector2i(1920, 1080)
 render_target_update_mode = 4
+
+[node name="MotionBlur" type="CanvasLayer" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport"]
+layer = -1
+script = ExtResource("17_blur")
+
+[node name="Rect" type="ColorRect" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport/MotionBlur"]
+material = SubResource("ShaderMaterial_blur")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Echo" type="SubViewport" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport/MotionBlur"]
+handle_input_locally = false
+size = Vector2i(1920, 1080)
+render_target_update_mode = 0
+
+[node name="Frame" type="TextureRect" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport/MotionBlur/Echo"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
 
 [node name="Hyperspace" type="Node2D" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport"]
 script = ExtResource("14_hyper")
@@ -90,8 +125,14 @@ script = ExtResource("10_presets")
 [node name="Gamepad" type="Node" parent="VJController" unique_id=1699424218]
 script = ExtResource("9_pad")
 
+[node name="MidiInput" type="Node" parent="VJController"]
+script = ExtResource("16_midi")
+
 [node name="SpoutSender" type="Node" parent="VJController"]
 script = ExtResource("15_spout")
+
+[node name="Console" type="Node" parent="VJController"]
+script = ExtResource("19_console")
 
 [node name="ControlPanel" type="CanvasLayer" parent="VJController" unique_id=385245453]
 layer = 2

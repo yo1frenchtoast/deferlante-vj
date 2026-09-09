@@ -60,7 +60,8 @@ row per setting, and it had started to run off the bottom of a 1080p screen. Thi
 it cannot, at any number of settings.
 
 **The panel is grouped by when you touch a setting, not by what it drives.** The first
-column holds GLOBAL, COLOR, MIRROR and AUDIO — what you settle before a set and then
+column holds GLOBAL, COLOR, MIRROR, MOTION BLUR and AUDIO — what you settle before a set
+and then
 leave alone. The instruments follow: SPOTLIGHT, LASERS, SPHERE, HYPERSPACE. Thus the
 hand goes to the same place every night, whatever effects the show has gained since.
 The two runs are named in `control_panel.gd`, and a section in neither list joins the
@@ -71,6 +72,27 @@ sideways past it rather than grow taller. Without the cap they make one column a
 as the screen allows. That is legal, and it puts the top of the panel level with the
 help text while the width beside it stays empty. The panel belongs in the bottom band
 of the screen, where the hand and the eye both go.
+
+### The console window
+
+`console_window.gd` opens a second, native window and **moves the panel into it**. The
+panel is not copied and not rebuilt from a description: it is the same node, reparented
+into the other window, thus the two screens can never disagree about what a slider says.
+Behind it hangs `ShowViewport`'s own texture — the one the Spout sender has been sending
+out for versions — so the preview costs no second render of the show.
+
+Two things do not survive the trip, and both are handled at the seam:
+
+- **The layout.** The column count is measured against the height of the window that
+  the panel is in, and the console is a different shape from the projector. The panel
+  lays itself out again on every move and on every resize, and scales itself down when
+  even that does not fit. It only ever shrinks: a panel blown up to fill a large window
+  would be a different instrument from the one the operator used last night.
+- **The keyboard.** Input stops at the window that has the focus, and with the console
+  open the panel is in one window and the show's nodes are in the other. Thus neither
+  window handles keys of its own. Both hand every key to `VJController.route_key()`,
+  which offers it to the panel first and then to the show. Either window answers to
+  every key, and which one was clicked last does not matter.
 
 `↑` and `↓` walk the panel in the order it reads on screen, which is no longer the
 order the settings are declared in.

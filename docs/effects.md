@@ -46,6 +46,33 @@ continuous sweep with no stops. At 3 it gives a head that stays a long time on e
 target. Travel range, throw distance and the frequency of the small corrections are
 `@export`s in the inspector. Throw distance also sets the curvature of the arcs.
 
+### The shutter
+
+A followspot is not always a full circle. Put a blade across the lens and what
+lands on the wall is an arc; put two and you get the bowtie a moving head throws
+when it is half closed. `ARCS` and `LENGTH` are that blade.
+
+`ARCS` is **how many pieces the ring is cut into** and `LENGTH` **how much of each
+piece is lit**. So `ARCS` 1 with `LENGTH` 0.5 is a half pool and 0.25 a quarter,
+while `ARCS` 4 at `LENGTH` 0.5 gives four blades with four gaps. Both default to
+the whole circle, so nothing that exists changes until you reach for them.
+
+The opening is **centred on its piece** rather than started at one edge. Closing it
+therefore eats from both sides and the shape stays where the operator put it —
+start it at an edge and every turn of the knob also slides the pool round, which
+is unusable while a beam is on somebody.
+
+`SPIN` turns the shutter **without moving the head**. That distinction is the whole
+point: the pool stays on its target and the opening travels around it, which is a
+blade turning in front of a lamp rather than a shape spinning in the air. It is
+two-way, like the other spins, and sits at 0 by default.
+
+Only one piece is really drawn. A `Line2D` is a single polyline and cannot have a
+hole in it, so the rest are rotated copies parented to the first — position,
+rotation and colour all come free from that one transform, and at `ARCS` 1 no copy
+exists at all. Each copy carries its own halo, and a glitch whitens every blade
+rather than one out of four.
+
 ## The sphere effect
 
 The show lays the circles on a virtual sphere and projects them onto the screen. The
@@ -173,6 +200,62 @@ Off the edge of the frame the lookup reflects rather than clamps. A clamp smears
 last row of pixels into a flat dark panel, where a reflection carries the pattern on
 and reads as more mirror.
 
+## Motion blur
+
+`TRAIL` keeps the frame that was on screen, dims it, and draws it under the new one.
+What stands still is drawn over its own ghost and looks untouched. What moves leaves
+the ghost behind, and the eye reads the smear as speed. It is a long exposure, done one
+frame at a time.
+
+The setting is a **time**, not a fraction. It runs from about two frames at the bottom,
+which reads as a softened edge, to half a second at the top, where a laser sweep writes
+a solid ribbon. The show computes how much of the last frame survives from that time
+and the length of the frame it is in. Thus the trail lasts as long on a projector that
+drops to 30 fps as it does at 60. At **0** the pass is switched off, not left to run as
+an identity transform, and the copy below stops as well.
+
+### Why it keeps a copy of the frame
+
+The short way to write this effect is to tell the viewport never to clear itself, then
+dim last frame's pixels where they already lie. Under the **Compatibility renderer**,
+which is the one this show ships on, `CLEAR_MODE_NEVER` makes the viewport draw
+nothing at all: not the trail, not the effects, not even a flat rectangle put on top of
+it. The wall goes an even grey. Measured on Godot 4.7.2.
+
+Thus the show keeps the frame by hand. A second viewport, `Echo`, holds a copy of the
+show one frame behind, and the pass reads that copy. It costs one full-screen copy and
+one more 1080p texture, which is why `Echo` stops updating at 0 rather than copies a
+frame that nobody reads. On a software renderer with no GPU at all, the pass at full
+trail measured inside the noise of the bench (±0.5 ms), in the same band as the
+kaleidoscope.
+
+### Why the trail has a ceiling
+
+The strokes are **additive light on black**. A stroke that barely moves therefore lands
+on top of its own ghost every frame, some thirty times over at a long trail. Every
+channel pins at 1, and the spotlight — an orange ring a few pixels wide — comes out a
+fat white band. That is the washed-out ghost that this show has no contrast to spare
+for.
+
+Thus the ghost is held **below the stroke that casts it**: the pass clamps the copy to
+half scale before it dims it. The ring keeps its color and its width, and the trail
+stays the dim part, which is also what a long exposure gives you.
+
+The pass writes an opaque color rather than lays a black veil at some alpha, for the
+same class of reason. A veil is a blend, and a blend lands in 8 bits. Once a pixel is
+dim enough that the multiply rounds back to where it started, no veil ever removes it,
+and a bright stroke leaves a permanent grey scar along its path — on stage, an hour
+into the set. The pass takes a small floor off every channel each frame instead. It is
+too small to see against a live stroke, and large enough that every tail reaches black.
+
+### With the mirror on
+
+The blur is drawn **below** every effect, and the mirror is drawn above them. Thus the
+fold is already in the frame that the copy holds, and the trail is folded with it. A
+turning mirror then walks the trail around the wedges, which reads as a spiral. Know it
+before it surprises you. It cannot run away: the pass only samples and dims, thus it
+creates no light, and the floor guarantees that each frame's leftovers reach black.
+
 ## Scanlines
 
 `PARALLEL` does not tune the scatter. It crossfades between two different behaviors.
@@ -219,6 +302,9 @@ What it does, effect by effect:
 - **Hyperspace.** The vanishing point wanders, and each star takes its own pace. This
   is what stops the field reading as a screensaver: a ship on a heading rather than a
   fixed tunnel.
+- **Mirror.** The `ROTATION` of the fold no longer holds its pace. It speeds up, slows
+  down, and at 1 it goes through a standstill and turns back the other way. Chaos only
+  unsettles a turn that is already there: at `ROTATION` 0 the mirror stays still.
 
 ## Two-way speeds
 

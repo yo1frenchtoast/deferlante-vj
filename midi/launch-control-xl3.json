@@ -1,0 +1,320 @@
+{
+  "name": "Novation Launch Control XL 3",
+  "match": [
+    "Launch Control XL",
+    "LCXL3"
+  ],
+  "channel": 16,
+  "surface": "24 encoders, 8 faders, 16 buttons — the factory custom mode, unedited: faders CC 5-12, encoders CC 13-36, buttons CC 37-52, channel 16, buttons latching",
+  "controls": [
+    {
+      "cc": 5,
+      "target": "global/speed",
+      "mode": "norm",
+      "label": "Fader 1"
+    },
+    {
+      "cc": 6,
+      "target": "global/chaos",
+      "mode": "norm",
+      "label": "Fader 2"
+    },
+    {
+      "cc": 7,
+      "target": "audio/reactivity",
+      "mode": "norm",
+      "label": "Fader 3"
+    },
+    {
+      "cc": 8,
+      "target": "global/glow",
+      "mode": "norm",
+      "label": "Fader 4"
+    },
+    {
+      "cc": 9,
+      "target": "lasers/count",
+      "mode": "norm",
+      "label": "Fader 5"
+    },
+    {
+      "cc": 10,
+      "target": "spot/radius",
+      "mode": "norm",
+      "label": "Fader 6"
+    },
+    {
+      "cc": 11,
+      "target": "sphere/count",
+      "mode": "norm",
+      "label": "Fader 7"
+    },
+    {
+      "cc": 12,
+      "target": "warp/count",
+      "mode": "norm",
+      "label": "Fader 8"
+    },
+    {
+      "cc": 13,
+      "target": "spot/pulse",
+      "mode": "norm",
+      "label": "Encoder 1"
+    },
+    {
+      "cc": 14,
+      "target": "spot/width",
+      "mode": "norm",
+      "label": "Encoder 2"
+    },
+    {
+      "cc": 15,
+      "target": "spot/speed",
+      "mode": "norm",
+      "label": "Encoder 3"
+    },
+    {
+      "cc": 16,
+      "target": "spot/hold",
+      "mode": "norm",
+      "label": "Encoder 4"
+    },
+    {
+      "cc": 17,
+      "target": "spot/shake",
+      "mode": "norm",
+      "label": "Encoder 5"
+    },
+    {
+      "cc": 18,
+      "target": "spot/frequency",
+      "mode": "norm",
+      "label": "Encoder 6"
+    },
+    {
+      "cc": 19,
+      "target": "spot/spread",
+      "mode": "norm",
+      "label": "Encoder 7"
+    },
+    {
+      "cc": 20,
+      "target": "spot/glitch",
+      "mode": "norm",
+      "label": "Encoder 8"
+    },
+    {
+      "cc": 21,
+      "target": "lasers/width",
+      "mode": "norm",
+      "label": "Encoder 9"
+    },
+    {
+      "cc": 22,
+      "target": "lasers/length",
+      "mode": "norm",
+      "label": "Encoder 10"
+    },
+    {
+      "cc": 23,
+      "target": "lasers/spin",
+      "mode": "norm",
+      "label": "Encoder 11"
+    },
+    {
+      "cc": 24,
+      "target": "lasers/parallel",
+      "mode": "norm",
+      "label": "Encoder 12"
+    },
+    {
+      "cc": 25,
+      "target": "lasers/scroll",
+      "mode": "norm",
+      "label": "Encoder 13"
+    },
+    {
+      "cc": 26,
+      "target": "mirror/segments",
+      "mode": "norm",
+      "label": "Encoder 14"
+    },
+    {
+      "cc": 27,
+      "target": "mirror/rotation",
+      "mode": "norm",
+      "label": "Encoder 15"
+    },
+    {
+      "cc": 28,
+      "target": "global/randomizer",
+      "mode": "norm",
+      "label": "Encoder 16"
+    },
+    {
+      "cc": 29,
+      "target": "sphere/size",
+      "mode": "norm",
+      "label": "Encoder 17"
+    },
+    {
+      "cc": 30,
+      "target": "sphere/sides",
+      "mode": "norm",
+      "label": "Encoder 18"
+    },
+    {
+      "cc": 31,
+      "target": "sphere/radius",
+      "mode": "norm",
+      "label": "Encoder 19"
+    },
+    {
+      "cc": 32,
+      "target": "sphere/spin",
+      "mode": "norm",
+      "label": "Encoder 20"
+    },
+    {
+      "cc": 33,
+      "target": "sphere/depth",
+      "mode": "norm",
+      "label": "Encoder 21"
+    },
+    {
+      "cc": 34,
+      "target": "warp/speed",
+      "mode": "norm",
+      "label": "Encoder 22"
+    },
+    {
+      "cc": 35,
+      "target": "warp/streak",
+      "mode": "norm",
+      "label": "Encoder 23"
+    },
+    {
+      "cc": 36,
+      "target": "warp/spread",
+      "mode": "norm",
+      "label": "Encoder 24"
+    },
+    {
+      "cc": 37,
+      "target": "preset:recall:1",
+      "mode": "action",
+      "latching": true,
+      "label": "Button 1 PRESET 1"
+    },
+    {
+      "cc": 38,
+      "target": "preset:recall:2",
+      "mode": "action",
+      "latching": true,
+      "label": "Button 2 PRESET 2"
+    },
+    {
+      "cc": 39,
+      "target": "preset:recall:3",
+      "mode": "action",
+      "latching": true,
+      "label": "Button 3 PRESET 3"
+    },
+    {
+      "cc": 40,
+      "target": "preset:recall:4",
+      "mode": "action",
+      "latching": true,
+      "label": "Button 4 PRESET 4"
+    },
+    {
+      "cc": 41,
+      "target": "preset:recall:5",
+      "mode": "action",
+      "latching": true,
+      "label": "Button 5 PRESET 5"
+    },
+    {
+      "cc": 42,
+      "target": "preset:recall:6",
+      "mode": "action",
+      "latching": true,
+      "label": "Button 6 PRESET 6"
+    },
+    {
+      "cc": 43,
+      "target": "preset:recall:7",
+      "mode": "action",
+      "latching": true,
+      "label": "Button 7 PRESET 7"
+    },
+    {
+      "cc": 44,
+      "target": "preset:recall:8",
+      "mode": "action",
+      "latching": true,
+      "label": "Button 8 PRESET 8"
+    },
+    {
+      "cc": 45,
+      "target": "glitch",
+      "mode": "action",
+      "latching": true,
+      "label": "Button 9 GLITCH"
+    },
+    {
+      "cc": 46,
+      "target": "randomize",
+      "mode": "action",
+      "latching": true,
+      "label": "Button 10 RANDOMIZE"
+    },
+    {
+      "cc": 47,
+      "target": "shuffle",
+      "mode": "action",
+      "latching": true,
+      "label": "Button 11 SHUFFLE"
+    },
+    {
+      "cc": 48,
+      "target": "global/speed",
+      "mode": "momentary",
+      "latching": true,
+      "value": 0.0,
+      "label": "Button 12 FREEZE"
+    },
+    {
+      "cc": 49,
+      "target": "global/speed",
+      "mode": "momentary",
+      "latching": true,
+      "value": 2.5,
+      "label": "Button 13 BOOST"
+    },
+    {
+      "cc": 50,
+      "target": "mirror/effect",
+      "mode": "toggle",
+      "latching": true,
+      "value": 1.0,
+      "label": "Button 14 MIRROR"
+    },
+    {
+      "cc": 51,
+      "target": "global/glow",
+      "mode": "toggle",
+      "latching": true,
+      "value": 1.0,
+      "label": "Button 15 GLOW"
+    },
+    {
+      "cc": 52,
+      "target": "spot/manual",
+      "mode": "toggle",
+      "latching": true,
+      "value": 1.0,
+      "label": "Button 16 AIMING"
+    }
+  ]
+}

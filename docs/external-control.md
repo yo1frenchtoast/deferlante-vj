@@ -284,6 +284,8 @@ TouchOSC. They have no business with the knowledge that `spot/radius` runs from 
 | `/deferlante/shuffle` | one move of the auto-pilot, now, whatever pace it is set to |
 | `/deferlante/shuffle/<section>` | the same, confined to one section: `global`, `color`, `mirror`, `lasers`, `spot`, `audio`, `sphere`, `warp` |
 | `/deferlante/color/rgb` | three floats 0 → 1: the whole color in one message, and a switch to manual |
+| `/deferlante/preset/recall` | one int: recall that slot, as a crossfade over `RECALL FADE` |
+| `/deferlante/preset/save` | one int: save every setting into that slot |
 
 ### Every address
 
@@ -310,6 +312,7 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/mirror/effect` | 0 – 1 | 0 | MIRROR › EFFECT |
 | `/deferlante/mirror/segments` | 2 – 16 | 5 | MIRROR › SEGMENTS |
 | `/deferlante/mirror/rotation` | -1 – 1 | 0 | MIRROR › ROTATION |
+| `/deferlante/blur/amount` | 0 – 1 | 0 | MOTION BLUR › TRAIL |
 | `/deferlante/lasers/count` | 0 – 40 | 3 | LASERS › COUNT |
 | `/deferlante/lasers/width` | 1 – 24 | 5 | LASERS › WIDTH |
 | `/deferlante/lasers/length` | 0.1 – 2 | 1 | LASERS › LENGTH |
@@ -324,6 +327,9 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/spot/shake` | 0 – 3 | 0.4 | SPOTLIGHT › SHAKE |
 | `/deferlante/spot/frequency` | 0 – 20 | 6 | SPOTLIGHT › FREQUENCY |
 | `/deferlante/spot/spread` | 0 – 1 | 0.35 | SPOTLIGHT › SPREAD |
+| `/deferlante/spot/arcs` | 1 – 12 | 1 | SPOTLIGHT › ARCS |
+| `/deferlante/spot/length` | 0.05 – 1 | 1 | SPOTLIGHT › LENGTH |
+| `/deferlante/spot/spin` | -1 – 1 | 0 | SPOTLIGHT › SPIN |
 | `/deferlante/spot/glitch` | 0 – 0.05 | 0 | SPOTLIGHT › GLITCH |
 | `/deferlante/spot/manual` | 0 – 1 | 0 | SPOTLIGHT › AIMING |
 | `/deferlante/spot/track` | 0.2 – 3 | 0.9 | SPOTLIGHT › TRACKING |
@@ -389,6 +395,15 @@ screen, and thus projected on the wall, for the whole set.
 A ready-made Chataigne module ships in `chataigne/Deferlante/`, with its own install
 notes. It is a convenience only, because the generic OSC module of Chataigne drives the
 same addresses.
+
+## MIDI
+
+A controller plugged into the machine that runs the show is read directly, with no
+Chataigne in between. Profiles ship for the Akai APC64 and the Novation Launch
+Control XL 3, and a third controller is a third file.
+
+It is a surface of its own rather than a section here, because none of it is OSC:
+see **[MIDI control](midi.md)**.
 
 ## Audio reactivity
 

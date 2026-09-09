@@ -70,6 +70,13 @@ var audio_device: String = ""
 ## Windows only, bound when `SpoutSender` opens the sender — see the note there.
 ## Off by default: a sender nobody is receiving still costs the frame it copies.
 var spout_enabled: bool = false
+## Open the settings panel in a window of its own, on the operator's screen, with a
+## live picture of what the projector is showing. The main window stays the
+## projection and loses the panel entirely. Off on a one-screen machine, where it
+## would only put the panel in a window over the show it is meant to be beside.
+## `F4` opens and closes the same window mid-set, for the projector that gets
+## plugged in after the show has started.
+var console_window: bool = false
 ## The settings panel never appears at all. For a machine that only projects, where
 ## the panel would be on the wall and the driving happens from a phone.
 var hide_panel: bool = false
@@ -89,6 +96,14 @@ var web_port: int = 7331
 ## letting one in is no reason to let the other.
 var osc_bind: String = LOCAL
 var osc_port: int = 9000
+## Which MIDI profile from `res://midi/` drives the show. Empty or "auto" picks the
+## one whose `match` names a controller that is actually plugged in, which is the
+## answer nearly every night; a profile id forces that file even with nothing
+## connected, and "off" stops the show opening MIDI inputs at all. Held here rather
+## than on the panel because it is a decision about the desk, settled before the set.
+var midi_profile: String = ""
+
+
 ## `Lang.EN` / `Lang.FR`. Held here so the launcher speaks the same tongue as the
 ## show it is about to start. Written to disk as a code rather than as the enum
 ## value: the value is a position, and a position means nothing to a file that
@@ -119,7 +134,9 @@ func load_from_disk():
 	web_port = cfg.get_value("io", "web_port", web_port)
 	osc_bind = cfg.get_value("io", "osc_bind", osc_bind)
 	osc_port = cfg.get_value("io", "osc_port", osc_port)
+	midi_profile = cfg.get_value("io", "midi_profile", midi_profile)
 	hide_panel = cfg.get_value("ui", "hide_panel", hide_panel)
+	console_window = cfg.get_value("ui", "console_window", console_window)
 	auto_start = clampi(int(cfg.get_value("ui", "auto_start", auto_start)), 0, 9)
 	# Files written before this was a code hold the old enum value, where 0 meant
 	# French and 1 meant English. Reading them as the enum stands now would open
@@ -167,7 +184,9 @@ func save():
 	cfg.set_value("io", "web_port", web_port)
 	cfg.set_value("io", "osc_bind", osc_bind)
 	cfg.set_value("io", "osc_port", osc_port)
+	cfg.set_value("io", "midi_profile", midi_profile)
 	cfg.set_value("ui", "hide_panel", hide_panel)
+	cfg.set_value("ui", "console_window", console_window)
 	cfg.set_value("ui", "auto_start", auto_start)
 	cfg.set_value("ui", "language", Lang.code_of(language))
 	cfg.save(PATH)

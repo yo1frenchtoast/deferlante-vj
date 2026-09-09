@@ -29,15 +29,18 @@ const OSC_PREFIX := "/deferlante/"
 @onready var sphere: Node2D = $ShowLayer/ShowViewportContainer/ShowViewport/SphereCircles
 @onready var warp: Node2D = $ShowLayer/ShowViewportContainer/ShowViewport/Hyperspace
 @onready var kaleido: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Kaleidoscope
+@onready var blur: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/MotionBlur
 @onready var panel: CanvasLayer = $ControlPanel
 @onready var osc: Node = $OscServer
 @onready var web: Node = $WebServer
 @onready var pad: Node = $Gamepad
+@onready var midi: Node = $MidiInput
 @onready var presets: Node = $Presets
 @onready var audio: Node = $Audio
 @onready var api: Node = $RestApi
 @onready var autopilot: Node = $Autopilot
 @onready var spout: Node = $SpoutSender
+@onready var console: Node = $Console
 
 var lang := Lang.new()
 ## Shared colour state, held by reference by every effect.
@@ -128,6 +131,11 @@ func _ready():
 	# a phone — which the phone then has to parse before it can draw anything.
 	for p in params:
 		p.changed.connect(func(v): _pending_values[p.slug] = v)
+		# A fader holding this setting is now lying about where it is: a preset
+		# recall, the auto-pilot or a phone just moved it under the operator's hand.
+		p.changed.connect(func(_v): midi.on_param_changed(p.slug))
+
+	console.setup(panel, show_viewport, lang, route_key)
 
 	if Launch.spout_enabled:
 		spout.start(show_viewport.get_texture())
@@ -140,6 +148,13 @@ func _ready():
 	if wanted != "":
 		_dump(wanted)
 		return
+
+	# The operator's own window, where there are two screens to put one on. After the
+	# dump path above, which must never put anything on screen at all; and deferred,
+	# because a second window cannot join the tree while the first is still building
+	# it, which is what `_ready()` is.
+	if Launch.console_window:
+		console.open.call_deferred()
 
 	# A deliberate click hands the panel back, exactly like a keypress does.
 	panel.mouse_reclaimed.connect(func(): panel.set_external_control(false, discreet_brightness))
@@ -156,6 +171,18 @@ func _ready():
 	# standing, the same way an empty slot does everywhere else.
 	if Launch.auto_start > 0:
 		presets.recall(Launch.auto_start, true)
+
+	# Every door the MIDI surface can open is one another surface already had: the
+	# settings by slug, and `fire_action()` for the one-shots. Nothing new to reach
+	# means the Chataigne module still covers everything a profile can.
+	midi.find_param = param
+	midi.all_params = func(): return params
+	midi.fire = fire_action
+	midi.touched = _external_touch
+	midi.actions = ACTIONS
+	midi.preset_count = presets.SLOTS
+	midi.surface_changed.connect(_refresh_status)
+	midi.start()
 
 	pad.connection_changed.connect(_refresh_status)
 	# Wrapping the lookup catches every pad interaction in one place.
@@ -208,6 +235,14 @@ func _build_params():
 	_fn("mirror/segments", 2, 16, 1, 5.0, kaleido.set_segments)
 	_fn("mirror/rotation", -1, 1, 0.02, 0.0, kaleido.set_spin, true)
 
+	_section("section.blur")
+	# One setting, and it is the exposure time. What a longer trail does to the look
+	# is not a second decision to be made here: the strokes on screen already carry
+	# their own speed, and the blur only says how long the eye is allowed to keep
+	# them. A second slider for the strength of the ghost would be a second way of
+	# saying the same thing, out of step with the first.
+	_fn("blur/amount", 0, 1, 0.02, 0.0, blur.set_amount)
+
 	_section("section.lasers")
 	_fn("lasers/count", 0, 40, 1, laser_count, _set_laser_count)
 	_fn("lasers/width", 1, 24, 0.5, 5.0, _set_laser_width)
@@ -226,6 +261,10 @@ func _build_params():
 	_prop("spot/shake", 0, 3, 0.05, 0.4, circle, "wobble_amount")
 	_prop("spot/frequency", 0, 20, 0.5, 6.0, circle, "wobble_speed")
 	_prop("spot/spread", 0, 1, 0.02, 0.35, circle, "spread_amount")
+	# The shutter. Both default to the full circle, so no show that exists changes.
+	_prop("spot/arcs", 1, 12, 1, 1.0, circle, "arcs")
+	_prop("spot/length", 0.05, 1, 0.01, 1.0, circle, "arc_length")
+	_prop("spot/spin", -1, 1, 0.05, 0.0, circle, "spin", true)
 	_prop("spot/glitch", 0, 0.05, 0.001, 0.0, circle, "glitch_chance")
 	var manual := _fn("spot/manual", 0, 1, 1, 0.0, _set_manual_lock)
 	manual.choices = PackedStringArray(["mode.auto", "mode.manual_lock"])
@@ -356,6 +395,9 @@ func _refresh_status():
 	var meter: String = _audio_meter()
 	if meter != "":
 		bits.append(meter)
+	var surface: String = midi.surface()
+	if surface != "":
+		bits.append("midi  %s" % surface)
 	if pad.is_connected_pad():
 		bits.append("%s  %s" % [lang.text("status.pad"), pad.pad_name()])
 	else:
@@ -397,6 +439,7 @@ func _set_chaos(value: float):
 	circle.chaos = value
 	sphere.chaos = value
 	warp.chaos = value
+	kaleido.chaos = value
 	for l in lasers:
 		l.chaos = value
 
@@ -804,6 +847,14 @@ func _describe_launch() -> Dictionary:
 				lang.text("launch.spout.on")),
 			_launch_toggle("hide_panel", "launch.panel", Launch.hide_panel,
 				lang.text("launch.panel.hidden")),
+			# Offered with a note rather than left out where the platform has one
+			# window only: a row that quietly vanishes on the phone is a row nobody
+			# can find out about. The note is the page's way of saying "this one
+			# cannot bite", which is why the hint the launcher prints is not passed
+			# on here — a working row would come out looking like a dead one.
+			_launch_toggle("console_window", "launch.console", Launch.console_window,
+				lang.text("launch.console.on"),
+				"" if console.available() else lang.text("launch.console.unavailable")),
 			_launch_choice("auto_start", "launch.autostart", _auto_start_choices(),
 				clampi(Launch.auto_start, 0, presets.SLOTS),
 				lang.text("launch.autostart.hint")),
@@ -839,9 +890,9 @@ func _launch_choice(key: String, label_key: String, choices: Array, index: int,
 ## launcher writes PANNEAU ☐ masqué pour tout le set, and a bare switch labelled
 ## only PANNEAU would not say which way is which.
 func _launch_toggle(key: String, label_key: String, on: bool,
-		caption: String = "") -> Dictionary:
+		caption: String = "", note: String = "") -> Dictionary:
 	return {"key": key, "label": lang.text(label_key), "type": "bool",
-		"value": on, "caption": caption, "note": ""}
+		"value": on, "caption": caption, "note": note}
 
 
 func _launch_port(key: String, label_key: String, port: int) -> Dictionary:
@@ -953,6 +1004,8 @@ func _on_web_launch_set(key: String, value: Variant):
 			Launch.spout_enabled = bool(value)
 		"hide_panel":
 			Launch.hide_panel = bool(value)
+		"console_window":
+			Launch.console_window = bool(value)
 		"auto_start":
 			Launch.auto_start = clampi(index, 0, presets.SLOTS)
 		"web_bind":
@@ -1080,12 +1133,25 @@ func _preset_slot(event: InputEventKey) -> int:
 # --------------------------------------------------------------------------
 
 func _unhandled_input(event: InputEvent):
+	route_key(event)
+
+
+## Every key the show answers to, wherever it was typed.
+##
+## The keyboard goes to the window that has the focus, and with the console open
+## there are two of them: the panel is in one, the show's nodes are in the other,
+## and whichever the operator clicked last is the one the keys reach. Thus neither
+## window handles keys of its own — both hand them here, and here decides. The panel
+## gets first refusal, because its keys are the ones held down repeatedly.
+func route_key(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_tree().quit()
 	if not (event is InputEventKey and event.pressed):
 		return
 	# Any key takes the wheel back from whatever external surface had it.
 	panel.set_external_control(false, discreet_brightness)
+	if panel.handle_key(event):
+		return
 
 	# Number keys: recall a preset, or save into it with Ctrl held. Ctrl rather
 	# than Shift because Shift is already the fine-adjust modifier on the arrows.
@@ -1114,6 +1180,11 @@ func _unhandled_input(event: InputEvent):
 			circle.apply_glitch()
 		KEY_R:
 			_randomize_all()
+		KEY_F4:
+			# The projector that gets plugged in after the show has started, which
+			# is most of them. Beside F2 and F3: the keys that change what the
+			# operator sees rather than what the room sees.
+			console.toggle()
 		KEY_F11:
 			var mode := DisplayServer.window_get_mode()
 			if mode == DisplayServer.WINDOW_MODE_FULLSCREEN:

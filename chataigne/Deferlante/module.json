@@ -235,6 +235,20 @@
         }
       }
     },
+    "Motion Blur Trail": {
+      "menu": "Motion Blur",
+      "callback": "blurAmount",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Lasers Count": {
       "menu": "Lasers",
       "callback": "lasersCount",
@@ -427,6 +441,48 @@
           "min": 0.0,
           "max": 1.0,
           "default": 0.35,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Spotlight Arcs": {
+      "menu": "Spotlight",
+      "callback": "spotArcs",
+      "parameters": {
+        "Value": {
+          "type": "Integer",
+          "ui": "slider",
+          "min": 1.0,
+          "max": 12.0,
+          "default": 1.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Spotlight Length": {
+      "menu": "Spotlight",
+      "callback": "spotLength",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.05,
+          "max": 1.0,
+          "default": 1.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Spotlight Spin": {
+      "menu": "Spotlight",
+      "callback": "spotSpin",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": -1.0,
+          "max": 1.0,
+          "default": 0.0,
           "mappingIndex": 0
         }
       }
@@ -820,6 +876,17 @@
     "Shuffle Mirror": {
       "menu": "Shuffle",
       "callback": "shuffleMirror",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Shuffle Motion Blur": {
+      "menu": "Shuffle",
+      "callback": "shuffleBlur",
       "parameters": {
         "Trigger": {
           "type": "Boolean",

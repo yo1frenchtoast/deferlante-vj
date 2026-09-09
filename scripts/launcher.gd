@@ -36,11 +36,15 @@ var _max_fps: OptionButton
 var _audio: OptionButton
 var _spout: CheckBox
 var _hide_panel: CheckBox
+var _console: CheckBox
 var _auto_start: OptionButton
 var _web_access: OptionButton
 var _web_port: SpinBox
 var _osc_access: OptionButton
 var _osc_port: SpinBox
+var _midi: OptionButton
+## The profile ids the row offers, in its own order, minus AUTO and OFF.
+var _midi_profiles: PackedStringArray = []
 var _language: OptionButton
 var _restart_note: Label
 
@@ -169,6 +173,16 @@ func _build():
 		_spout.disabled = true
 		_note(grid).text = lang.text("launch.spout.unavailable")
 	_hide_panel = _check(grid, "launch.panel", "launch.panel.hidden")
+	# Under PANEL because it answers the same question from the other side: not
+	# whether the panel is there, but which screen it is on.
+	_console = _check(grid, "launch.console", "launch.console.on")
+	if not DisplayServer.has_feature(DisplayServer.FEATURE_SUBWINDOWS):
+		# Android, and anything else with one window: a box that could never open a
+		# second one has to say so rather than sit there looking operational.
+		_console.disabled = true
+		_note(grid).text = lang.text("launch.console.unavailable")
+	else:
+		_note(grid).text = lang.text("launch.console.hint")
 	# Beside PANEL on purpose: both answer the same question, which is whether
 	# anybody is standing in front of this machine tonight.
 	_auto_start = _option(grid, "launch.autostart", _auto_start_choices())
@@ -184,6 +198,14 @@ func _build():
 	if Launch.osc_bind != Launch.LOCAL and not _access_addresses.has(Launch.osc_bind):
 		_note(grid).text = lang.text("launch.access.gone")
 	_osc_port = _spin(grid, "launch.oscport", 1024, 65535)
+	# Beside the OSC row rather than with the audio ones: both answer "what is
+	# driving this show from outside", and a controller is a desk before it is a
+	# device. The list is read from the profiles that ship, so a third controller
+	# appears here by existing.
+	_midi = _option(grid, "launch.midi", _midi_choices())
+	if _midi_profiles.is_empty():
+		_midi.disabled = true
+	_note(grid).text = lang.text("launch.midi.hint")
 
 	column.add_child(_spacer(6))
 
@@ -353,6 +375,18 @@ func _max_fps_choices() -> PackedStringArray:
 ## Loopback first, then the addresses a phone could actually reach. Offered as a
 ## list rather than a free field: the useful answers are few and the machine already
 ## knows them, and a typo here is a surface that never comes up.
+## AUTO, then every profile in `res://midi/`, then OFF. AUTO is first because it
+## is right nearly every night: plug the controller in and the show knows it.
+func _midi_choices() -> PackedStringArray:
+	var out := PackedStringArray([lang.text("launch.midi.auto")])
+	_midi_profiles = PackedStringArray()
+	for profile in MidiInput.profiles_on_disk():
+		_midi_profiles.append(profile["id"])
+		out.append(profile.get("name", profile["id"]))
+	out.append(lang.text("launch.midi.off"))
+	return out
+
+
 func _access_choices() -> PackedStringArray:
 	_access_addresses = Launch.local_addresses()
 	var out := PackedStringArray([lang.text("launch.access.local")])
@@ -448,11 +482,18 @@ func _load_values():
 	_audio.selected = _audio_selection()
 	_spout.button_pressed = Launch.spout_enabled and not _spout.disabled
 	_hide_panel.button_pressed = Launch.hide_panel
+	_console.button_pressed = Launch.console_window and not _console.disabled
 	_auto_start.selected = clampi(Launch.auto_start, 0, Presets.SLOTS)
 	_web_access.selected = maxi(0, _access_addresses.find(Launch.web_bind) + 1)
 	_web_port.value = Launch.web_port
 	_osc_access.selected = maxi(0, _access_addresses.find(Launch.osc_bind) + 1)
 	_osc_port.value = Launch.osc_port
+	# A profile saved from a machine that had a file this one does not falls back to
+	# AUTO rather than to whatever sits at that index.
+	if Launch.midi_profile == "off":
+		_midi.selected = _midi.item_count - 1
+	else:
+		_midi.selected = maxi(0, _midi_profiles.find(Launch.midi_profile) + 1)
 	_language.selected = Lang.choice_of(Launch.language)
 	_refresh_renderer_dependants()
 
@@ -501,6 +542,7 @@ func _collect():
 			else _audio_devices[_audio.selected - 1])
 	Launch.spout_enabled = _spout.button_pressed
 	Launch.hide_panel = _hide_panel.button_pressed
+	Launch.console_window = _console.button_pressed
 	Launch.auto_start = _auto_start.selected
 	Launch.web_bind = (Launch.LOCAL if _web_access.selected == 0
 		else _access_addresses[_web_access.selected - 1])
@@ -508,6 +550,12 @@ func _collect():
 	Launch.osc_bind = (Launch.LOCAL if _osc_access.selected == 0
 		else _access_addresses[_osc_access.selected - 1])
 	Launch.osc_port = int(_osc_port.value)
+	if _midi.selected == 0 or _midi.disabled:
+		Launch.midi_profile = ""
+	elif _midi.selected == _midi.item_count - 1:
+		Launch.midi_profile = "off"
+	else:
+		Launch.midi_profile = _midi_profiles[_midi.selected - 1]
 	Launch.language = Lang.value_of(_language.selected)
 
 

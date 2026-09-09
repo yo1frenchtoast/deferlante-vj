@@ -94,6 +94,38 @@ var _wobble_time: float = 0.0
 
 var _halo: Halo
 
+## A shutter in front of the lens. A followspot is not always a full circle: put a
+## blade across it and what lands on the wall is an arc, and two blades give the
+## bowtie a moving head throws when it is half closed.
+##
+## `arcs` is how many pieces the ring is cut into and `arc_length` how much of each
+## piece is drawn, so ARCS 1 with LENGTH 0.5 is a half pool, LENGTH 0.25 a quarter,
+## and ARCS 4 with LENGTH 0.5 is four blades with four gaps. The opening is centred
+## on the piece rather than started at its edge, so closing it eats from both sides
+## and the shape stays where the operator left it.
+##
+## One piece is drawn by this stroke; the rest are rotated copies, because a Line2D
+## is a single polyline and cannot have a hole in it. They are children, so the
+## position, the rotation and the colour all come free from this transform.
+const MAX_ARCS := 12
+## Radians a second at SPIN 1. A little under a sixth of a turn, which is slow
+## enough to read as a beam turning rather than as a shape spinning.
+const SPIN_RATE := 1.0
+
+var arcs: int = 1:
+	set(value):
+		var wanted := clampi(int(round(value)), 1, MAX_ARCS)
+		if wanted == arcs:
+			return
+		arcs = wanted
+		_rebuild_arcs()
+var arc_length: float = 1.0
+var spin: float = 0.0
+
+var _arcs: Array[Line2D] = []
+var _arc_halos: Array[Halo] = []
+var _spin_phase: float = 0.0
+
 
 func _ready():
 	_halo = Halo.attach(self)
@@ -104,6 +136,8 @@ func _ready():
 
 func set_halo(value: float):
 	_halo.amount = value
+	for halo in _arc_halos:
+		halo.amount = value
 
 
 func randomize_look():
@@ -122,12 +156,14 @@ func refresh_color():
 	# again on the way out.
 	if palette and not is_glitching:
 		default_color = _target_color()
+		_sync_arcs()
 
 
 func set_line_width(value: float):
 	line_width = value
 	if not is_glitching:
 		width = line_width
+		_sync_arcs()
 
 
 func _process(delta: float):
@@ -172,6 +208,13 @@ func default_behaviour(delta: float):
 	var spread = lerpf(1.0, 1.0 / (cos(pan) * cos(tilt)), spread_amount)
 	var radius = (base_radius + sin(time_passed * 2.0) * fluctuation_range) * spread
 	generate_circle_points(radius, segments)
+
+	# Turning the shutter, not the head. The pieces are children, so rotating this
+	# stroke carries all of them round together and their spacing never drifts.
+	if not is_zero_approx(spin):
+		_spin_phase = wrapf(_spin_phase + delta * speed_scale * spin * SPIN_RATE,
+			-PI, PI)
+		rotation = _spin_phase
 
 
 ## What is actually drawn: the machine's own aim, pulled towards the operator's.
@@ -285,9 +328,12 @@ func apply_glitch():
 	# 2. Shape distortion: few segments, so the circle becomes an odd polygon.
 	generate_circle_points(base_radius * randf_range(0.5, 1.5), randi_range(3, 12))
 
-	# 3. Colour flash (pure white) and a huge stroke width.
+	# 3. Colour flash (pure white) and a huge stroke width. Pushed to the other
+	# pieces by hand: the shape was synced a line ago, before these two were set,
+	# and a glitch that whitened one blade out of four would read as a fault.
 	default_color = Color.WHITE
 	width = line_width * 6.0
+	_sync_arcs()
 
 	# Very short glitch (the shorter it is, the more violent it reads).
 	await get_tree().create_timer(0.08).timeout
@@ -295,14 +341,60 @@ func apply_glitch():
 	# 4. Back to normal: _process takes over again on the next frame.
 	default_color = _target_color()
 	width = line_width
+	_sync_arcs()
 	is_glitching = false
 
 
 func generate_circle_points(radius: float, points_count: int):
 	clear_points()
-	for i in range(points_count + 1):
-		var angle = TAU * (float(i) / points_count)
+	# One piece of the ring. A closed circle is simply the case where the piece is
+	# the whole thing, which is what ARCS 1 at LENGTH 1 asks for.
+	var span := TAU * clampf(arc_length, 0.0, 1.0) / arcs
+	# Resolution follows the length: a quarter arc drawn with a whole circle's worth
+	# of points costs four times what it needs and looks no different.
+	var steps := maxi(2, int(ceil(points_count * span / TAU)))
+	for i in range(steps + 1):
+		var angle := -span * 0.5 + span * (float(i) / steps)
 		add_point(Vector2(cos(angle), sin(angle)) * radius)
+	_sync_arcs()
+
+
+## The extra pieces exist only while there is more than one. Built and freed as the
+## count changes rather than kept around: at ARCS 1 — the default, and what every
+## existing show is on — this effect costs nothing at all.
+func _rebuild_arcs():
+	for extra in _arcs:
+		extra.queue_free()
+	_arcs.clear()
+	_arc_halos.clear()
+	for i in range(arcs - 1):
+		var extra := Line2D.new()
+		# Additive like everything else, and the same material rather than a second
+		# one: the stroke it copies already carries the right blend mode.
+		extra.material = material
+		extra.joint_mode = joint_mode
+		extra.begin_cap_mode = begin_cap_mode
+		extra.end_cap_mode = end_cap_mode
+		add_child(extra)
+		_arcs.append(extra)
+		_arc_halos.append(Halo.attach(extra))
+	_sync_arcs()
+	set_halo(_halo.amount)
+
+
+## Shape, stroke and colour copied to every piece, and each one turned to its place.
+## Called from the same breath as the points, so a glitch — which flashes this stroke
+## white and six times as wide — takes the whole ring with it rather than one blade.
+func _sync_arcs():
+	if _arcs.is_empty():
+		return
+	var step := TAU / arcs
+	for i in _arcs.size():
+		var extra := _arcs[i]
+		extra.points = points
+		extra.width = width
+		extra.default_color = default_color
+		extra.rotation = step * (i + 1)
 
 
 func _target_color() -> Color:

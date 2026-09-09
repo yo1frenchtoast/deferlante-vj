@@ -1,0 +1,596 @@
+{
+  "name": "Akai APC64",
+  "match": [
+    "APC64",
+    "APC 64"
+  ],
+  "channel": 1,
+  "surface": "8x8 pads, 8 touch faders — Custom Mode, APC64 Project Editor",
+  "controls": [
+    {
+      "cc": 5,
+      "target": "global/speed",
+      "mode": "norm",
+      "label": "Fader 1",
+      "style": "pan"
+    },
+    {
+      "cc": 6,
+      "target": "global/chaos",
+      "mode": "norm",
+      "label": "Fader 2",
+      "style": "volume"
+    },
+    {
+      "cc": 7,
+      "target": "audio/reactivity",
+      "mode": "norm",
+      "label": "Fader 3",
+      "style": "volume"
+    },
+    {
+      "cc": 8,
+      "target": "global/glow",
+      "mode": "norm",
+      "label": "Fader 4",
+      "style": "volume"
+    },
+    {
+      "cc": 9,
+      "target": "lasers/count",
+      "mode": "norm",
+      "label": "Fader 5",
+      "style": "volume"
+    },
+    {
+      "cc": 10,
+      "target": "spot/radius",
+      "mode": "norm",
+      "label": "Fader 6",
+      "style": "volume"
+    },
+    {
+      "cc": 11,
+      "target": "sphere/count",
+      "mode": "norm",
+      "label": "Fader 7",
+      "style": "volume"
+    },
+    {
+      "cc": 12,
+      "target": "warp/count",
+      "mode": "norm",
+      "label": "Fader 8",
+      "style": "volume"
+    },
+    {
+      "note": 92,
+      "target": "preset:recall:1",
+      "mode": "action",
+      "label": "R1C1 PRESET 1",
+      "led": "#FF9500"
+    },
+    {
+      "note": 93,
+      "target": "preset:recall:2",
+      "mode": "action",
+      "label": "R1C2 PRESET 2",
+      "led": "#FF9500"
+    },
+    {
+      "note": 94,
+      "target": "preset:recall:3",
+      "mode": "action",
+      "label": "R1C3 PRESET 3",
+      "led": "#FF9500"
+    },
+    {
+      "note": 95,
+      "target": "preset:recall:4",
+      "mode": "action",
+      "label": "R1C4 PRESET 4",
+      "led": "#FF9500"
+    },
+    {
+      "note": 96,
+      "target": "preset:recall:5",
+      "mode": "action",
+      "label": "R1C5 PRESET 5",
+      "led": "#FF9500"
+    },
+    {
+      "note": 97,
+      "target": "preset:recall:6",
+      "mode": "action",
+      "label": "R1C6 PRESET 6",
+      "led": "#FF9500"
+    },
+    {
+      "note": 98,
+      "target": "preset:recall:7",
+      "mode": "action",
+      "label": "R1C7 PRESET 7",
+      "led": "#FF9500"
+    },
+    {
+      "note": 99,
+      "target": "preset:recall:8",
+      "mode": "action",
+      "label": "R1C8 PRESET 8",
+      "led": "#FF9500"
+    },
+    {
+      "note": 84,
+      "target": "preset:save:1",
+      "mode": "hold",
+      "hold_ms": 1000,
+      "label": "R2C1 SAVE 1",
+      "led": "#330000",
+      "led_on": "#FF0000"
+    },
+    {
+      "note": 85,
+      "target": "preset:save:2",
+      "mode": "hold",
+      "hold_ms": 1000,
+      "label": "R2C2 SAVE 2",
+      "led": "#330000",
+      "led_on": "#FF0000"
+    },
+    {
+      "note": 86,
+      "target": "preset:save:3",
+      "mode": "hold",
+      "hold_ms": 1000,
+      "label": "R2C3 SAVE 3",
+      "led": "#330000",
+      "led_on": "#FF0000"
+    },
+    {
+      "note": 87,
+      "target": "preset:save:4",
+      "mode": "hold",
+      "hold_ms": 1000,
+      "label": "R2C4 SAVE 4",
+      "led": "#330000",
+      "led_on": "#FF0000"
+    },
+    {
+      "note": 88,
+      "target": "preset:save:5",
+      "mode": "hold",
+      "hold_ms": 1000,
+      "label": "R2C5 SAVE 5",
+      "led": "#330000",
+      "led_on": "#FF0000"
+    },
+    {
+      "note": 89,
+      "target": "preset:save:6",
+      "mode": "hold",
+      "hold_ms": 1000,
+      "label": "R2C6 SAVE 6",
+      "led": "#330000",
+      "led_on": "#FF0000"
+    },
+    {
+      "note": 90,
+      "target": "preset:save:7",
+      "mode": "hold",
+      "hold_ms": 1000,
+      "label": "R2C7 SAVE 7",
+      "led": "#330000",
+      "led_on": "#FF0000"
+    },
+    {
+      "note": 91,
+      "target": "preset:save:8",
+      "mode": "hold",
+      "hold_ms": 1000,
+      "label": "R2C8 SAVE 8",
+      "led": "#330000",
+      "led_on": "#FF0000"
+    },
+    {
+      "note": 76,
+      "target": "shuffle:global",
+      "mode": "action",
+      "label": "R3C1 SHUFFLE GLOBAL",
+      "led": "#FFFFFF"
+    },
+    {
+      "note": 77,
+      "target": "shuffle:color",
+      "mode": "action",
+      "label": "R3C2 SHUFFLE COLOR",
+      "led": "#FF66AA"
+    },
+    {
+      "note": 78,
+      "target": "shuffle:mirror",
+      "mode": "action",
+      "label": "R3C3 SHUFFLE MIRROR",
+      "led": "#AA66FF"
+    },
+    {
+      "note": 79,
+      "target": "shuffle:lasers",
+      "mode": "action",
+      "label": "R3C4 SHUFFLE LASERS",
+      "led": "#00E6FF"
+    },
+    {
+      "note": 80,
+      "target": "shuffle:spot",
+      "mode": "action",
+      "label": "R3C5 SHUFFLE SPOT",
+      "led": "#FFD000"
+    },
+    {
+      "note": 81,
+      "target": "shuffle:audio",
+      "mode": "action",
+      "label": "R3C6 SHUFFLE AUDIO",
+      "led": "#66FF99"
+    },
+    {
+      "note": 82,
+      "target": "shuffle:sphere",
+      "mode": "action",
+      "label": "R3C7 SHUFFLE SPHERE",
+      "led": "#FF7A00"
+    },
+    {
+      "note": 83,
+      "target": "shuffle:warp",
+      "mode": "action",
+      "label": "R3C8 SHUFFLE WARP",
+      "led": "#4D7AFF"
+    },
+    {
+      "note": 68,
+      "target": "glitch",
+      "mode": "action",
+      "label": "R4C1 GLITCH",
+      "led": "#FFFFFF"
+    },
+    {
+      "note": 69,
+      "target": "randomize",
+      "mode": "action",
+      "label": "R4C2 RANDOMIZE",
+      "led": "#FFFFFF"
+    },
+    {
+      "note": 70,
+      "target": "shuffle",
+      "mode": "action",
+      "label": "R4C3 SHUFFLE",
+      "led": "#FFFFFF"
+    },
+    {
+      "note": 71,
+      "target": "global/speed",
+      "mode": "momentary",
+      "value": 0.0,
+      "label": "R4C4 FREEZE",
+      "led": "#00E6FF"
+    },
+    {
+      "note": 72,
+      "target": "global/speed",
+      "mode": "momentary",
+      "value": 2.5,
+      "label": "R4C5 BOOST",
+      "led": "#00E6FF"
+    },
+    {
+      "note": 73,
+      "target": "mirror/effect",
+      "mode": "toggle",
+      "value": 1.0,
+      "label": "R4C6 MIRROR",
+      "led": "#FF00C8"
+    },
+    {
+      "note": 74,
+      "target": "global/glow",
+      "mode": "toggle",
+      "value": 1.0,
+      "label": "R4C7 GLOW",
+      "led": "#FF00C8"
+    },
+    {
+      "note": 75,
+      "target": "spot/manual",
+      "mode": "toggle",
+      "value": 1.0,
+      "label": "R4C8 AIMING",
+      "led": "#FF00C8"
+    },
+    {
+      "note": 60,
+      "target": "mirror/segments",
+      "mode": "set",
+      "value": 2,
+      "label": "R5C1 2",
+      "led": "#101E60"
+    },
+    {
+      "note": 61,
+      "target": "mirror/segments",
+      "mode": "set",
+      "value": 3,
+      "label": "R5C2 3",
+      "led": "#212777"
+    },
+    {
+      "note": 62,
+      "target": "mirror/segments",
+      "mode": "set",
+      "value": 4,
+      "label": "R5C3 4",
+      "led": "#33308D"
+    },
+    {
+      "note": 63,
+      "target": "mirror/segments",
+      "mode": "set",
+      "value": 5,
+      "label": "R5C4 5",
+      "led": "#4439A4"
+    },
+    {
+      "note": 64,
+      "target": "mirror/segments",
+      "mode": "set",
+      "value": 6,
+      "label": "R5C5 6",
+      "led": "#5641BB"
+    },
+    {
+      "note": 65,
+      "target": "mirror/segments",
+      "mode": "set",
+      "value": 8,
+      "label": "R5C6 8",
+      "led": "#674AD2"
+    },
+    {
+      "note": 66,
+      "target": "mirror/segments",
+      "mode": "set",
+      "value": 12,
+      "label": "R5C7 12",
+      "led": "#7953E8"
+    },
+    {
+      "note": 67,
+      "target": "mirror/segments",
+      "mode": "set",
+      "value": 16,
+      "label": "R5C8 16",
+      "led": "#8A5CFF"
+    },
+    {
+      "note": 52,
+      "target": "sphere/sides",
+      "mode": "set",
+      "value": 0,
+      "label": "R6C1 0",
+      "led": "#5A2400"
+    },
+    {
+      "note": 53,
+      "target": "sphere/sides",
+      "mode": "set",
+      "value": 3,
+      "label": "R6C2 3",
+      "led": "#72380D"
+    },
+    {
+      "note": 54,
+      "target": "sphere/sides",
+      "mode": "set",
+      "value": 4,
+      "label": "R6C3 4",
+      "led": "#894D1A"
+    },
+    {
+      "note": 55,
+      "target": "sphere/sides",
+      "mode": "set",
+      "value": 5,
+      "label": "R6C4 5",
+      "led": "#A16127"
+    },
+    {
+      "note": 56,
+      "target": "sphere/sides",
+      "mode": "set",
+      "value": 6,
+      "label": "R6C5 6",
+      "led": "#B87535"
+    },
+    {
+      "note": 57,
+      "target": "sphere/sides",
+      "mode": "set",
+      "value": 7,
+      "label": "R6C6 7",
+      "led": "#D08942"
+    },
+    {
+      "note": 58,
+      "target": "sphere/sides",
+      "mode": "set",
+      "value": 8,
+      "label": "R6C7 8",
+      "led": "#E79E4F"
+    },
+    {
+      "note": 59,
+      "target": "sphere/sides",
+      "mode": "set",
+      "value": 12,
+      "label": "R6C8 12",
+      "led": "#FFB25C"
+    },
+    {
+      "note": 44,
+      "target": "lasers/spin",
+      "mode": "set",
+      "value": -1.0,
+      "label": "R7C1 -1",
+      "led": "#2A5CFF"
+    },
+    {
+      "note": 45,
+      "target": "lasers/spin",
+      "mode": "set",
+      "value": -0.6,
+      "label": "R7C2 -0.6",
+      "led": "#5C84FF"
+    },
+    {
+      "note": 46,
+      "target": "lasers/spin",
+      "mode": "set",
+      "value": -0.3,
+      "label": "R7C3 -0.3",
+      "led": "#8DACFF"
+    },
+    {
+      "note": 47,
+      "target": "lasers/spin",
+      "mode": "set",
+      "value": -0.05,
+      "label": "R7C4 -0.05",
+      "led": "#BFD4FF"
+    },
+    {
+      "note": 48,
+      "target": "lasers/spin",
+      "mode": "set",
+      "value": 0.05,
+      "label": "R7C5 +0.05",
+      "led": "#FFDDBF"
+    },
+    {
+      "note": 49,
+      "target": "lasers/spin",
+      "mode": "set",
+      "value": 0.3,
+      "label": "R7C6 +0.3",
+      "led": "#FFBC7F"
+    },
+    {
+      "note": 50,
+      "target": "lasers/spin",
+      "mode": "set",
+      "value": 0.6,
+      "label": "R7C7 +0.6",
+      "led": "#FF9B40"
+    },
+    {
+      "note": 51,
+      "target": "lasers/spin",
+      "mode": "set",
+      "value": 1.0,
+      "label": "R7C8 +1",
+      "led": "#FF7A00"
+    },
+    {
+      "note": 36,
+      "target": "color/mode",
+      "mode": "set",
+      "value": 0,
+      "label": "R8C1 RANDOM",
+      "led": "#FFFFFF"
+    },
+    {
+      "note": 37,
+      "target": "color/rgb",
+      "mode": "rgb",
+      "value": [
+        1.0,
+        0.25,
+        0.1
+      ],
+      "label": "R8C2 #FF401A",
+      "led": "#FF401A"
+    },
+    {
+      "note": 38,
+      "target": "color/rgb",
+      "mode": "rgb",
+      "value": [
+        1.0,
+        0.58,
+        0.0
+      ],
+      "label": "R8C3 #FF9400",
+      "led": "#FF9400"
+    },
+    {
+      "note": 39,
+      "target": "color/rgb",
+      "mode": "rgb",
+      "value": [
+        1.0,
+        0.88,
+        0.0
+      ],
+      "label": "R8C4 #FFE000",
+      "led": "#FFE000"
+    },
+    {
+      "note": 40,
+      "target": "color/rgb",
+      "mode": "rgb",
+      "value": [
+        0.2,
+        1.0,
+        0.4
+      ],
+      "label": "R8C5 #33FF66",
+      "led": "#33FF66"
+    },
+    {
+      "note": 41,
+      "target": "color/rgb",
+      "mode": "rgb",
+      "value": [
+        0.0,
+        0.9,
+        1.0
+      ],
+      "label": "R8C6 #00E6FF",
+      "led": "#00E6FF"
+    },
+    {
+      "note": 42,
+      "target": "color/rgb",
+      "mode": "rgb",
+      "value": [
+        0.16,
+        0.36,
+        1.0
+      ],
+      "label": "R8C7 #295CFF",
+      "led": "#295CFF"
+    },
+    {
+      "note": 43,
+      "target": "color/rgb",
+      "mode": "rgb",
+      "value": [
+        0.75,
+        0.25,
+        1.0
+      ],
+      "label": "R8C8 #BF40FF",
+      "led": "#BF40FF"
+    }
+  ]
+}

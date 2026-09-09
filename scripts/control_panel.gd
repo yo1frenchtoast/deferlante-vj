@@ -80,7 +80,8 @@ const SECTION_COLOR := Color(1.0, 0.72, 0.35)
 ## every night whatever effects the show has gained since.
 ##
 ## PLAY is the instruments, and it spreads over the columns after it.
-const SETUP_SECTIONS := ["section.global", "section.color", "section.mirror", "section.audio"]
+const SETUP_SECTIONS := ["section.global", "section.color", "section.mirror", "section.blur",
+	"section.audio"]
 const PLAY_SECTIONS := ["section.spot", "section.lasers", "section.sphere", "section.warp"]
 
 # Rough heights, used only to decide where to break into a new column. They do not
@@ -99,6 +100,24 @@ const MIN_VALUE_WIDTH := 100.0
 @export var vertical_margin: float = 48.0
 
 var _column: GridContainer
+## The run of columns, kept so the panel can be measured against the window it is
+## in. See `_fit_window()`.
+var _columns: HBoxContainer
+## What `_build_row()` connected to each setting, so `relayout()` can take it back
+## off again. Rebuilding without this leaves every old row still listening, and the
+## count grows by one panel every time the window changes size.
+var _row_listeners: Array[Callable] = []
+## The viewport the layout is currently measured against. The panel moves between
+## two of them — the projection and the console — and each has its own size to
+## follow, so the connection moves with it.
+var _watched: Viewport
+
+## True while the panel lives in the console window rather than over the projection.
+## Three of its habits exist only because it is normally projected on the wall, and
+## all three are wrong on a screen the audience cannot see: it fades out when left
+## alone, it ducks when another surface takes over, and it can be told to stay away
+## for the whole set. On the console it simply stays up.
+var on_console: bool = false
 
 ## Chosen at the launcher: the panel is never shown at all, whatever anyone presses.
 ## For a machine that only projects, where the sliders would be on the wall and the
@@ -115,6 +134,8 @@ func build(p_params: Array[VJParam], lang: Lang):
 
 	_build_columns()
 	_build_help()
+
+	_watch_viewport()
 
 	select(0)
 	fps_label.visible = show_fps
@@ -142,12 +163,19 @@ func _build_columns():
 	_reading_order.clear()
 
 	var columns := HBoxContainer.new()
+	_columns = columns
 	columns.add_theme_constant_override("separation", 28)
 	# Columns run left to right from the screen edge; each one is bottom-aligned
 	# inside itself, so the whole panel sits in the bottom-left corner as before.
 	columns.alignment = BoxContainer.ALIGNMENT_BEGIN
 	columns.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	rows.add_child(columns)
+
+	# The width the columns end up needing is not known here: a column is as wide as
+	# its widest label, and a label coming from the fallback font measures short
+	# until it has been drawn (see `_new_column()`). Thus the fit is not computed
+	# once but followed — every time the run of columns settles on a new size.
+	columns.resized.connect(_fit_window)
 
 	var play := _ordered(groups, PLAY_SECTIONS, true)
 	var setup_height := _lay_out(_ordered(groups, SETUP_SECTIONS), columns, budget)
@@ -168,6 +196,101 @@ func _build_columns():
 	# section added to the show and forgotten here then reads oddly, which is a bug
 	# somebody reports — where a section quietly dropped from the panel is not.
 	_lay_out(play, columns, clampf(setup_height, tallest, budget))
+
+
+## Moves the panel to the console window, or brings it back over the projection.
+## Called by `console_window.gd` once the reparenting is done, because everything
+## here has to be measured against the window the panel is in *now*.
+func set_on_console(value: bool):
+	on_console = value
+	_watch_viewport()
+	relayout()
+	if on_console:
+		# Whatever the launcher decided about the panel, it decided it about a panel
+		# projected on a wall. On the console there is no wall.
+		wake()
+		return
+	if hidden_for_good:
+		rows.visible = false
+		help_box.visible = false
+	else:
+		wake()
+
+
+## The layout is measured against the window the panel is in, thus it has to be
+## redone when that window changes — a resize, or the move to and from the console.
+func _watch_viewport():
+	var current := get_viewport()
+	if _watched == current:
+		return
+	if _watched != null and _watched.size_changed.is_connected(_on_viewport_resized):
+		_watched.size_changed.disconnect(_on_viewport_resized)
+	_watched = current
+	_watched.size_changed.connect(_on_viewport_resized)
+
+
+## Lays the panel out again for the window it is in now. Called when that window is
+## resized, and when the panel moves between the projection and the console: the
+## column count comes from the height on offer, and neither answer survives the trip.
+##
+## The settings themselves are untouched — this rebuilds the widgets that show them,
+## and puts the selection back where the operator left it.
+func relayout():
+	# Nothing to measure against while the panel is between two windows: the console
+	# closing frees its window, and the size it reports on the way out belongs to a
+	# viewport this panel has already left.
+	if params.is_empty() or get_viewport() == null:
+		return
+	for i in range(_row_listeners.size()):
+		params[i].changed.disconnect(_row_listeners[i])
+	_row_listeners.clear()
+	for child in rows.get_children():
+		child.queue_free()
+		rows.remove_child(child)
+	_section_labels.clear()
+	_section_keys.clear()
+
+	var was_selected := selected
+	_build_columns()
+	select(was_selected)
+
+
+func _on_viewport_resized():
+	# Only the window the panel is in now. A window being torn down resizes as it
+	# goes, and that is not a layout this panel has any business following.
+	if get_viewport() != _watched:
+		return
+	relayout()
+	# A window that has just appeared, or grown, is a gesture as much as a keypress.
+	wake()
+
+
+## Scales the settings down when the window cannot hold them at full size.
+##
+## The column count comes from the height on offer, and on a short window that
+## answer is "many" — which then runs off the right-hand edge, where nobody can read
+## it and nothing says so. The console window makes this ordinary: it is whatever
+## size the operator's screen and window manager leave it, not the 1080p the panel
+## was drawn for.
+##
+## Only ever shrinks. A panel blown up to fill a large window would be a different
+## instrument from the one the same operator used last night on the projector.
+func _fit_window():
+	if _columns == null or get_viewport() == null:
+		return
+	var room := get_viewport().get_visible_rect().size
+	var needed := _columns.get_combined_minimum_size()
+	if needed.x <= 0.0 or needed.y <= 0.0:
+		return
+	# The panel sits 24 px in from the left edge and keeps the same margin on the
+	# right; the help text at the top is not ours to scale.
+	var across := (room.x - 48.0) / needed.x
+	var down := (room.y - vertical_margin - HELP_HEIGHT) / needed.y
+	var factor := clampf(minf(across, down), 0.35, 1.0)
+	# Grown from the bottom-left corner, which is where the panel has always been
+	# anchored and where the hand looks for it.
+	_columns.pivot_offset = Vector2(0.0, _columns.size.y)
+	_columns.scale = Vector2(factor, factor)
 
 
 ## The groups this list names, in the order it names them. With `rest`, everything
@@ -319,7 +442,9 @@ func _build_row(p: VJParam, index: int):
 	_sliders[index] = slider
 	_value_labels[index] = value_label
 
-	p.changed.connect(_on_param_changed.bind(index))
+	var listener := _on_param_changed.bind(index)
+	p.changed.connect(listener)
+	_row_listeners.append(listener)
 
 
 func _build_help():
@@ -408,6 +533,11 @@ func set_brightness(value: float):
 ## Called when something other than this keyboard moves a setting. Any keypress
 ## hands control back, so the way out is the thing you were about to do anyway.
 func set_external_control(active: bool, dim_to: float):
+	# On the console there is nothing to duck out of the way of: the wall does not
+	# show this panel, and a console that dimmed itself every time Chataigne moved a
+	# fader would be unreadable for exactly as long as the set lasts.
+	if on_console:
+		return
 	if active == external_control:
 		return
 	external_control = active
@@ -423,7 +553,7 @@ func set_external_control(active: bool, dim_to: float):
 func wake():
 	# Every route back on screen goes through here — a keypress, a click, the pad,
 	# a language change — so one guard covers all of them.
-	if hidden_for_good:
+	if hidden_for_good and not on_console:
 		return
 	_idle = 0.0
 	if _fade:
@@ -464,9 +594,13 @@ func _input(event: InputEvent):
 			wake()
 
 
-func _unhandled_input(event: InputEvent):
-	if not (event is InputEventKey and event.pressed):
-		return
+## The panel's own shortcuts. Public and called by the controller rather than taken
+## from `_unhandled_input`, because the keyboard reaches whichever window has the
+## focus and the panel is only ever in one of them: with the console open, the
+## arrows have to work from the projection window too, where this node is not.
+func handle_key(event: InputEventKey) -> bool:
+	if not event.pressed:
+		return false
 	match event.keycode:
 		KEY_UP:
 			select(_step(-1))
@@ -483,6 +617,9 @@ func _unhandled_input(event: InputEvent):
 			fps_label.visible = not fps_label.visible
 			_fps_elapsed = 0.0
 			_fps_frames = 0
+		_:
+			return false
+	return true
 
 
 # --------------------------------------------------------------------------
@@ -490,7 +627,7 @@ func _unhandled_input(event: InputEvent):
 # --------------------------------------------------------------------------
 
 func _process(delta: float):
-	if rows.visible and not pinned and _fade == null:
+	if rows.visible and not pinned and not on_console and _fade == null:
 		_idle += delta
 		if _idle >= hide_delay:
 			_fade_out()

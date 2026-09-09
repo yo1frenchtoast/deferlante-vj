@@ -98,6 +98,14 @@ jobs:
       - name: Check the Chataigne module still matches the settings
         run: python3 tools/build_chataigne_module.py --check
 
+      # And the same question for the MIDI profiles, which are data and so free to
+      # name a setting that has been renamed, claim a pad twice, or ask for a value
+      # the show would quietly snap. None of those announce themselves: the pad
+      # simply does nothing, or something slightly wrong, on the night. No hardware
+      # is involved — the profiles are held against Godot's own description.
+      - name: Check the MIDI profiles still match the settings
+        run: python3 tools/build_midi_map.py --check
+
       # One export per step: a failure names its own platform in the annotation,
       # instead of a single "Export failed" that could mean any of the three.
       - name: Export Linux

@@ -25,6 +25,7 @@ show starts.
 | `AUDIO INPUT` | automatic, or a named source | The same row, on a machine where the show cannot route the sound — Windows, mainly. The row is disabled where Godot ignores the choice too. [Audio reactivity](external-control.md#audio-reactivity) explains both rows. |
 | `SPOUT` | off, or the show sent out | Windows only, and only on the Forward+ renderer. The show becomes a Spout source named `Déferlante`, which Resolume, TouchDesigner or OBS take live. The row says so where the build has no Spout extension. See [sending the show out](in-the-room.md#sending-the-show-out). |
 | `PANEL` | hidden for the whole set | For a machine that only projects, and that a phone drives. `F3` still works. |
+| `CONSOLE` | panel and preview in a window of their own | For two screens: this window projects, the console drives. `F4` opens and closes it during the show. See [two screens](#two-screens-the-console-window). |
 | `START ON` | the defaults, or a preset slot | The state the show comes up in. See [starting on a preset](#starting-on-a-preset). |
 | `WEB ACCESS` | this machine only, or one of its addresses | Loopback by default. The control surface has no password, thus you let the room in on purpose. To let a phone in, pick an address here. |
 | `OSC ACCESS` | this machine only, or one of its addresses | The same decision for OSC, answered separately. See [OSC](external-control.md#external-control-over-osc). |
@@ -98,6 +99,7 @@ adjust the settings.
 | `H` | Pin or unpin the panel (it stops the fade) |
 | `F2` | Dim the panel to discreet, and back |
 | `F3` | FPS readout |
+| `F4` | Open or close the console window. See [two screens](#two-screens-the-console-window) |
 | `F11` | Fullscreen |
 | `Esc` | Quit |
 
@@ -119,11 +121,11 @@ scroll away long before you need them.
 
 ## Settings
 
-The panel has eight sections. It groups them by **when you touch a setting**, not by
-what the setting drives. The four that you settle before a set come first: GLOBAL,
-COLOR, MIRROR and AUDIO. The four instruments follow: SPOTLIGHT, LASERS, SPHERE and
-HYPERSPACE. `↑` and `↓` walk the panel in that order. The Chataigne module carries the
-same eight sections as menus, in the order that the code declares them. The labels that
+The panel has nine sections. It groups them by **when you touch a setting**, not by
+what the setting drives. The five that you settle before a set come first: GLOBAL,
+COLOR, MIRROR, MOTION BLUR and AUDIO. The four instruments follow: SPOTLIGHT, LASERS,
+SPHERE and HYPERSPACE. `↑` and `↓` walk the panel in that order. The Chataigne module
+carries the same nine sections as menus, in the order that the code declares them. The labels that
 follow are the English ones.
 
 ### Global
@@ -150,6 +152,11 @@ follow are the English ones.
 | `EFFECT` | OFF / ON | Kaleidoscope fold. At `OFF` the show does not pay for the pass. It has no middle: see [why](effects.md#why-it-has-no-middle). |
 | `SEGMENTS` | 2 – 16 | Number of wedges. It starts at 5. 6 gives the classic star. |
 | `ROTATION` | -1 – 1 | Turns the mirrors. ← left, → right. |
+
+### Motion blur
+| Setting | Range | Effect |
+| --- | --- | --- |
+| `TRAIL` | 0 – 1 | How long the image stays on screen behind itself. **0 is off**, and the show does not pay for the pass. 1 holds a trail for half a second. See [motion blur](effects.md#motion-blur). |
 
 ### Audio
 The rows run in the order that the ear takes the bands, low to high. That is also the
@@ -221,6 +228,39 @@ The last three rows only matter with a pad connected. See
 To add a setting, write one line in `_build_params()` of `vj_controller.gd`. The
 section, the UI row, the slider, the number format, the keyboard handling and the OSC
 address all follow from it. Put its label in `scripts/lang.gd`.
+
+### Two screens: the console window
+
+With two screens, you do not have to choose between a panel that you can read and a
+wall that stays clean. `CONSOLE` at the launcher, or `F4` at any moment, opens a
+second window: **the projection keeps this window and loses the panel, and the
+console gets the panel with a live picture of the projection behind it.**
+
+The console is the same panel, in the same corner, with the same keys. Only the
+screen changes. A thin frame marks the edge of the projection, because the show is
+neon on black in a window that is black around it, and where the edge falls is the
+one thing the preview exists to answer.
+
+It opens maximised on the screen that the projection is *not* on. On one screen it
+opens over the show, which is what a rehearsal at a desk wants. You can move it,
+resize it, or put it behind something: it is an ordinary window. Close it with its own
+button or with `F4`, and the panel goes back over the projection.
+
+Three habits of the panel change while it is on the console, and all three exist only
+because it is normally on the wall:
+
+- it no longer **fades out** after four seconds;
+- it no longer **dims** when a phone or a console takes over (`AUTO DIM`);
+- `PANEL` `hidden for the whole set` no longer hides it — that row is about the wall,
+  and there is no wall here.
+
+The keyboard reaches the window that has the focus. **Both windows answer to every
+key**, thus it does not matter which one you clicked last.
+
+The preview costs a second window to draw each frame. On a GPU, measured, the console
+open costs about **1.5 ms a frame** at 2560 × 1020; on a machine with no GPU at all it
+costs far more, around 14 ms. Make the window smaller if the frame rate matters more
+than the size of the preview.
 
 ### Working discreetly
 

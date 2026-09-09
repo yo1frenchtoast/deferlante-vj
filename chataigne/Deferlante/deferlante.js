@@ -65,6 +65,10 @@ function mirrorRotation(value) {
 	local.send("/deferlante/mirror/rotation", value);
 }
 
+function blurAmount(value) {
+	local.send("/deferlante/blur/amount", value);
+}
+
 function lasersCount(value) {
 	local.send("/deferlante/lasers/count", value);
 }
@@ -119,6 +123,18 @@ function spotFrequency(value) {
 
 function spotSpread(value) {
 	local.send("/deferlante/spot/spread", value);
+}
+
+function spotArcs(value) {
+	local.send("/deferlante/spot/arcs", value);
+}
+
+function spotLength(value) {
+	local.send("/deferlante/spot/length", value);
+}
+
+function spotSpin(value) {
+	local.send("/deferlante/spot/spin", value);
 }
 
 function spotGlitch(value) {
@@ -236,6 +252,10 @@ function shuffleColor(value) {
 
 function shuffleMirror(value) {
 	local.send("/deferlante/shuffle/mirror");
+}
+
+function shuffleBlur(value) {
+	local.send("/deferlante/shuffle/blur");
 }
 
 function shuffleLasers(value) {

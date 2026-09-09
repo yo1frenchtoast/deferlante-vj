@@ -79,6 +79,26 @@ A screen that is not 16:9 gets the whole image. The show fills a 16:10 panel or 
 1200-line laptop instead of putting black borders at the top and the bottom. The
 effects take the extra canvas: nothing is stretched, and nothing is cut off.
 
+## Two screens
+
+A laptop with the projector on its second output can keep the panel off the wall
+entirely: `CONSOLE` at the launcher, or `F4` during the set, puts the panel and a live
+preview in a window of their own, and leaves the projection with nothing but the show.
+It is the same panel and the same keys — see
+[two screens](getting-started.md#two-screens-the-console-window).
+
+Worth knowing before the room fills:
+
+- **The console goes on the screen that the projection is not on.** Put the show
+  full-screen on the projector first, then open the console.
+- **It costs a frame.** A second window is drawn every frame: about 1.5 ms on a GPU at
+  2560 × 1020, and around 14 ms on a machine rendering in software. A smaller console
+  window costs less.
+- **`PANEL` hidden and `AUTO DIM` stop applying** while the panel is on the console.
+  Both exist to keep the sliders off the wall, and on the console there is no wall.
+- One screen only, or a platform with one window (Android): the row says so and the
+  key does nothing.
+
 ## Sending the show out
 
 Turn `SPOUT` on at the launcher and the show becomes a live source named
