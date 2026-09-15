@@ -19,6 +19,7 @@ extends Control
 ## relaunch uses. Both go straight to the show on the saved settings.
 
 const MAIN_SCENE := "res://scenes/main.tscn"
+const LOGO := preload("res://branding/logo.svg")
 
 ## Matches the panel's section headers, so the two screens look like one program.
 const HEADING := Color(1.0, 0.72, 0.35)
@@ -115,18 +116,25 @@ func _build():
 	column.add_theme_constant_override("separation", 10)
 	centre.add_child(column)
 
-	var title := Label.new()
-	title.text = "DÉFERLANTE"
-	title.add_theme_font_size_override("font_size", 34)
-	title.add_theme_color_override("font_color", HEADING)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(title)
+	# The subtitle sits beside the logo, on its baseline, not under it: the form
+	# already fills a 1080p screen to the last row, and a logo stacked on top of a
+	# subtitle pushed LANCER off the bottom.
+	var header := HBoxContainer.new()
+	header.alignment = BoxContainer.ALIGNMENT_CENTER
+	header.add_theme_constant_override("separation", 18)
+	column.add_child(header)
+
+	# Drawn at the size its import rasterises it to, so the blocks stay sharp.
+	var title := TextureRect.new()
+	title.texture = LOGO
+	title.stretch_mode = TextureRect.STRETCH_KEEP
+	header.add_child(title)
 
 	var subtitle := Label.new()
 	subtitle.text = lang.text("launch.subtitle")
 	subtitle.add_theme_color_override("font_color", DIM)
-	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(subtitle)
+	subtitle.size_flags_vertical = Control.SIZE_SHRINK_END
+	header.add_child(subtitle)
 
 	column.add_child(_spacer(8))
 

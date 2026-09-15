@@ -14,6 +14,10 @@ config/name="Déferlante"
 run/main_scene="res://scenes/launcher.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
+boot_splash/bg_color=Color(0, 0, 0, 1)
+boot_splash/image="res://branding/splash.png"
+boot_splash/stretch_mode=0
+boot_splash/minimum_display_time=1500
 
 [audio]
 

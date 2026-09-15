@@ -49,3 +49,9 @@ pad — and comes back on the first key press.*
 The on-screen interface speaks French or English. You pick the language at the
 [launcher](docs/getting-started.md#the-launcher), before the show. Everything else
 stays in English: the code, the OSC addresses, and this document.
+
+## Credits
+
+The boot splash carries the Godot logo, by Andrea Calabró, under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Its "GODOT" and "Game engine"
+lines are recoloured to read on black. The Déferlante logo is in [docs/logo](docs/logo).

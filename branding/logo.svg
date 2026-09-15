@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 736 240" width="736" height="240">
+<title>Déferlante</title>
+<rect width="240" height="240" fill="#e9e6df"/>
+<path fill="#ff4a1c" d="M132 36 L240 8 V72 Z"/>
+<g fill="#000000">
+<rect x="106" y="24" width="28" height="24"/>
+<path d="M102 58 H138 L144 118 H96 Z M95 128 H145 L150 176 H90 Z"/>
+<rect x="64" y="176" width="112" height="18"/>
+<rect x="0" y="194" width="240" height="8"/>
+<path d="M0 240 V226 H64 V218 H104 V210 H160 V228 H136 V240 Z M176 228 H240 V240 H176 Z"/>
+</g>
+<g transform="translate(264 184)">
+<g fill="#e9e6df" fill-rule="evenodd">
+<path d="M0 0 H28 L40 12 V44 L28 56 H0 Z M12 12 H23 L28 17 V39 L23 44 H12 Z"/>
+<path transform="translate(48 0)" d="M0 0 H40 V12 H12 V22 H34 V34 H12 V44 H40 V56 H0 Z"/>
+<path transform="translate(96 0)" d="M0 0 H40 V12 H12 V22 H34 V34 H12 V56 H0 Z"/>
+<path transform="translate(144 0)" d="M0 0 H40 V12 H12 V22 H34 V34 H12 V44 H40 V56 H0 Z"/>
+<path transform="translate(192 0)" d="M0 0 H40 V34 H31 L40 56 H27 L18 34 H12 V56 H0 Z M12 12 H28 V22 H12 Z"/>
+<path transform="translate(240 0)" d="M0 0 H12 V44 H40 V56 H0 Z"/>
+<path transform="translate(288 0)" d="M0 0 H40 V56 H28 V34 H12 V56 H0 Z M12 12 H28 V22 H12 Z"/>
+<path transform="translate(336 0)" d="M0 0 H12 L28 30 V0 H40 V56 H28 L12 26 V56 H0 Z"/>
+<path transform="translate(384 0)" d="M0 0 H40 V12 H26 V56 H14 V12 H0 Z"/>
+<path transform="translate(432 0)" d="M0 0 H40 V12 H12 V22 H34 V34 H12 V44 H40 V56 H0 Z"/>
+</g>
+<rect x="60" y="-18" width="16" height="10" fill="#ff4a1c"/>
+</g>
+</svg>
