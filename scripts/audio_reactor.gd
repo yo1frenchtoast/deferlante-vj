@@ -18,6 +18,9 @@ extends Node
 ## passage opens the levels back up instead of going dead.
 
 signal levels(bass: float, mid: float, treble: float)
+## A kick, once per kick. What listens to this wants an *event* — something to hit
+## on the beat — where `levels` is a continuous reading.
+signal beat
 
 @export var enabled: bool = true
 ## The capture source to look for. Anything containing this is preferred.
@@ -86,6 +89,22 @@ signal levels(bass: float, mid: float, treble: float)
 ## at all. The nervousness wanted here comes from the envelope, not from the curve.
 var punch: float = 0.35
 
+## Beat detection. The bands are already an envelope normalised against the track,
+## so a kick is a rising edge in the bass and nothing cleverer is needed: it counts
+## when the band climbs past `beat_on` having first fallen back under `beat_off`.
+## Two thresholds rather than one is what separates two kicks from one long note —
+## a single threshold retriggers on every tremble along the top of a held bass.
+##
+## Read on the smoothed level *before* the response curve, not on `bass`. PUNCH is
+## a look control: bending the picture harder should not also retune the detector
+## and lose half the beats.
+@export var beat_on: float = 0.6
+@export var beat_off: float = 0.35
+## Nothing counts as a beat within this of the last one. 0.25 s is 240 bpm on the
+## floor, which no kick drum reaches — it guards against the double trigger a
+## sloppy edge produces, not against fast music.
+@export var beat_gap: float = 0.25
+
 var bass: float = 0.0
 var mid: float = 0.0
 var treble: float = 0.0
@@ -119,6 +138,9 @@ var _floors := [-92.0, -92.0, -92.0]
 ## Starting at -92 dB with a floor that climbs a few decibels a second, it took
 ## half a minute to reach the music — and until it did, every band read 0.9 flat.
 var _primed := false
+## True while the bass sits low enough for the next rise to count as a kick.
+var _beat_armed := true
+var _since_beat: float = 0.0
 
 
 func _ready():
@@ -311,6 +333,21 @@ func _process(delta: float):
 
 	level = maxf(bass, maxf(mid, treble))
 	levels.emit(bass, mid, treble)
+	_detect_beat(delta)
+
+
+## The rising edge of the bass, reported once. A silent capture reports nothing at
+## all rather than a beat on whatever the noise floor does: the whole point of the
+## band being gated is that this is not music.
+func _detect_beat(delta: float):
+	_since_beat += delta
+	var envelope: float = _smoothed[0]
+	if _beat_armed and envelope >= beat_on and _since_beat >= beat_gap:
+		_beat_armed = false
+		_since_beat = 0.0
+		beat.emit()
+	elif envelope <= beat_off:
+		_beat_armed = true
 
 
 ## Listening, and hearing nothing whatsoever. Distinct from `capturing`, which only

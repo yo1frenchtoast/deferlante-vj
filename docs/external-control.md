@@ -340,6 +340,7 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/audio/warp` | 0 – 12 | 2.5 | AUDIO › HYPERSPACE ← BASS |
 | `/deferlante/audio/lasers` | 0 – 12 | 2.5 | AUDIO › LASERS ← MID |
 | `/deferlante/audio/sphere` | 0 – 12 | 2.5 | AUDIO › SPHERE ← TREBLE |
+| `/deferlante/audio/randomizer` | 0 – 1 | 0 | AUDIO › SHUFFLE ← KICK |
 | `/deferlante/sphere/count` | 0 – 80 | 14 | SPHERE › COUNT |
 | `/deferlante/sphere/size` | 0.03 – 0.8 | 0.13 | SPHERE › SIZE |
 | `/deferlante/sphere/sides` | 0 – 12 | 0 | SPHERE › SIDES |
@@ -592,6 +593,10 @@ shape in the same place. A spotlight that swells on the kick changes the whole p
 Size moves at a third of the amount, because a radius reads far more strongly than a
 width. Measured at an amount of 1.5: laser strokes 6.1–10.6 px, spotlight radius
 208–274 px, spotlight stroke 3.4–6.4 px.
+
+`SHUFFLE ← KICK` is the one destination that is not a width. Instead of scaling a
+setting it presses `SHUFFLE`, so the sound moves the show the way the auto-pilot and
+the operator's own button do — see [on the beat](effects.md#on-the-beat).
 
 The sound **adds to** the widths rather than sets them. The sliders continue to mean
 what they say, and a return of `REACTIVITY` to 0 restores exactly the look that was

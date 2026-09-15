@@ -71,7 +71,8 @@ var _scroll_phase: float = 0.0
 
 # Audio reactivity. The master is zero by default, so nothing moves until asked.
 var _react: float = 0.0
-var _amounts := {"lasers": 2.5, "spot": 2.5, "sphere": 2.5, "warp": 2.5}
+var _amounts := {"lasers": 2.5, "spot": 2.5, "sphere": 2.5, "warp": 2.5,
+	"randomizer": 0.0}
 var _modulations: Array = []
 
 enum { BASS, MID, TREBLE }
@@ -134,6 +135,11 @@ func _ready():
 		# A fader holding this setting is now lying about where it is: a preset
 		# recall, the auto-pilot or a phone just moved it under the operator's hand.
 		p.changed.connect(func(_v): midi.on_param_changed(p.slug))
+
+	# The kick, offered to the auto-pilot. Connected rather than polled: a rising
+	# edge read once a frame from here would be a beat missed on any frame the
+	# envelope crossed and came back within.
+	audio.beat.connect(_on_beat)
 
 	console.setup(panel, show_viewport, lang, route_key)
 
@@ -295,6 +301,11 @@ func _build_params():
 	_fn("audio/warp", 0, 12, 0.05, 2.5, func(v): _amounts["warp"] = v)
 	_fn("audio/lasers", 0, 12, 0.05, 2.5, func(v): _amounts["lasers"] = v)
 	_fn("audio/sphere", 0, 12, 0.05, 2.5, func(v): _amounts["sphere"] = v)
+	# Not a multiplier like the four above: the sound does not scale a setting here,
+	# it hits SHUFFLE. So this one is the chance that a kick rolls the show, and it
+	# starts at 0 — a show saved before this existed comes up with the auto-pilot on
+	# its own clock, the way it was left.
+	_fn("audio/randomizer", 0, 1, 0.02, 0.0, func(v): _amounts["randomizer"] = v)
 
 	_section("section.sphere")
 	_prop("sphere/count", 0, 80, 1, 14.0, sphere, "circle_count")
@@ -326,7 +337,8 @@ func _build_params():
 	# hand-back delay decides how long the beam sits still afterwards. `spot/manual`
 	# was already out for the same reason; these two were left behind.
 	for slug in ["global/speed", "global/glow", "global/recall", "global/panel",
-			"global/autodim", "audio/reactivity", "color/saturation",
+			"global/autodim", "audio/reactivity", "audio/randomizer",
+			"color/saturation",
 			"color/mode", "color/red", "color/green", "color/blue",
 			"spot/track", "spot/handback"]:
 		param(slug).randomizable = false
@@ -546,6 +558,12 @@ func _spawn_lasers(count: int):
 
 func _set_reactivity(value: float):
 	_react = value
+
+
+## Scaled by REACTIVITY like every other amount, so the master still switches the
+## whole of the sound response off in one move.
+func _on_beat():
+	autopilot.on_beat(_react * _amounts["randomizer"])
 
 
 ## A live bar in the status line. Without it, "the visuals are not moving" could be

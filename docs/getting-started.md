@@ -170,8 +170,9 @@ order that the vu-meter draws them.
 | `HYPERSPACE ← BASS` | 0 – 12 | The kick drives the star field. |
 | `LASERS ← MID` | 0 – 12 | Mids drive the laser strokes. |
 | `SPHERE ← TREBLE` | 0 – 12 | Treble drives the sphere. |
+| `SHUFFLE ← KICK` | 0 – 1 | The kick shuffles the show. **0 by default.** Half way up is about one move a bar. See [the auto-pilot](effects.md#on-the-beat). |
 
-The top of those four ranges is deliberately past good taste. See
+The top of the four band ranges is deliberately past good taste. See
 [how nervous it is](external-control.md#how-nervous-it-is). A set lives in the middle
 of the range.
 

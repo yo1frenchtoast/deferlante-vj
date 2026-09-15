@@ -87,6 +87,7 @@ const LABELS := {
 	"audio/warp": ["HYPERSPACE ← BASS", "HYPERESPACE ← GRAVES"],
 	"audio/lasers": ["LASERS ← MID", "LASERS ← MÉDIUMS"],
 	"audio/sphere": ["SPHERE ← TREBLE", "SPHÈRE ← AIGUS"],
+	"audio/randomizer": ["SHUFFLE ← KICK", "BRASSAGE ← KICK"],
 
 	"sphere/count": ["COUNT", "NOMBRE"],
 	"sphere/size": ["SIZE", "TAILLE"],
@@ -334,6 +335,7 @@ const HINTS := {
 	"audio/warp": ["The kick drives the star field: how fast it flies and how thick the streaks are.", "Le kick pilote le champ d'étoiles : sa vitesse et l'épaisseur des traînées."],
 	"audio/lasers": ["Mids drive the lasers: their length and their stroke width.", "Les médiums pilotent les lasers : leur longueur et leur épaisseur."],
 	"audio/sphere": ["Treble drives the sphere: the shape size and the stroke width.", "Les aigus pilotent la sphère : la taille des formes et leur épaisseur."],
+	"audio/randomizer": ["Chance a kick shuffles the show. 0 off, half way about one move a bar.", "Chance qu'un kick brasse le show. 0 coupé, à mi-course environ un changement par mesure."],
 
 	"sphere/count": ["Number of shapes. 0 switches the effect off.", "Nombre de formes. 0 éteint l'effet."],
 	"sphere/size": ["Size of one shape, in radians on the sphere.", "Taille d'une forme, en radians sur la sphère."],

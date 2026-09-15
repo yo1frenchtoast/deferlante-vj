@@ -177,6 +177,10 @@ function audioSphere(value) {
 	local.send("/deferlante/audio/sphere", value);
 }
 
+function audioRandomizer(value) {
+	local.send("/deferlante/audio/randomizer", value);
+}
+
 function sphereCount(value) {
 	local.send("/deferlante/sphere/count", value);
 }

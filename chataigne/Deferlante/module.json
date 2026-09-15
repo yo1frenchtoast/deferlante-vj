@@ -627,6 +627,20 @@
         }
       }
     },
+    "Audio Shuffle \u2190 Kick": {
+      "menu": "Audio",
+      "callback": "audioRandomizer",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Sphere Count": {
       "menu": "Sphere",
       "callback": "sphereCount",

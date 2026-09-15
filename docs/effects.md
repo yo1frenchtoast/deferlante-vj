@@ -359,8 +359,9 @@ Three precautions make it usable for real:
   starts reading as a malfunction.
 - **Values group towards the middle** of each range (the average of two draws), which
   avoids the extremes that either empty or saturate the screen.
-- **Fifteen settings are out of its reach**: `SPEED`, `GLOW`, `RECALL FADE`,
-  `PANEL`, `AUTO DIM`, `RANDOMIZER`, `REACTIVITY`, the three spotlight rows that only
+- **Sixteen settings are out of its reach**: `SPEED`, `GLOW`, `RECALL FADE`,
+  `PANEL`, `AUTO DIM`, `RANDOMIZER`, `REACTIVITY`, `SHUFFLE ← KICK`, the three
+  spotlight rows that only
   matter with a pad (`AIMING`, `TRACKING`, `HAND BACK`), and the whole COLOR section
   (`MODE`, `SATURATION`, `RED`, `GREEN`, `BLUE`). Those are decisions — the tempo of
   the track, the contrast of the room, who holds the beam — not variations to be
@@ -372,6 +373,39 @@ Three precautions make it usable for real:
   beam answers **while a hand is on the stick**, in the middle of a follow. A roll of
   the hand-back delay decides how long the beam then sits still. Neither shows on
   screen when nobody holds a pad, thus rolling them spends a move on nothing.
+
+### On the beat
+
+`SHUFFLE ← KICK`, in the AUDIO section, hands the shuffle to the music. The show
+watches the bass for a rising edge and, on each kick, gives itself that much of a
+chance of rolling. At 0 nothing happens, which is where it starts. It reads the
+envelope before `PUNCH` is applied, so bending the picture harder does not also
+retune the detector.
+
+It presses the same handle as the button. The sound does not get its own kind of
+move: it rolls the whole show exactly as `SHUFFLE` and the `RANDOMIZER` clock do,
+thus everything above — one or two settings, values towards the middle, the sixteen
+settings out of reach — holds here too.
+
+Two things keep it musical:
+
+- **No more than one move a second**, whatever the tempo and whatever the chance. It
+  is what keeps a fast track from turning the show into a strobe of settings, and it
+  is why the top of this slider is not a cut on every kick.
+- **`RANDOMIZER` is not involved.** At 0 the clock is off and the music is the only
+  thing moving the show, which is usually what you want. Run the two together and the
+  show drifts on its own between kicks.
+
+Measured at 128 bpm: the top of the slider moves the show every three kicks, half way
+up is about one move a bar, and 0.1 is one every three bars. The detector itself is
+exact — one beat per kick, from 100 to 174 bpm, and a held bass note counts once
+rather than trembling into a stream of them.
+
+It follows `REACTIVITY` like every other amount, thus the master still takes the whole
+of the sound response out in one move. On a night with no sound, or with the capture
+on the wrong source, nothing rolls — the status row says which. And like the rest of
+the sound response it is out of the auto-pilot's own reach: a roll that could switch
+on the thing that rolls the show is a loop, not a variation.
 
 ### Where it lands
 
@@ -403,7 +437,8 @@ lives in the middle.
 **Five settings can be picked and change nothing.** `PUNCH` and the four band amounts
 do nothing while `REACTIVITY` is 0, which is where it starts and where it stays unless
 you move it, because the auto-pilot cannot. On a night with no sound, five of the
-thirty-six candidates are silent moves.
+thirty-six candidates are silent moves. `SHUFFLE ← KICK` is not among them: it is out
+of reach for the reason given above.
 
 ### What starts off, and who may switch it on
 
