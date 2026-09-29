@@ -43,6 +43,7 @@ scripts/
   show_dump.gd      Describes the show to a generator, then quits
   vj_param.gd       One setting: bounds, step, application, formatting
   control_panel.gd  Panel: rows, keyboard, auto-hide, FPS readout
+  panel_layout.gd   Which section sits in which column, and which are put away
   glitch_circle.gd  The followspot circle (a head that searches) + random glitches
   laser_line.gd     A stroke that spins and bounces off the edges
   halo.gd           The wide additive echoes that stand in for the glow
@@ -78,8 +79,19 @@ column holds GLOBAL, COLOR, MIRROR, MOTION BLUR and AUDIO — what you settle be
 and then
 leave alone. The instruments follow: SPOTLIGHT, LASERS, SPHERE, HYPERSPACE. Thus the
 hand goes to the same place every night, whatever effects the show has gained since.
-The two runs are named in `control_panel.gd`, and a section in neither list joins the
+The two runs are named in `panel_layout.gd`, and a section in neither list joins the
 instruments at the end rather than disappears.
+
+**The operator can rearrange all of this.** `F6` opens an edit mode: sections move up
+and down, across columns, and can be put away. `PanelLayout` holds the result and works
+on lists of section keys, with no nodes in it, so that its rules are tested without a
+screen. The automatic layout is one of its two ways to make a plan, and it is the
+algorithm above, unchanged. The first move adopts what was on screen as the operator's
+own layout; from then on the columns stay where they were put, and the panel still
+scales itself down when a window is too small. Hiding is separate from both, and it is
+display only: the settings still answer to OSC, MIDI, the web page and the presets. The
+file is `user://panel_layout.json`. A missing or damaged file gives the automatic
+layout, because the panel must come up whatever is in there.
 
 The instrument columns are **capped at the height of the first column**, and spread
 sideways past it rather than grow taller. Without the cap they make one column as tall

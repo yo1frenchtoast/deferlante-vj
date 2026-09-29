@@ -139,9 +139,14 @@ const TEXTS := {
 		"ESPACE glitch    R couleurs    1-9 preset    Ctrl+1-9 enregistrer",
 	],
 	"help.keys": [
-		"H pin UI    F2 dim    F3 fps    F4 console    F11 fullscreen    ESC quit",
-		"H figer l'UI    F2 discrétion    F3 fps    F4 console    F11 plein écran    ÉCHAP quitter",
+		"H pin UI    F2 dim    F3 fps    F4 console    F6 layout    F11 fullscreen    ESC quit",
+		"H figer l'UI    F2 discrétion    F3 fps    F4 console    F6 disposition    F11 plein écran    ÉCHAP quitter",
 	],
+	"layout.help": [
+		"LAYOUT    ↑↓ section    Shift+↑↓ move up/down    ←→ other column    ENTER hide/show    BACKSPACE reset    F6 done",
+		"DISPOSITION    ↑↓ section    Maj+↑↓ monter/descendre    ←→ autre colonne    ENTRÉE masquer/afficher    RETOUR ARRIÈRE réinitialiser    F6 terminé",
+	],
+	"layout.hidden": ["(hidden)", "(masquée)"],
 	"help.pad": [
 		"pad: left stick aims    triggers size    A glitch    LB/RB freeze/boost",
 		"manette : stick gauche vise    gâchettes taille    A glitch    LB/RB gel/boost",
