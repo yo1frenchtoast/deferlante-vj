@@ -103,6 +103,8 @@ const DRAG_THRESHOLD := 6.0
 ## How far right of the last column a drop still means "beside it" rather than in it.
 const NEW_COLUMN_MARGIN := 30.0
 var _pressed_key: String = ""
+## The release that ends a double click, which has nothing left to do.
+var _swallow_release: bool = false
 var _press_at: Vector2 = Vector2.ZERO
 var _dragging: bool = false
 var _ghost: Label
@@ -591,9 +593,22 @@ func _edit_mouse(event: InputEvent) -> bool:
 				if key == "":
 					return false
 				_choose_section(key)
+				if event.double_click:
+					# Twice on a name puts the section away, or brings it back. Taken
+					# on the second press, and its release is swallowed with it, so
+					# that a hand still moving cannot start a drag from a section that
+					# is about to be redrawn.
+					_swallow_release = true
+					_apply_edit(layout.toggle_hidden(key))
+					get_viewport().set_input_as_handled()
+					return true
 				_pressed_key = key
 				_press_at = at
 				_dragging = false
+				get_viewport().set_input_as_handled()
+				return true
+			if _swallow_release:
+				_swallow_release = false
 				get_viewport().set_input_as_handled()
 				return true
 			if _pressed_key != "":

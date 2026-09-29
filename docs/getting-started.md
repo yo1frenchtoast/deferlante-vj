@@ -277,6 +277,7 @@ first column, and the instruments beside them. `F6` lets you arrange it yourself
 | `Enter` | Hide the section, or bring it back |
 | `Backspace` | Go back to the automatic layout, with every section shown |
 | Mouse | Take a section by its name and drag it. Let go where it must go |
+| Double click | On a name: hide the section, or bring it back. The same as `Enter` |
 | `F6` | Done |
 
 A bar shows where the section will land, and shows nothing where letting go would change

@@ -312,3 +312,55 @@ func test_a_press_that_is_not_on_a_name_is_left_alone():
 	await _settle()
 	check(not panel._edit_mouse(_button(Vector2(1800.0, 5.0), true)), "empty space is not the panel's")
 	_end()
+
+
+func _double_click(canvas_point: Vector2) -> InputEventMouseButton:
+	var e := _button(canvas_point, true)
+	e.double_click = true
+	return e
+
+
+func test_a_double_click_on_a_name_puts_the_section_away_and_brings_it_back():
+	_begin()
+	panel.handle_key(_key(KEY_F6))
+	await _settle()
+	var at := _centre("section.mirror")
+	panel._input(_button(at, true))
+	panel._input(_button(at, false))
+	panel._input(_double_click(at))
+	panel._input(_button(at, false))
+	check(panel.layout.hidden.has("section.mirror"), "put away")
+	check(panel._pressed_key == "" and not panel._dragging, "and no drag was started by the second press")
+	check(FileAccess.file_exists(PATH), "saved")
+	await _settle()
+	var again := _centre("section.mirror")
+	panel._input(_button(again, true))
+	panel._input(_button(again, false))
+	panel._input(_double_click(again))
+	panel._input(_button(again, false))
+	check(not panel.layout.hidden.has("section.mirror"), "brought back by the same gesture")
+	_end()
+
+
+func test_moving_after_a_double_click_does_not_drag():
+	_begin()
+	panel.handle_key(_key(KEY_F6))
+	await _settle()
+	var at := _centre("section.mirror")
+	panel._input(_button(at, true))
+	panel._input(_button(at, false))
+	panel._input(_double_click(at))
+	panel._input(_move(at + Vector2(200.0, 0.0)))
+	check(not panel._dragging, "the hand is still moving, and nothing is being dragged")
+	panel._input(_button(at + Vector2(200.0, 0.0), false))
+	check(not panel._swallow_release, "the release was taken")
+	_end()
+
+
+func test_a_double_click_outside_the_edit_mode_does_nothing():
+	_begin()
+	await _settle()
+	var at := _centre("section.mirror")
+	panel._input(_double_click(at))
+	check(panel.layout.hidden.is_empty(), "nothing hidden")
+	_end()
