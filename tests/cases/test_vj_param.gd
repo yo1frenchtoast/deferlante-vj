@@ -69,3 +69,28 @@ func test_choices_show_names():
 	p.translate_choices = false
 	p.set_value(1.0)
 	same(p.format_value(), "on", "the name, not the number")
+
+
+func test_reset_goes_back_to_the_declared_value_not_the_last_one():
+	var seen := []
+	var p := VJParam.new("test/x", 0, 10, 0.5, 4.0, func(v): seen.append(v))
+	p.set_value(9.0)
+	p.reset()
+	same(p.value, 4.0, "the declared value")
+	same(seen, [9.0, 4.0], "written through the effect like any other change")
+
+
+func test_reset_announces_the_change():
+	var heard := []
+	var p := VJParam.new("test/x", 0, 10, 0.5, 4.0, func(_v): pass)
+	p.changed.connect(func(v): heard.append(v))
+	p.set_value(7.0)
+	p.reset()
+	same(heard, [7.0, 4.0], "so the panel, the phone and the pad all see it")
+
+
+func test_the_default_does_not_follow_the_value():
+	var p := VJParam.new("test/x", 0, 10, 0.5, 4.0, func(_v): pass)
+	p.set_value(8.0)
+	p.apply_current()
+	same(p.default_value, 4.0, "still what was declared")

@@ -22,6 +22,9 @@ var min_value: float
 var max_value: float
 var step: float
 var value: float
+## What the show declared it as, which is what `reset()` goes back to. It is not the
+## value a preset or the auto-pilot last left, and it does not follow them.
+var default_value: float
 ## Two-way setting: the sign is a direction of rotation, shown as an arrow rather
 ## than a minus sign — in the dark an arrow reads at a glance.
 var bidirectional: bool
@@ -47,6 +50,7 @@ func _init(p_slug: String, p_min: float, p_max: float, p_step: float,
 	max_value = p_max
 	step = p_step
 	value = p_value
+	default_value = p_value
 	_apply = p_apply
 	bidirectional = p_bidirectional
 
@@ -62,6 +66,11 @@ func label() -> String:
 ## In a named tongue rather than the room's. See `Lang.label_in()`.
 func label_in(tongue: int) -> String:
 	return _lang.label_in(slug, tongue) if _lang else slug
+
+
+## Back to the declared value, through the same door as every other change.
+func reset():
+	set_value(default_value)
 
 
 ## What every surface that is not the panel is told about this setting: the web page,

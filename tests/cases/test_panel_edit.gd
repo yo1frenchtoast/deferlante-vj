@@ -399,3 +399,60 @@ func test_the_right_button_off_a_name_is_left_alone():
 	check(not panel._edit_mouse(_button(Vector2(1800.0, 5.0), true, MOUSE_BUTTON_RIGHT)), "empty space")
 	check(panel.layout.hidden.is_empty(), "nothing hidden")
 	_end()
+
+
+# --------------------------------------------------------------------------
+# A double click on a slider
+# --------------------------------------------------------------------------
+
+func _slider_click(double: bool) -> InputEventMouseButton:
+	var e := InputEventMouseButton.new()
+	e.button_index = MOUSE_BUTTON_LEFT
+	e.pressed = true
+	e.double_click = double
+	return e
+
+
+func test_a_double_click_on_a_slider_puts_its_setting_back_to_the_default():
+	_begin()
+	var index: int = panel.params.find(show.registry.find("lasers/width"))
+	var p: VJParam = panel.params[index]
+	p.set_value(17.0)
+	panel._sliders[index].gui_input.emit(_slider_click(false))
+	same(p.value, 17.0, "a single click leaves it where the slider put it")
+	panel._sliders[index].gui_input.emit(_slider_click(true))
+	same(p.value, p.default_value, "a double click sends it back to the declared value")
+	same(panel._sliders[index].value, p.default_value, "and the slider follows")
+	same(panel.selected, index, "and the row is the selected one")
+	_end()
+
+
+func test_the_default_is_the_declared_one_after_a_preset_or_the_pilot_moved_it():
+	_begin()
+	var index: int = panel.params.find(show.registry.find("spot/radius"))
+	var p: VJParam = panel.params[index]
+	var declared: float = p.default_value
+	same(declared, 200.0, "what _build_params declares, whatever an earlier case did to the value")
+	p.set_value(500.0)
+	p.apply_current()
+	panel._sliders[index].gui_input.emit(_slider_click(true))
+	same(p.value, declared, "not 500, and not whatever was last written")
+	_end()
+
+
+func test_only_a_left_double_click_resets():
+	_begin()
+	var index: int = panel.params.find(show.registry.find("lasers/width"))
+	var p: VJParam = panel.params[index]
+	p.set_value(17.0)
+	var right := _slider_click(true)
+	right.button_index = MOUSE_BUTTON_RIGHT
+	panel._sliders[index].gui_input.emit(right)
+	var release := _slider_click(true)
+	release.pressed = false
+	panel._sliders[index].gui_input.emit(release)
+	var motion := InputEventMouseMotion.new()
+	panel._sliders[index].gui_input.emit(motion)
+	same(p.value, 17.0, "the right button, a release and a movement leave it alone")
+	p.reset()
+	_end()

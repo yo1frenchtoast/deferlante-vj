@@ -440,6 +440,7 @@ func _build_row(p: VJParam, index: int):
 	# Without this the sliders swallow the arrow keys and break navigation.
 	slider.focus_mode = Control.FOCUS_NONE
 	slider.value_changed.connect(_on_slider_moved.bind(index))
+	slider.gui_input.connect(_on_slider_input.bind(index))
 	_column.add_child(slider)
 
 	var value_label := Label.new()
@@ -766,6 +767,19 @@ func _end_drag():
 # --------------------------------------------------------------------------
 # Keeping values and display in step
 # --------------------------------------------------------------------------
+
+## A double click on a slider puts its setting back to the value it was declared with.
+## The first click of the pair has already moved the slider to where it landed, and
+## this then overrides it, so the double click ends at the default wherever it fell.
+## Taken with `accept_event()` so the slider does not go on to start a drag from it.
+func _on_slider_input(event: InputEvent, index: int):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT \
+			and event.pressed and event.double_click:
+		params[index].reset()
+		select(index)
+		wake()
+		_sliders[index].accept_event()
+
 
 func _on_slider_moved(value: float, index: int):
 	params[index].set_value(value)
