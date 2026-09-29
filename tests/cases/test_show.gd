@@ -149,9 +149,12 @@ func test_midi_profiles_only_name_what_the_show_answers_to():
 		var claimed := {}
 		for control in profile["controls"]:
 			var label := "%s / %s" % [file, control.get("label", "?")]
-			check(show.midi.MODES.has(control.get("mode", "")), "%s: unknown mode" % label)
-			check(show.midi._target_exists(control), "%s aims at %s, which nothing answers to"
-				% [label, control.get("target", "")])
+			check(MidiControl.MODES.has(control.get("mode", "")), "%s: unknown mode" % label)
+			var why := []
+			var typed := MidiControl.parse(control, why)
+			check(typed != null, "%s: %s" % [label, why])
+			check(typed != null and show.midi.map._target_exists(typed),
+				"%s aims at %s, which nothing answers to" % [label, control.get("target", "")])
 			var key = "cc%d" % control["cc"] if control.has("cc") else "note%d" % control["note"]
 			check(not claimed.has(key), "%s: %s is claimed twice" % [label, key])
 			claimed[key] = true

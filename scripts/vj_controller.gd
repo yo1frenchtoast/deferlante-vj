@@ -148,16 +148,11 @@ func _ready():
 	# Every door the MIDI surface can open is one another surface already had: the
 	# settings by slug, and `ShowActions.fire()` for the one-shots. Nothing new to reach
 	# means the Chataigne module still covers everything a profile can.
-	midi.registry = registry
-	midi.fire = actions.fire
-	midi.touched = _external_touch
-	midi.actions = ShowActions.LIST
-	midi.preset_count = presets.SLOTS
+	midi.setup(registry, actions.fire, _external_touch, ShowActions.LIST, presets.SLOTS)
 	midi.surface_changed.connect(_refresh_status)
 	midi.start()
 
 	pad.connection_changed.connect(_refresh_status)
-	# Wrapping the lookup catches every pad interaction in one place.
 	pad.registry = registry
 	pad.touched = _external_touch
 	pad.aim.connect(circle.aim_by)
