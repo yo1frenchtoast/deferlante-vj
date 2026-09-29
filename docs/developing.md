@@ -33,11 +33,30 @@ show](the-code.md#describing-the-show-to-other-tools).
 ```
 
 `vj_controller.gd` is the only script that knows that the others exist. It declares
-the settings, it spawns the lasers, and it hands each collaborator the few callables
-that it needs. `rest_api.gd` gets "find a setting, list them all, describe one".
-`presets.gd` gets "give me the parameters". `autopilot.gd` gets an amount. None of
-them can reach back, which is what keeps the controller about a show rather than about
-JSON.
+the settings into a `ParamRegistry`, builds the small objects that do the work, and
+hands each collaborator what it needs. `rest_api.gd`, `presets.gd`, `autopilot.gd`,
+`midi_input.gd` and `gamepad.gd` get the registry. None of them can reach back, which
+is what keeps the controller about a show rather than about JSON.
+
+What the controller builds, and where each one lives:
+
+| Object | Does |
+| --- | --- |
+| `ParamRegistry` | Holds the settings in declaration order. Finds one by slug. |
+| `ShowActions` | The one-shots, and the one door they go through: `fire(name)`. |
+| `OscRouter` | An OSC address in, a setting moved or an action fired. |
+| `WebBridge` | The schema, the values that moved, the meter, and what a phone may ask for. |
+| `LaunchSurface` | The start-up tab of the web page: describes it, applies a change. |
+| `LaserRig` | The strokes, the settings they inherit, and the fan's angle. |
+| `AudioModulation` | What each band of the sound does to which setting. |
+| `MidiMap` | What a controller's controls do. No hardware in it. |
+| `ShowDump` | Describes the show to a generator, then quits. |
+
+All of these except the last one are plain objects (`RefCounted`) that take what they
+need in their constructor. That is deliberate: you can build one in a test with
+stand-ins, and you cannot forget to give it something. A `Callable` made from a method
+of a `RefCounted` does **not** keep that object alive, so whoever binds one must also
+hold the object in a variable.
 
 The effects (`glitch_circle.gd`, `laser_line.gd`, `sphere_circles.gd`,
 `kaleidoscope.gd`, `halo.gd`) know nothing about settings at all. They expose
@@ -118,11 +137,14 @@ into columns between them and never splits one in two.
 Actions are not settings. They have no value, they only happen. This one costs three
 edits, because the wiring is genuinely per-surface.
 
-1. Name it in `ACTIONS` at the top of the controller. The REST specification and the
-   Chataigne module both read that list, thus neither can advertise something that the
-   show does not have.
-2. Wire it in `_on_web_action()`, in the `match`.
-3. Wire its OSC address in `_on_osc_message()`.
+1. Name it in `ShowActions.LIST`, and give it a `match` arm in `ShowActions.fire()`.
+   The REST specification, the web page, the MIDI profiles and the Chataigne module
+   all read that list, thus none of them can advertise something that the show does
+   not have.
+2. Add its label to `Lang.TEXTS` as `action.<name>`.
+3. Wire its OSC address in `OscRouter.handle()`.
+
+The web page and the REST API need no edit: they go through `ShowActions.fire()`.
 
 The show then generates the Chataigne command. If you want it to read as something
 other than its slug on the console, add a line to `ACTION_NAMES` in the generator.
@@ -133,9 +155,9 @@ That table exists to *keep* names that people have already mapped, not to invent
 This one is expensive, and deliberately so. These are the few things that Godot fixes
 before a script runs, or binds before anything can listen. To add one, edit four
 places: `launch_config.gd` (the variable, plus `load_from_disk()` and `save()`),
-`lang.gd`, the row of the launcher in `launcher.gd`, and the controller. In the
-controller, edit `_describe_launch()` and `_on_web_launch_set()` so that the web tab
-offers the setting too.
+`lang.gd`, the row of the launcher in `launcher.gd`, and the controller. In
+`launch_surface.gd`, edit `describe()` and `apply()` so that the web tab offers the
+setting too.
 
 If a setting *can* live among the ordinary ones, put it there. A setting that you
 cannot reach in the middle of a set is of no use.
@@ -147,8 +169,37 @@ Then point settings at it from `_build_params()`. It must not import anything ab
 settings, OSC or the panel. If it needs the palette, take it by reference like the
 others (`use_palette`).
 
-To make it react to sound, add an entry to `_build_modulations()`: a slug, a band
+To make it react to sound, add an entry to `AudioModulation._build()`: a slug, a band
 (`BASS` / `MID` / `TREBLE`), the amount that governs it, a weight, and a setter.
+
+## Tests
+
+```
+tests/run.sh                        # all of them; needs `godot` on the PATH
+tests/run.sh --only=test_osc        # one file
+```
+
+With Flatpak: `GODOT="flatpak run --command=godot org.godotengine.Godot" tests/run.sh`.
+
+The cases in `tests/cases/` run the real show headless. There is no test addon to
+install, and the CI runs the same script before the exports. A file is a class that
+extends `TestCase`, and a method named `test_…` is a test. Declare
+`const NEEDS_SHOW := false` in a file that builds its own objects, so that it cannot
+depend on the show by accident.
+
+What they hold in place:
+
+- The settings: unique slugs, a label in both languages, a section, and every string
+  in the code that *looks like* a slug must be one. `param()` answers null for a typo,
+  and the compiler cannot see that a string is an address.
+- The surfaces that write to a setting: OSC, REST and the web bridge.
+- The MIDI behaviour (takeover, toggles, held pads), with no controller plugged in.
+- The MIDI profiles, against the settings, and the checker's lists against the
+  engine's.
+
+To check a refactor that must change nothing, photograph the show before and after
+and compare: `tests/run.sh --only=zz_snapshot --snap=/tmp/before.json`. The seed is
+fixed, so two photographs of the same code are identical.
 
 ## Running it
 

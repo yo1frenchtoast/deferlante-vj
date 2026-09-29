@@ -170,3 +170,8 @@ func test_the_launch_tab_describes_every_row_it_can_change():
 	check(keys.has("renderer") and keys.has("osc_port"), "the first and the last are there")
 	# Unknown keys are refused before anything is written to disk.
 	check(not show.launch_surface.apply("nonsense", 1), "an unknown key changes nothing")
+
+
+func test_every_action_has_a_label_on_the_page():
+	for a in ShowActions.LIST:
+		check(Lang.TEXTS.has("action." + a), "the action %s has no label (action.%s)" % [a, a])
