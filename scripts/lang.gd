@@ -259,7 +259,7 @@ const TEXTS := {
 	# reached through the very port one of these rows can move.
 	# The one-shot actions, as the web surface labels its buttons. The panel says the
 	# same words in its help line; these are keyed by action name so a new one in
-	# `ACTIONS` only needs a line here to read properly.
+	# `ShowActions.LIST` only needs a line here to read properly.
 	"action.glitch": ["GLITCH", "GLITCH"],
 	"action.randomize": ["COLORS", "COULEURS"],
 	"action.shuffle": ["SHUFFLE", "BRASSER"],

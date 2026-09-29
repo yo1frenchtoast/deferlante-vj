@@ -3,6 +3,9 @@
 ## Structure
 
 ```
+tests/
+  run.sh, run.tscn            Runs every case in cases/ against the real show, headless
+  cases/                      One file per part; `test_` methods, no addon
 tools/
   build_chataigne_module.py   Regenerates the Chataigne module from the settings
   listen-to-output.sh         Wraps the output's monitor as a source Godot will list
@@ -26,7 +29,18 @@ scripts/
   lang.gd           On-screen translations, keyed by OSC address
   kaleidoscope.gd   Drives the mirror's full-screen pass
   palette.gd        Color state, shared by reference with the four effects
-  vj_controller.gd  Settings declaration, lasers, OSC routing
+  vj_controller.gd  Settings declaration, and the wiring of everything below
+  param_registry.gd Every setting, in order, found by slug
+  show_actions.gd   The one-shots, and the one door they go through
+  osc_router.gd     An OSC address in, a setting moved or an action fired
+  web_bridge.gd     What the phones are told, and what they may ask for
+  launch_surface.gd The start-up tab of the web page
+  laser_rig.gd      The strokes, and the settings they inherit
+  audio_modulation.gd  What each band of the sound does to which setting
+  midi_input.gd     The MIDI device: finding it, choosing its profile
+  midi_map.gd       What a controller's controls do — no hardware in it
+  midi_control.gd   One line of a profile, typed and checked
+  show_dump.gd      Describes the show to a generator, then quits
   vj_param.gd       One setting: bounds, step, application, formatting
   control_panel.gd  Panel: rows, keyboard, auto-hide, FPS readout
   glitch_circle.gd  The followspot circle (a head that searches) + random glitches
@@ -46,9 +60,9 @@ scripts/
 ```
 
 The controller is the only script that knows that the others exist. `rest_api.gd`,
-`autopilot.gd` and `presets.gd` get the few callables that they need — find a setting,
-list them all — and are otherwise self-contained. That is what keeps the controller
-about a show rather than about JSON.
+`autopilot.gd`, `presets.gd`, `midi_input.gd` and `gamepad.gd` get the `ParamRegistry`
+— find a setting, list them all — and are otherwise self-contained. That is what keeps
+the controller about a show rather than about JSON.
 
 The show builds the UI at runtime from the list of settings. The scene holds nothing
 but an empty `VBoxContainer`, not 51 pairs of nodes to maintain by hand.

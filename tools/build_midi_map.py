@@ -12,8 +12,9 @@ the night. So the same question the Chataigne module is held to gets asked here 
 is this still level with the show? — against Godot's own description rather than
 against a list kept beside it.
 
-`midi_input.gd` repeats the structural half of these checks when it loads a
-profile, because a profile edited on the machine that runs the show never sees CI.
+`midi_control.gd` and `midi_map.gd` repeat the structural half of these checks when
+it loads a profile, because a profile edited on the machine that runs the show
+never sees CI.
 This tool goes further: it can also see that a value would be snapped or clamped
 on the way in, which the engine does silently and which would leave a pad's
 printed label saying something the pad no longer does.

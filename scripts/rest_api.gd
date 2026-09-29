@@ -11,8 +11,7 @@ extends Node
 ## Everything it needs is injected, so it knows nothing about lasers or spheres.
 
 ## Injected by the controller.
-var find_param: Callable
-var all_params: Callable
+var registry: ParamRegistry
 var describe: Callable
 var presets: Node
 ## Fires an action by name, answering false when the show has no such action. The
@@ -31,13 +30,13 @@ func handle(method: String, path: String, body: String) -> Dictionary:
 
 	if path == "/api/params":
 		var listed: Array = []
-		for p in all_params.call():
+		for p in registry.all():
 			listed.append(describe.call(p))
 		return {"code": 200, "body": {"params": listed}}
 
 	if path.begins_with("/api/params/"):
 		var slug := path.substr("/api/params/".length())
-		var p: VJParam = find_param.call(slug)
+		var p: VJParam = registry.find(slug)
 		if p == null:
 			return {"code": 404, "body": {"error": "unknown setting", "setting": slug}}
 		if method == "GET":
@@ -87,7 +86,7 @@ func handle(method: String, path: String, body: String) -> Dictionary:
 ## the same reason the Chataigne module is: a hand-kept copy drifts silently.
 func _openapi() -> Dictionary:
 	var slugs: Array = []
-	for p in all_params.call():
+	for p in registry.all():
 		slugs.append(p.slug)
 
 	var setting_param := {

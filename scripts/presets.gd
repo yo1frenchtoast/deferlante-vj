@@ -24,7 +24,7 @@ const EXCLUDED := ["global/panel"]
 @export var recall_time: float = 2.0
 
 ## Set by the controller: called as () -> Array[VJParam].
-var all_params: Callable
+var registry: ParamRegistry
 
 ## True while a slot is being applied. Rules that react to one setting changing —
 ## "touching a colour means you want manual" — must stay quiet during a recall,
@@ -77,10 +77,10 @@ func used_slots() -> Array:
 # --------------------------------------------------------------------------
 
 func save_slot(slot: int) -> bool:
-	if slot < 1 or slot > SLOTS or not all_params.is_valid():
+	if slot < 1 or slot > SLOTS or registry == null:
 		return false
 	var snapshot := {}
-	for p in all_params.call():
+	for p in registry.all():
 		if not EXCLUDED.has(p.slug):
 			snapshot[p.slug] = p.value
 	_slots[str(slot)] = snapshot
@@ -107,13 +107,13 @@ func clear_slot(slot: int) -> bool:
 ## uses it to start on a slot: a crossfade from the defaults is a fade from a look
 ## nobody chose, and there is no audience yet to fade for.
 func recall(slot: int, instant: bool = false) -> bool:
-	if not has_slot(slot) or not all_params.is_valid():
+	if not has_slot(slot) or registry == null:
 		return false
 
 	var target: Dictionary = _slots[str(slot)]
 	_from.clear()
 	_to.clear()
-	for p in all_params.call():
+	for p in registry.all():
 		# A setting saved before this one existed is simply left alone, so an old
 		# preset keeps working after new settings are added.
 		if target.has(p.slug):
@@ -146,10 +146,10 @@ func _process(delta: float):
 
 
 func _apply(t: float):
-	if not all_params.is_valid():
+	if registry == null:
 		return
 	applying = true
-	for p in all_params.call():
+	for p in registry.all():
 		if _to.has(p.slug):
 			p.set_value(lerpf(_from[p.slug], _to[p.slug], t))
 	applying = false
