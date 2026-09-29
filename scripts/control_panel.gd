@@ -617,9 +617,20 @@ func _edit_mouse(event: InputEvent) -> bool:
 				_end_drag()
 				get_viewport().set_input_as_handled()
 				return true
-		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed and _dragging:
-			# The way out of a drag that was a mistake. Not ESC: that quits the show.
+		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			if _dragging:
+				# The way out of a drag that was a mistake. Not ESC: that quits the show.
+				_end_drag()
+				get_viewport().set_input_as_handled()
+				return true
+			# Not dragging, the right button is free: on a name it puts the section
+			# away, or brings it back, like a double click and like ENTER.
+			var key := _header_at(_canvas_position(event))
+			if key == "":
+				return false
+			_choose_section(key)
 			_end_drag()
+			_apply_edit(layout.toggle_hidden(key))
 			get_viewport().set_input_as_handled()
 			return true
 	elif event is InputEventMouseMotion and _pressed_key != "":

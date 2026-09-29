@@ -364,3 +364,38 @@ func test_a_double_click_outside_the_edit_mode_does_nothing():
 	panel._input(_double_click(at))
 	check(panel.layout.hidden.is_empty(), "nothing hidden")
 	_end()
+
+
+func test_the_right_button_on_a_name_puts_the_section_away_and_brings_it_back():
+	_begin()
+	panel.handle_key(_key(KEY_F6))
+	await _settle()
+	var at := _centre("section.mirror")
+	panel._input(_button(at, true, MOUSE_BUTTON_RIGHT))
+	check(panel.layout.hidden.has("section.mirror"), "put away")
+	await _settle()
+	panel._input(_button(_centre("section.mirror"), true, MOUSE_BUTTON_RIGHT))
+	check(not panel.layout.hidden.has("section.mirror"), "brought back")
+	_end()
+
+
+func test_the_right_button_still_cancels_a_drag_and_hides_nothing():
+	_begin()
+	panel.handle_key(_key(KEY_F6))
+	await _settle()
+	var from := _centre("section.mirror")
+	panel._input(_button(from, true))
+	panel._input(_move(_centre("section.lasers")))
+	panel._input(_button(_centre("section.lasers"), true, MOUSE_BUTTON_RIGHT))
+	check(not panel._dragging, "cancelled")
+	check(panel.layout.hidden.is_empty(), "and nothing was hidden by it")
+	_end()
+
+
+func test_the_right_button_off_a_name_is_left_alone():
+	_begin()
+	panel.handle_key(_key(KEY_F6))
+	await _settle()
+	check(not panel._edit_mouse(_button(Vector2(1800.0, 5.0), true, MOUSE_BUTTON_RIGHT)), "empty space")
+	check(panel.layout.hidden.is_empty(), "nothing hidden")
+	_end()
