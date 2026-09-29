@@ -106,6 +106,13 @@ jobs:
       - name: Check the MIDI profiles still match the settings
         run: python3 tools/build_midi_map.py --check
 
+      # The cases in tests/ run the real show headless: the settings, the surfaces
+      # that write to them, and the code's own references to them. Before the
+      # exports, so a refactor that broke the show fails in seconds rather than
+      # after three builds.
+      - name: Run the tests
+        run: tests/run.sh
+
       # One export per step: a failure names its own platform in the annotation,
       # instead of a single "Export failed" that could mean any of the three.
       - name: Export Linux
