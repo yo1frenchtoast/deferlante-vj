@@ -45,19 +45,11 @@ var registry := ParamRegistry.new()
 var actions: ShowActions
 var osc_router: OscRouter
 
-var _audio_was_active: bool = false
 var _status_tick: float = 0.0
 ## What moved since the last frame, slug -> value, waiting to go out in one message.
 var _pending_values: Dictionary = {}
 var _meter_tick: float = 0.0
-# Audio reactivity. The master is zero by default, so nothing moves until asked.
-var _react: float = 0.0
-var _amounts := {"lasers": 2.5, "spot": 2.5, "sphere": 2.5, "warp": 2.5,
-	"randomizer": 0.0}
-var _modulations: Array = []
-
-enum { BASS, MID, TREBLE }
-
+var modulation: AudioModulation
 var _mode_param: VJParam
 ## True while start-up values are being applied: without this guard, setting the
 ## initial RED would flip the project into manual colour mode on launch.
@@ -76,6 +68,7 @@ func _ready():
 	launch_surface = LaunchSurface.new(lang, presets, console)
 	rig = LaserRig.new(laser_scene, show_viewport, palette,
 		func(): return get_viewport_rect().size)
+	modulation = AudioModulation.new(registry, audio, rig, circle, sphere, warp)
 	_build_params()
 	for p in registry.all():
 		p.use_language(lang)
@@ -85,7 +78,6 @@ func _ready():
 	autopilot.randomize_colours = _randomize_all
 	autopilot.palette = palette
 
-	_build_modulations()
 	circle.use_palette(palette)
 	sphere.use_palette(palette)
 	warp.use_palette(palette)
@@ -262,7 +254,7 @@ func _build_params():
 	_prop("spot/handback", 2, 120, 1, 30.0, circle, "manual_hold")
 
 	_section("section.audio")
-	_fn("audio/reactivity", 0, 1, 0.02, 0.0, _set_reactivity)
+	_fn("audio/reactivity", 0, 1, 0.02, 0.0, func(v): modulation.react = v)
 	_prop("audio/punch", 0, 1, 0.02, 0.35, audio, "punch")
 	# Written out one by one rather than looped over: this list is read back by
 	# `tools/build_chataigne_module.py`, which parses the declarations as text, and
@@ -275,20 +267,20 @@ func _build_params():
 	# In the order the ear takes them, low to high, which is also the order the
 	# vu-metre draws them. They used to run mids, bass, treble — the order they were
 	# written in — and reading the panel meant translating every time.
-	_fn("audio/spot", 0, 12, 0.05, 2.5, func(v): _amounts["spot"] = v)
+	_fn("audio/spot", 0, 12, 0.05, 2.5, func(v): modulation.amounts["spot"] = v)
 	# The one band shared by two effects. Four effects and three bands leave no
 	# choice, and the kick is where a jump to light speed belongs. What the doc
 	# below warns against is two effects breathing on the same *property*: the
 	# spotlight takes the bass as a size, the star field takes it as a speed, and
 	# the two read as separate layers rather than as one pump.
-	_fn("audio/warp", 0, 12, 0.05, 2.5, func(v): _amounts["warp"] = v)
-	_fn("audio/lasers", 0, 12, 0.05, 2.5, func(v): _amounts["lasers"] = v)
-	_fn("audio/sphere", 0, 12, 0.05, 2.5, func(v): _amounts["sphere"] = v)
+	_fn("audio/warp", 0, 12, 0.05, 2.5, func(v): modulation.amounts["warp"] = v)
+	_fn("audio/lasers", 0, 12, 0.05, 2.5, func(v): modulation.amounts["lasers"] = v)
+	_fn("audio/sphere", 0, 12, 0.05, 2.5, func(v): modulation.amounts["sphere"] = v)
 	# Not a multiplier like the four above: the sound does not scale a setting here,
 	# it hits SHUFFLE. So this one is the chance that a kick rolls the show, and it
 	# starts at 0 — a show saved before this existed comes up with the auto-pilot on
 	# its own clock, the way it was left.
-	_fn("audio/randomizer", 0, 1, 0.02, 0.0, func(v): _amounts["randomizer"] = v)
+	_fn("audio/randomizer", 0, 1, 0.02, 0.0, func(v): modulation.amounts["randomizer"] = v)
 
 	_section("section.sphere")
 	_prop("sphere/count", 0, 80, 1, 14.0, sphere, "circle_count")
@@ -467,14 +459,8 @@ func _set_channel(value: float, index: int):
 # Audio reactivity
 # --------------------------------------------------------------------------
 
-func _set_reactivity(value: float):
-	_react = value
-
-
-## Scaled by REACTIVITY like every other amount, so the master still switches the
-## whole of the sound response off in one move.
 func _on_beat():
-	autopilot.on_beat(_react * _amounts["randomizer"])
+	autopilot.on_beat(modulation.beat_chance())
 
 
 ## A live bar in the status line. Without it, "the visuals are not moving" could be
@@ -494,7 +480,7 @@ func _audio_meter() -> String:
 		bars += glyphs[clampi(int(round(value * 5.0)), 0, 5)]
 	# The amount is shown next to the bars: bars moving while this reads 0 % is
 	# the difference between "it cannot hear you" and "you have not turned it up".
-	return "%s %s %.0f%%" % [label, bars, _react * 100.0]
+	return "%s %s %.0f%%" % [label, bars, modulation.react * 100.0]
 
 
 ## The same three levels the status line draws, sent to the browsers.
@@ -514,67 +500,8 @@ func _broadcast_levels():
 		"mid": audio.mid,
 		"treble": audio.treble,
 		"silent": audio.is_silent(),
-		"reactivity": _react,
+		"reactivity": modulation.react,
 	})
-
-
-## What the sound moves, one line per target.
-##
-## Each entry names the setting that holds the *base* value, the band that drives
-## it, the amount slider that scales it, and how strongly. Reading the base from the
-## setting rather than from a copy in this file is the point: adding a target used
-## to mean a shadow variable, a modified setter, and a line in each of two
-## hand-written loops, and the four could drift apart.
-##
-## Size moves at a third of the weight of thickness — a radius reads far more
-## strongly than a width, and matching them made every hit look like a blowout.
-func _build_modulations():
-	_modulations = [
-		{"slug": "lasers/width", "band": MID, "amount": "lasers", "weight": 1.0,
-			"set": rig.draw_width},
-		{"slug": "lasers/length", "band": MID, "amount": "lasers", "weight": 0.33,
-			"set": rig.draw_length},
-		{"slug": "spot/width", "band": BASS, "amount": "spot", "weight": 1.0,
-			"set": circle.set_line_width},
-		{"slug": "spot/radius", "band": BASS, "amount": "spot", "weight": 0.33,
-			"set": func(v: float): circle.base_radius = v},
-		{"slug": "sphere/width", "band": TREBLE, "amount": "sphere", "weight": 1.0,
-			"set": func(v: float): sphere.line_width = v},
-		{"slug": "sphere/size", "band": TREBLE, "amount": "sphere", "weight": 0.33,
-			"set": func(v: float): sphere.circle_size = v},
-		{"slug": "warp/speed", "band": BASS, "amount": "warp", "weight": 1.0,
-			"set": func(v: float): warp.approach = v},
-		{"slug": "warp/width", "band": BASS, "amount": "warp", "weight": 0.33,
-			"set": func(v: float): warp.line_width = v},
-	]
-
-
-## The sound *adds* to each target rather than setting it, and nothing here writes
-## to a VJParam — so the sliders keep meaning what they say, REACTIVITY back to 0
-## restores exactly the look that was there, and the sound never lands in a preset
-## or fights the operator for a slider.
-##
-## Each effect follows a different band. Three effects breathing on one envelope
-## read as a single thing pumping; on separate bands the picture comes apart into
-## layers. The kick drives the spotlight, the biggest shape on screen.
-func _apply_audio():
-	if _react <= 0.0 or not audio.capturing:
-		if _audio_was_active:
-			_audio_was_active = false
-			_reset_modulations()
-		return
-	_audio_was_active = true
-
-	var bands := [audio.bass, audio.mid, audio.treble]
-	for m in _modulations:
-		var base: float = registry.find(m["slug"]).value
-		var drive: float = _react * _amounts[m["amount"]] * bands[m["band"]]
-		m["set"].call(base * (1.0 + drive * m["weight"]))
-
-
-func _reset_modulations():
-	for m in _modulations:
-		m["set"].call(registry.find(m["slug"]).value)
 
 
 # --------------------------------------------------------------------------
@@ -582,7 +509,7 @@ func _reset_modulations():
 # --------------------------------------------------------------------------
 
 func _process(delta: float):
-	_apply_audio()
+	modulation.apply()
 	_flush_values()
 
 	# The meter has to be refreshed on a clock: the status line is otherwise only
