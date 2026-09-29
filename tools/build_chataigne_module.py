@@ -49,6 +49,16 @@ ACTION_NAMES = {
     "randomize": ("Randomize Colors", "randomizeColors", "randomize"),
 }
 
+# Where a slug prefix keeps a name it had before the panel called its section
+# something else. The console menu and the command names are built from the section's
+# English name, and the section that held only MOTION BLUR is now EFFECTS. Left to the
+# generator, "Motion Blur Trail" would become "Effects Trail" and unbind whatever is
+# mapped to it, for the same reason as above. The panel says EFFECTS, and the console
+# keeps the name that is in people's files.
+LEGACY_SECTION_NAMES = {
+    "blur": "Motion Blur",
+}
+
 VERSION = "6.0.0"
 # The module's own default, not the running show's: `launch.cfg` is one machine's
 # answer, and this file is meant to be handed to somebody else's console.
@@ -140,7 +150,7 @@ def sections_of(settings) -> dict:
     out = collections.OrderedDict()
     for setting in settings:
         prefix = setting["slug"].split("/")[0]
-        out.setdefault(prefix, ascii_only(setting["section"]).title())
+        out.setdefault(prefix, section_name(setting))
     return out
 
 
@@ -153,8 +163,14 @@ def action_command(action: str):
     return ACTION_NAMES.get(action, (action.title(), action, action))
 
 
+def section_name(setting: dict) -> str:
+    """The name a setting's section goes by on the console."""
+    legacy = LEGACY_SECTION_NAMES.get(setting["slug"].split("/")[0])
+    return legacy or ascii_only(setting["section"]).title()
+
+
 def menu_of(setting: dict) -> str:
-    return ascii_only(setting["section"]).title()
+    return section_name(setting)
 
 
 def command_name(setting: dict) -> str:

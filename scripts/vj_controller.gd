@@ -24,6 +24,9 @@ extends Node2D
 @onready var warp: Node2D = $ShowLayer/ShowViewportContainer/ShowViewport/Hyperspace
 @onready var kaleido: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Kaleidoscope
 @onready var blur: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/MotionBlur
+@onready var wave: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Wave
+@onready var slices: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Slices
+@onready var aberration: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Aberration
 @onready var panel: CanvasLayer = $ControlPanel
 @onready var osc: Node = $OscServer
 @onready var web: Node = $WebServer
@@ -67,7 +70,7 @@ func _ready():
 	launch_surface = LaunchSurface.new(lang, presets, console)
 	rig = LaserRig.new(laser_scene, show_viewport, palette,
 		func(): return get_viewport_rect().size)
-	modulation = AudioModulation.new(registry, audio, rig, circle, sphere, warp)
+	modulation = AudioModulation.new(registry, audio, rig, circle, sphere, warp, aberration, slices)
 	_build_params()
 	for p in registry.all():
 		p.use_language(lang)
@@ -211,6 +214,25 @@ func _build_params():
 	# saying the same thing, out of step with the first.
 	_fn("blur/amount", 0, 1, 0.02, 0.0, blur.set_amount)
 
+	# The section holds every full-screen effect, and started as the motion blur
+	# alone. Its key, `section.blur`, and TRAIL's address, `blur/amount`, kept their
+	# names: one is written into saved panel layouts and the other is mapped in
+	# consoles. What the operator reads is EFFECTS. The effects that came after it
+	# live under `fx/`, so that one shuffle can roll them together.
+	#
+	# Off by default: a show saved before these existed comes up unchanged.
+	_fn("fx/tunnel", -1, 1, 0.02, 0.0, blur.set_tunnel, true)
+	_fn("fx/tunnel_twist", -1, 1, 0.02, 0.0, blur.set_twist, true)
+	_fn("fx/wave", 0, 1, 0.02, 0.0, wave.set_amount)
+	_fn("fx/wave_count", 1, 16, 0.5, 4.0, wave.set_count)
+	_fn("fx/wave_speed", -1, 1, 0.05, 0.3, wave.set_speed, true)
+	_fn("fx/slice", 0, 1, 0.02, 0.0, slices.set_amount)
+	_fn("fx/slice_bands", 2, 40, 1, 12.0, slices.set_bands)
+	_fn("fx/slice_rate", 1, 30, 1, 8.0, slices.set_rate)
+	_fn("fx/aberration", 0, 1, 0.02, 0.0, aberration.set_amount)
+	_fn("fx/aberration_radial", 0, 1, 0.02, 0.0, aberration.set_radial)
+	_fn("fx/aberration_angle", 0, 1, 0.01, 0.0, aberration.set_angle)
+
 	_section("section.lasers")
 	_fn("lasers/count", 0, 40, 1, laser_count, _set_laser_count)
 	_fn("lasers/width", 1, 24, 0.5, 5.0, rig.set_width)
@@ -261,6 +283,11 @@ func _build_params():
 	# spotlight takes the bass as a size, the star field takes it as a speed, and
 	# the two read as separate layers rather than as one pump.
 	_fn("audio/warp", 0, 12, 0.05, 2.5, func(v): modulation.amounts["warp"] = v)
+	# Off by default, unlike the four beside it: they arrived with the sound, and this
+	# came after — a show that already had REACTIVITY up must not find its kick
+	# throwing fringes it never asked for.
+	_fn("audio/aberration", 0, 12, 0.05, 0.0, func(v): modulation.amounts["aberration"] = v)
+	_fn("audio/slice", 0, 12, 0.05, 0.0, func(v): modulation.amounts["slice"] = v)
 	_fn("audio/lasers", 0, 12, 0.05, 2.5, func(v): modulation.amounts["lasers"] = v)
 	_fn("audio/sphere", 0, 12, 0.05, 2.5, func(v): modulation.amounts["sphere"] = v)
 	# Not a multiplier like the four above: the sound does not scale a setting here,
@@ -382,6 +409,8 @@ func _set_speed(value: float):
 	sphere.speed_scale = value
 	warp.speed_scale = value
 	kaleido.speed_scale = value
+	wave.speed_scale = value
+	slices.speed_scale = value
 	rig.set_speed(value)
 
 

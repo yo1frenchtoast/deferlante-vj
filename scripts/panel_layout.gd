@@ -19,10 +19,13 @@ extends RefCounted
 ## What you settle before a set and then leave alone — the room, the track, the
 ## colour. It gets the first column to itself, so the hand goes to the same place
 ## every night whatever effects the show has gained since.
-const SETUP_SECTIONS := ["section.global", "section.color", "section.mirror", "section.blur",
-	"section.audio"]
-## The instruments, which spread over the columns after it.
-const PLAY_SECTIONS := ["section.spot", "section.lasers", "section.sphere", "section.warp"]
+const SETUP_SECTIONS := ["section.global", "section.color", "section.mirror", "section.audio"]
+## The instruments, which spread over the columns after it. The effects are among them:
+## they were in the setup column while they were one setting, the trail, and they are
+## played during a set like the rest. With a dozen rows they would also have pushed the
+## setup column past the bottom of a 1080p screen, and it would have split in two.
+const PLAY_SECTIONS := ["section.spot", "section.lasers", "section.sphere", "section.warp",
+	"section.blur"]
 
 # Rough heights, used only to decide where to break into a new column. They do not
 # have to be exact — being a few pixels out costs nothing, and the alternative is

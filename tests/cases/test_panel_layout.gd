@@ -7,7 +7,7 @@ const GROUPS := [
 	{"key": "section.global", "rows": 8},
 	{"key": "section.color", "rows": 5},
 	{"key": "section.mirror", "rows": 3},
-	{"key": "section.blur", "rows": 1},
+	{"key": "section.blur", "rows": 12},
 	{"key": "section.lasers", "rows": 6},
 	{"key": "section.spot", "rows": 14},
 	{"key": "section.audio", "rows": 8},
@@ -24,12 +24,12 @@ func _layout() -> PanelLayout:
 
 func test_automatic_puts_setup_first_then_instruments_in_their_order():
 	var plan := _layout().plan(GROUPS, TALL, false)
-	same(plan[0], ["section.global", "section.color", "section.mirror", "section.blur",
-		"section.audio"], "the setup column, in the order the panel names them")
+	same(plan[0], ["section.global", "section.color", "section.mirror", "section.audio"],
+		"the setup column, in the order the panel names them")
 	# The instruments are capped at the height of the setup column, so they spread
 	# sideways over as many columns as that takes.
-	same(_flat(plan.slice(1)), ["section.spot", "section.lasers", "section.sphere", "section.warp"],
-		"the instruments beside it, in their order")
+	same(_flat(plan.slice(1)), ["section.spot", "section.lasers", "section.sphere", "section.warp",
+		"section.blur"], "the instruments beside it, in their order, the effects last")
 
 
 func test_automatic_breaks_into_more_columns_on_a_short_screen_and_never_splits_a_section():

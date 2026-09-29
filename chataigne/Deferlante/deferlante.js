@@ -69,6 +69,50 @@ function blurAmount(value) {
 	local.send("/deferlante/blur/amount", value);
 }
 
+function fxTunnel(value) {
+	local.send("/deferlante/fx/tunnel", value);
+}
+
+function fxTunnel_twist(value) {
+	local.send("/deferlante/fx/tunnel_twist", value);
+}
+
+function fxWave(value) {
+	local.send("/deferlante/fx/wave", value);
+}
+
+function fxWave_count(value) {
+	local.send("/deferlante/fx/wave_count", value);
+}
+
+function fxWave_speed(value) {
+	local.send("/deferlante/fx/wave_speed", value);
+}
+
+function fxSlice(value) {
+	local.send("/deferlante/fx/slice", value);
+}
+
+function fxSlice_bands(value) {
+	local.send("/deferlante/fx/slice_bands", value);
+}
+
+function fxSlice_rate(value) {
+	local.send("/deferlante/fx/slice_rate", value);
+}
+
+function fxAberration(value) {
+	local.send("/deferlante/fx/aberration", value);
+}
+
+function fxAberration_radial(value) {
+	local.send("/deferlante/fx/aberration_radial", value);
+}
+
+function fxAberration_angle(value) {
+	local.send("/deferlante/fx/aberration_angle", value);
+}
+
 function lasersCount(value) {
 	local.send("/deferlante/lasers/count", value);
 }
@@ -169,6 +213,14 @@ function audioWarp(value) {
 	local.send("/deferlante/audio/warp", value);
 }
 
+function audioAberration(value) {
+	local.send("/deferlante/audio/aberration", value);
+}
+
+function audioSlice(value) {
+	local.send("/deferlante/audio/slice", value);
+}
+
 function audioLasers(value) {
 	local.send("/deferlante/audio/lasers", value);
 }
@@ -260,6 +312,10 @@ function shuffleMirror(value) {
 
 function shuffleBlur(value) {
 	local.send("/deferlante/shuffle/blur");
+}
+
+function shuffleFx(value) {
+	local.send("/deferlante/shuffle/fx");
 }
 
 function shuffleLasers(value) {

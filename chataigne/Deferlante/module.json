@@ -249,6 +249,160 @@
         }
       }
     },
+    "Effects Tunnel": {
+      "menu": "Effects",
+      "callback": "fxTunnel",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": -1.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Effects Tunnel Twist": {
+      "menu": "Effects",
+      "callback": "fxTunnel_twist",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": -1.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Effects Wave": {
+      "menu": "Effects",
+      "callback": "fxWave",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Effects Wave Count": {
+      "menu": "Effects",
+      "callback": "fxWave_count",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 1.0,
+          "max": 16.0,
+          "default": 4.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Effects Wave Speed": {
+      "menu": "Effects",
+      "callback": "fxWave_speed",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": -1.0,
+          "max": 1.0,
+          "default": 0.3,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Effects Slice": {
+      "menu": "Effects",
+      "callback": "fxSlice",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Effects Slice Bands": {
+      "menu": "Effects",
+      "callback": "fxSlice_bands",
+      "parameters": {
+        "Value": {
+          "type": "Integer",
+          "ui": "slider",
+          "min": 2.0,
+          "max": 40.0,
+          "default": 12.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Effects Slice Rate": {
+      "menu": "Effects",
+      "callback": "fxSlice_rate",
+      "parameters": {
+        "Value": {
+          "type": "Integer",
+          "ui": "slider",
+          "min": 1.0,
+          "max": 30.0,
+          "default": 8.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Effects Aberration": {
+      "menu": "Effects",
+      "callback": "fxAberration",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Effects Aberration Lens": {
+      "menu": "Effects",
+      "callback": "fxAberration_radial",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Effects Aberration Angle": {
+      "menu": "Effects",
+      "callback": "fxAberration_angle",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Lasers Count": {
       "menu": "Lasers",
       "callback": "lasersCount",
@@ -599,6 +753,34 @@
         }
       }
     },
+    "Audio Aberration \u2190 Bass": {
+      "menu": "Audio",
+      "callback": "audioAberration",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 12.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Audio Slice \u2190 Bass": {
+      "menu": "Audio",
+      "callback": "audioSlice",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 12.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Audio Lasers \u2190 Mid": {
       "menu": "Audio",
       "callback": "audioLasers",
@@ -901,6 +1083,17 @@
     "Shuffle Motion Blur": {
       "menu": "Shuffle",
       "callback": "shuffleBlur",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Shuffle Effects": {
+      "menu": "Shuffle",
+      "callback": "shuffleFx",
       "parameters": {
         "Trigger": {
           "type": "Boolean",

@@ -256,6 +256,149 @@ turning mirror then walks the trail around the wedges, which reads as a spiral. 
 before it surprises you. It cannot run away: the pass only samples and dims, thus it
 creates no light, and the floor guarantees that each frame's leftovers reach black.
 
+## The tunnel
+
+`TUNNEL` is the trail with one change. The trail keeps the frame that was on screen and
+draws it, dimmed, under the new one. The tunnel draws that ghost a little **bigger and a
+little turned**, and the next frame does it again to the frame before. What was at the
+centre a moment ago is further out now, and the picture falls away along a spiral. It is
+what a camera does when it films its own monitor. A sphere is drawn out into a tube, and
+a laser into a ribbed sheet.
+
+The setting is a **speed**, and it has two signs. → moves the ghost outwards, as if you
+were flying forward, and ← moves it inwards, which draws everything towards the centre.
+The top of the slider is a plunge. It is measured in seconds, not in frames, so the fall
+is as fast on a projector that drops to 30 fps as it is at 60. `TUNNEL TWIST` turns the
+ghost as it falls, one way or the other. It does nothing while the tunnel is at 0.
+
+It shares the trail's pass and its copy of the frame, so it costs what the trail costs,
+and nothing at 0. It also brings a ghost of its own. A tunnel is made of ghosts, and one
+that lasted two frames would be a zoom blur. So with `TRAIL` at 0 the ghost lasts 0.4 s,
+and `TRAIL` can make it longer, up to its half second. It cannot make it shorter.
+
+The brightness cannot run away, for the same reasons as the trail: the ghost is held below
+the strokes that cast it, and a small floor is taken off every frame. What the ghost
+never held, at the edge of a picture that is shrinking, is black. Reading the pixel at the
+edge instead would smear it into a frame of solid colour.
+
+Because the ghost is read smoothly while it moves, the trail softens a little as it falls.
+With the tunnel at 0 the pass reads exactly the pixels that it always did.
+
+## The wave
+
+`WAVE` reads the frame from a place that swings from side to side, and up and down, as a
+sine of where you are looking. A straight line comes out as a ripple: heat over asphalt,
+the view through water, a picture on a sheet that somebody is shaking.
+
+There are two waves, not one, and they share neither a direction nor a pace. A single wave
+shears the picture sideways and reads as a rendering fault. A second one across the first
+makes it read as a surface. `WAVE COUNT` is how many there are across the height of the
+screen, and more of them are shorter. `WAVE SPEED` is signed: it says which way they
+travel, and 0 holds them still. The speed follows the global speed, so a global speed of
+0 freezes the ripple with the rest of the show.
+
+The strength is a distance. At the top of the slider a point is pulled by 4 % of the
+screen, about 77 pixels on a 1920 wide one. The top of a slider should be too much.
+
+The pass is drawn above the mirror, so the ripple runs across the folded picture and a
+kaleidoscope ripples as a whole. It is below the aberration, so the fringes follow the
+waves, where the other order would wave the fringes themselves. Off the edge of the frame
+it reflects rather than clamps, for the same reason as the mirror: a clamp smears the last
+row of pixels into a flat panel.
+
+It is off at 0 and costs nothing there. On, it is one full-screen pass with one fetch.
+
+## The slice glitch
+
+`SLICE` cuts the picture into horizontal bands and slides some of them sideways. Where a
+band slides it takes its colours with it at slightly different paces: red goes furthest and
+blue least. Each edge of a torn band then has a coloured fringe, which is how a damaged
+video signal tears.
+
+One value says two things. It is the **share of bands that slide**, and it is **how far
+they go**. A low value is a few bands nudged, and the top is most of the picture torn.
+`SLICE BANDS` is how many bands there are, and `SLICE RATE` is how many times a second the
+tear changes into a new one. A band slides off one side of the frame and comes back on the
+other. The edges of the bands move with each new tear as well. Bands that stayed where they
+were would tear along the same seams every time and read as a grid. The tear follows the
+global speed, so a global speed of 0 holds it still.
+
+The kick can drive it. `SLICE ← BASS` in AUDIO adds to `SLICE`, and it is **0 by default**.
+It adds and does not multiply, for the reason that the aberration does: this effect is off
+at rest, and a kick that could only scale a zero would never show. The setting keeps
+saying what the slider says, and only what is drawn moves.
+
+The pass is drawn above the wave and below the aberration. The tear cuts the rippled
+picture, and the fringes are put on what is left. It is off at 0 and costs nothing there.
+On, it is one full-screen pass with four fetches.
+
+## Chromatic aberration
+
+`ABERRATION` reads each colour channel of the frame from a slightly different place.
+Green stays where it is, red moves one way and blue the other. Every edge then grows a
+red fringe on one side and a blue one on the other, which is what a cheap lens does,
+because glass bends each wavelength by a little more or less than the next. A stroke
+keeps its centre and gains two coloured edges. Moving only one channel would drag the
+whole picture to a side instead.
+
+The strength is a distance: 32 pixels on a 1080p screen at the top of the slider. The
+top of a slider should be too much. The middle is where the set lives. At **0** the pass
+is switched off, not left to run as an identity transform.
+
+Two more settings say which way the channels move.
+
+- `ABERRATION LENS` at **0** moves them the same way everywhere, along `ABERRATION
+  ANGLE`. At **1** they move along the line from the centre, and by more the further
+  out. The middle of the picture stays clean and the edges carry the fringe, like a
+  real lens. Between the two, the direction is a mix.
+- `ABERRATION ANGLE` is once round the dial. It does nothing at full `LENS`, where the
+  direction comes from the position on screen.
+
+The pass is drawn **above** the mirror and below the panel. The fringes therefore
+follow the folded shapes, and the sliders are not part of the picture. Under a turning
+mirror the fringes turn with the wedges, and that reads as one lens looking at a
+kaleidoscope, which is the right picture. With the trail on, the ghost that it holds is
+already fringed, and it is fringed again on every frame it lives. The older the tail,
+the further its colours have parted, which is a smear that the aberration alone does not
+make. At the top of both sliders it is long.
+
+At the edge of the frame a channel that is read from beyond it gives black, and the
+fringe simply stops there. Reading the pixel at the edge instead would smear it out
+into a solid block, which is what it did at first: strokes that run into a corner drew
+squares of one colour.
+
+It is off by default, so a show saved before it existed comes up unchanged. It also
+takes part in `SHUFFLE` like every other setting, under the section `fx`.
+
+## What the full-screen passes cost
+
+Every effect on this page that works on the whole picture is one pass over the frame, and
+it costs nothing at 0. Measured with no GPU at all (llvmpipe, the Compatibility renderer,
+a 1080p show, 12 lasers, 20 circles and 120 stars), the frame time in milliseconds was:
+
+| Scenario | ms a frame | Added |
+| --- | --- | --- |
+| Nothing on | 6.1 | — |
+| Wave | 9.0 | +2.9 |
+| Mirror | 9.4 | +3.3 |
+| Aberration | 9.8 | +3.7 |
+| Aberration, in lens mode | 10.0 | +3.9 |
+| Trail | 10.3 | +4.2 |
+| Slice glitch | 10.4 | +4.3 |
+| Tunnel (with its twist) | 10.5 | +4.4 |
+| Mirror, wave, slice, aberration and tunnel together | 26.8 | +20.7 |
+
+The passes add up. Five of them together are about five times one, and on a machine with
+no GPU that is past the 16.7 ms of a frame at 60. Turn on the ones that the set needs.
+
+Read the numbers for their order and not for their size. Software rendering is a bad model
+of a graphics chip: it pays for every pixel that a pass reads, where a GPU pays much less.
+The variation between two runs of the same scenario was about 0.2 ms. The new passes cost
+what the mirror costs, within a millisecond, and the mirror has been shipping for a long
+time. On the RTX 3060 of the machine this was developed on, the cost is not measurable
+against a frame of a few milliseconds. It was not measured on the projector's own machine
+or on an Android TV, and those are the weakest hardware that this show runs on.
+
 ## Scanlines
 
 `PARALLEL` does not tune the scatter. It crossfades between two different behaviors.

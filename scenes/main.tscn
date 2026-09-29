@@ -9,6 +9,12 @@
 [ext_resource type="Script" uid="uid://hyk3mrjde3i0" path="res://scripts/kaleidoscope.gd" id="6_kaleido"]
 [ext_resource type="Shader" uid="uid://12bsdtb2wo1s" path="res://shaders/kaleidoscope.gdshader" id="7_shader"]
 [ext_resource type="Script" uid="uid://b76r06fscxf41" path="res://scripts/motion_blur.gd" id="17_blur"]
+[ext_resource type="Script" path="res://scripts/chromatic_aberration.gd" id="20_chroma"]
+[ext_resource type="Shader" path="res://shaders/chromatic_aberration.gdshader" id="21_chroma_shader"]
+[ext_resource type="Script" path="res://scripts/wave.gd" id="22_wave"]
+[ext_resource type="Shader" path="res://shaders/wave.gdshader" id="23_wave_shader"]
+[ext_resource type="Script" path="res://scripts/slice_glitch.gd" id="24_slice"]
+[ext_resource type="Shader" path="res://shaders/slice_glitch.gdshader" id="25_slice_shader"]
 [ext_resource type="Shader" uid="uid://dmr7woid10fbb" path="res://shaders/motion_blur.gdshader" id="18_blur_shader"]
 [ext_resource type="Script" uid="uid://lj1vhqus3h5" path="res://scripts/web_server.gd" id="8_web"]
 [ext_resource type="Script" uid="uid://cqj2ao6ebwa2y" path="res://scripts/gamepad.gd" id="9_pad"]
@@ -36,6 +42,24 @@ shader_parameter/ceiling = 0.5
 shader = ExtResource("7_shader")
 shader_parameter/segments = 6
 shader_parameter/rotation = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_chroma"]
+shader = ExtResource("21_chroma_shader")
+shader_parameter/shift = 0.0
+shader_parameter/radial = 0.0
+shader_parameter/angle = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wave"]
+shader = ExtResource("23_wave_shader")
+shader_parameter/amplitude = 0.0
+shader_parameter/count = 4.0
+shader_parameter/phase = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_slice"]
+shader = ExtResource("25_slice_shader")
+shader_parameter/strength = 0.0
+shader_parameter/bands = 12.0
+shader_parameter/seed = 0.0
 
 [node name="Main" type="WorldEnvironment" unique_id=1286195540]
 environment = SubResource("Environment_te0mf")
@@ -98,6 +122,42 @@ script = ExtResource("6_kaleido")
 
 [node name="Rect" type="ColorRect" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport/Kaleidoscope" unique_id=1772031414]
 material = SubResource("ShaderMaterial_kaleido")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Wave" type="CanvasLayer" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport"]
+layer = 1
+script = ExtResource("22_wave")
+
+[node name="Rect" type="ColorRect" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport/Wave"]
+material = SubResource("ShaderMaterial_wave")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Slices" type="CanvasLayer" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport"]
+layer = 2
+script = ExtResource("24_slice")
+
+[node name="Rect" type="ColorRect" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport/Slices"]
+material = SubResource("ShaderMaterial_slice")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Aberration" type="CanvasLayer" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport"]
+layer = 3
+script = ExtResource("20_chroma")
+
+[node name="Rect" type="ColorRect" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport/Aberration"]
+material = SubResource("ShaderMaterial_chroma")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0

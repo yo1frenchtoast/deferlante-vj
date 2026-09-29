@@ -175,3 +175,262 @@ func test_the_launch_tab_describes_every_row_it_can_change():
 func test_every_action_has_a_label_on_the_page():
 	for a in ShowActions.LIST:
 		check(Lang.TEXTS.has("action." + a), "the action %s has no label (action.%s)" % [a, a])
+
+
+func test_the_effects_section_reads_effects_and_keeps_its_old_key_and_addresses():
+	same(Lang.TEXTS["section.blur"], ["EFFECTS", "EFFETS"], "what the operator reads")
+	check(PanelLayout.PLAY_SECTIONS.has("section.blur"), "the key is what saved layouts hold, so it stays, and the layout places it with the instruments")
+	check(param("blur/amount") != null, "and TRAIL keeps the address a console is mapped to")
+	same(param("blur/amount").section, "section.blur", "in the same section as the new ones")
+
+
+func test_the_aberration_is_off_by_default_and_costs_nothing_until_asked():
+	for slug in ["fx/aberration", "fx/aberration_radial", "fx/aberration_angle"]:
+		check(param(slug) != null, "%s is declared" % slug)
+		same(show.get_meta("defaults")[slug], 0.0, "%s starts at 0, so a show saved before it comes up unchanged" % slug)
+		same(param(slug).section, "section.blur", "%s sits in the effects section" % slug)
+	# Whatever an earlier case left it at: SHUFFLE rolls these like any other setting.
+	param("fx/aberration").set_value(0.0)
+	check(not show.aberration.rect.visible, "the pass is switched off at 0")
+	param("fx/aberration").set_value(0.5)
+	check(show.aberration.rect.visible, "and on above it")
+	param("fx/aberration").set_value(0.0)
+	check(not show.aberration.rect.visible, "and off again")
+
+
+func test_the_aberration_settings_reach_the_shader():
+	var material: ShaderMaterial = show.aberration.rect.material
+	param("fx/aberration").set_value(1.0)
+	param("fx/aberration_radial").set_value(0.5)
+	param("fx/aberration_angle").set_value(0.25)
+	same(material.get_shader_parameter("shift"), show.aberration.MAX_SHIFT, "the top of the slider is the most it moves")
+	same(material.get_shader_parameter("radial"), 0.5, "the lens mix")
+	check(is_equal_approx(material.get_shader_parameter("angle"), PI * 0.5), "a quarter turn, in radians")
+	param("fx/aberration").set_value(0.5)
+	check(is_equal_approx(material.get_shader_parameter("shift"), show.aberration.MAX_SHIFT * 0.5), "half way is half the distance")
+	param("fx/aberration").set_value(0.0)
+	param("fx/aberration_radial").set_value(0.0)
+	param("fx/aberration_angle").set_value(0.0)
+
+
+func test_the_chataigne_module_keeps_the_names_that_are_in_people_s_files():
+	var module: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://chataigne/Deferlante/module.json"))
+	var commands: Dictionary = module["commands"]
+	check(commands.has("Motion Blur Trail"), "TRAIL is still 'Motion Blur Trail' on the console")
+	if commands.has("Motion Blur Trail"):
+		same(commands["Motion Blur Trail"]["callback"], "blurAmount", "and calls the same function")
+		same(commands["Motion Blur Trail"]["menu"], "Motion Blur", "in the same menu")
+	check(commands.has("Shuffle Motion Blur"), "and so is its shuffle")
+	check(commands.has("Effects Aberration"), "the new effect has its own")
+
+
+func test_the_drawn_aberration_follows_the_sound_and_comes_back_to_the_setting():
+	param("fx/aberration").set_value(0.0)
+	show.aberration.draw_amount(0.4)
+	check(show.aberration.rect.visible, "the pass is on while the sound holds it open")
+	same(show.aberration.rect.material.get_shader_parameter("shift"), 0.4 * show.aberration.MAX_SHIFT, "at the drawn strength")
+	same(param("fx/aberration").value, 0.0, "and the setting still says 0")
+	param("fx/aberration").set_value(0.0)
+	check(not show.aberration.rect.visible, "the setting puts the drawing back, and the pass off")
+
+
+func test_the_aberration_amount_is_off_by_default():
+	same(show.get_meta("defaults")["audio/aberration"], 0.0, "a show saved before it existed hears no change")
+	same(AudioModulation.new(show.registry, show.audio, show.rig, show.circle, show.sphere, show.warp).amounts["aberration"], 0.0, "and the modulation agrees")
+
+
+func test_the_tunnel_runs_the_trail_pass_on_its_own_and_only_then():
+	var blur = show.blur
+	param("blur/amount").set_value(0.0)
+	param("fx/tunnel").set_value(0.0)
+	check(not blur.rect.visible, "trail 0 and tunnel 0: the pass is off, and the copy stops")
+	param("fx/tunnel").set_value(0.5)
+	check(blur.rect.visible, "the tunnel alone switches it on")
+	same(blur.echo.render_target_update_mode, SubViewport.UPDATE_ALWAYS, "and the copy of the frame starts")
+	param("fx/tunnel").set_value(-0.5)
+	check(blur.rect.visible, "backwards too")
+	param("fx/tunnel").set_value(0.0)
+	check(not blur.rect.visible, "and back off")
+
+
+func test_the_tunnel_falls_outwards_forwards_and_inwards_backwards():
+	var blur = show.blur
+	var material: ShaderMaterial = blur.rect.material
+	param("fx/tunnel").set_value(0.5)
+	blur._process(1.0 / 60.0)
+	check(material.get_shader_parameter("zoom") > 1.0, "positive magnifies the ghost: flying forward")
+	param("fx/tunnel").set_value(-0.5)
+	blur._process(1.0 / 60.0)
+	check(material.get_shader_parameter("zoom") < 1.0, "negative shrinks it")
+	param("fx/tunnel").set_value(0.0)
+
+
+func test_the_tunnel_is_a_rate_not_a_step():
+	var blur = show.blur
+	var material: ShaderMaterial = blur.rect.material
+	param("fx/tunnel").set_value(1.0)
+	blur._process(1.0 / 60.0)
+	var at_60: float = material.get_shader_parameter("zoom")
+	blur._process(1.0 / 30.0)
+	var at_30: float = material.get_shader_parameter("zoom")
+	check(is_equal_approx(at_30, at_60 * at_60), "a slow frame falls twice as far, so the speed is the same at 30 fps")
+	param("fx/tunnel").set_value(0.0)
+
+
+func test_the_twist_turns_only_while_the_tunnel_is_on():
+	var blur = show.blur
+	var material: ShaderMaterial = blur.rect.material
+	param("blur/amount").set_value(0.3)
+	param("fx/tunnel_twist").set_value(1.0)
+	blur._process(1.0 / 60.0)
+	same(material.get_shader_parameter("turn"), 0.0, "twist alone does nothing to a plain trail")
+	param("fx/tunnel").set_value(0.5)
+	blur._process(1.0 / 60.0)
+	check(material.get_shader_parameter("turn") > 0.0, "with the tunnel it turns")
+	param("fx/tunnel_twist").set_value(-1.0)
+	blur._process(1.0 / 60.0)
+	check(material.get_shader_parameter("turn") < 0.0, "and the other way")
+	param("fx/tunnel").set_value(0.0)
+	param("fx/tunnel_twist").set_value(0.0)
+	param("blur/amount").set_value(0.0)
+
+
+func test_a_plain_trail_is_exactly_what_it_was():
+	var blur = show.blur
+	var material: ShaderMaterial = blur.rect.material
+	param("blur/amount").set_value(0.5)
+	blur._process(1.0 / 60.0)
+	same(material.get_shader_parameter("zoom"), 1.0, "no magnification")
+	same(material.get_shader_parameter("turn"), 0.0, "no turn")
+	var expected := exp(-(1.0 / 60.0) / lerpf(blur.SHORTEST, blur.LONGEST, 0.5))
+	check(is_equal_approx(material.get_shader_parameter("keep"), expected), "and the same decay as before the tunnel existed")
+	param("blur/amount").set_value(0.0)
+
+
+func test_the_tunnel_brings_its_own_ghost_and_the_trail_can_lengthen_it():
+	var blur = show.blur
+	param("blur/amount").set_value(0.0)
+	param("fx/tunnel").set_value(0.5)
+	same(blur._seconds(), blur.TUNNEL_SECONDS, "a tunnel with no trail still lasts long enough to be one")
+	param("blur/amount").set_value(1.0)
+	same(blur._seconds(), blur.LONGEST, "TRAIL makes it longer")
+	param("blur/amount").set_value(0.1)
+	same(blur._seconds(), blur.TUNNEL_SECONDS, "a short trail does not make it shorter")
+	param("fx/tunnel").set_value(0.0)
+	param("blur/amount").set_value(0.0)
+
+
+func test_the_wave_is_off_by_default_and_costs_nothing_until_asked():
+	same(show.get_meta("defaults")["fx/wave"], 0.0, "a show saved before it existed comes up unchanged")
+	param("fx/wave").set_value(0.0)
+	check(not show.wave.rect.visible, "the pass is off at 0")
+	param("fx/wave").set_value(0.5)
+	check(show.wave.rect.visible, "and on above it")
+	param("fx/wave").set_value(0.0)
+	check(not show.wave.rect.visible, "and off again")
+
+
+func test_the_wave_settings_reach_the_shader():
+	var material: ShaderMaterial = show.wave.rect.material
+	param("fx/wave").set_value(1.0)
+	param("fx/wave_count").set_value(9.0)
+	same(material.get_shader_parameter("amplitude"), show.wave.MAX_AMPLITUDE, "the top of the slider is the most it pulls")
+	same(material.get_shader_parameter("count"), 9.0, "the number of waves")
+	param("fx/wave").set_value(0.5)
+	check(is_equal_approx(material.get_shader_parameter("amplitude"), show.wave.MAX_AMPLITUDE * 0.5), "half way is half the pull")
+	param("fx/wave").set_value(0.0)
+	param("fx/wave_count").set_value(4.0)
+
+
+func test_the_waves_travel_the_way_the_speed_says_and_stand_still_at_zero():
+	var wave = show.wave
+	var material: ShaderMaterial = wave.rect.material
+	param("fx/wave").set_value(0.5)
+	param("fx/wave_speed").set_value(1.0)
+	wave._phase = 0.0
+	wave._process(0.1)
+	var forward: float = material.get_shader_parameter("phase")
+	check(forward > 0.0, "positive moves the phase on")
+	wave._phase = 0.0
+	param("fx/wave_speed").set_value(-1.0)
+	wave._process(0.1)
+	check(material.get_shader_parameter("phase") != forward, "negative goes the other way round")
+	param("fx/wave_speed").set_value(0.0)
+	var before: float = wave._phase
+	wave._process(0.5)
+	same(wave._phase, before, "0 holds them still")
+	param("fx/wave").set_value(0.0)
+
+
+func test_the_waves_follow_the_global_speed():
+	var wave = show.wave
+	param("fx/wave").set_value(0.5)
+	param("fx/wave_speed").set_value(1.0)
+	param("global/speed").set_value(0.0)
+	var before: float = wave._phase
+	wave._process(0.5)
+	same(wave._phase, before, "global speed 0 freezes the ripple with everything else")
+	param("global/speed").set_value(1.0)
+	wave._process(0.5)
+	check(wave._phase != before, "and it moves again with the speed")
+	param("fx/wave").set_value(0.0)
+	param("fx/wave_speed").set_value(0.3)
+
+
+func test_the_phase_stays_small_however_long_the_show_runs():
+	var wave = show.wave
+	param("fx/wave").set_value(0.5)
+	param("fx/wave_speed").set_value(1.0)
+	for i in 400:
+		wave._process(1.0)
+	check(wave._phase >= 0.0 and wave._phase < TAU * 4.0 + 0.001, "wrapped, so a sine never loses its precision")
+	param("fx/wave").set_value(0.0)
+	param("fx/wave_speed").set_value(0.3)
+
+
+func test_the_slices_are_off_by_default_and_costs_nothing_until_asked():
+	same(show.get_meta("defaults")["fx/slice"], 0.0, "a show saved before it existed comes up unchanged")
+	same(show.get_meta("defaults")["audio/slice"], 0.0, "and the kick does not tear it")
+	param("fx/slice").set_value(0.0)
+	check(not show.slices.rect.visible, "the pass is off at 0")
+	param("fx/slice").set_value(0.5)
+	check(show.slices.rect.visible, "and on above it")
+	same(show.slices.rect.material.get_shader_parameter("strength"), 0.5, "at that strength")
+	param("fx/slice_bands").set_value(20.0)
+	same(show.slices.rect.material.get_shader_parameter("bands"), 20.0, "with that many bands")
+	param("fx/slice").set_value(0.0)
+	param("fx/slice_bands").set_value(12.0)
+	check(not show.slices.rect.visible, "and off again")
+
+
+func test_the_tear_changes_at_its_rate_and_holds_at_zero_speed():
+	var slices = show.slices
+	var material: ShaderMaterial = slices.rect.material
+	param("fx/slice").set_value(0.5)
+	param("fx/slice_rate").set_value(10.0)
+	param("global/speed").set_value(1.0)
+	slices._clock = 0.0
+	slices._process(0.05)
+	var first: float = material.get_shader_parameter("seed")
+	slices._process(0.06)
+	check(material.get_shader_parameter("seed") != first, "a new tear once the clock has passed a whole step")
+	param("global/speed").set_value(0.0)
+	var held: float = material.get_shader_parameter("seed")
+	slices._process(1.0)
+	same(material.get_shader_parameter("seed"), held, "global speed 0 holds the tear still")
+	param("global/speed").set_value(1.0)
+	param("fx/slice").set_value(0.0)
+	param("fx/slice_rate").set_value(8.0)
+
+
+func test_the_seed_stays_small_however_long_the_show_runs():
+	var slices = show.slices
+	param("fx/slice").set_value(0.5)
+	param("fx/slice_rate").set_value(30.0)
+	param("global/speed").set_value(1.0)
+	for i in 300:
+		slices._process(1.0)
+	var seed_now: float = slices.rect.material.get_shader_parameter("seed")
+	check(seed_now >= 0.0 and seed_now < 997.0, "wrapped, so the hash never loses its precision")
+	param("fx/slice").set_value(0.0)
+	param("fx/slice_rate").set_value(8.0)
