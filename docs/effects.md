@@ -308,6 +308,30 @@ row of pixels into a flat panel.
 
 It is off at 0 and costs nothing there. On, it is one full-screen pass with one fetch.
 
+## The slice glitch
+
+`SLICE` cuts the picture into horizontal bands and slides some of them sideways. Where a
+band slides it takes its colours with it at slightly different paces: red goes furthest and
+blue least. Each edge of a torn band then has a coloured fringe, which is how a damaged
+video signal tears.
+
+One value says two things. It is the **share of bands that slide**, and it is **how far
+they go**. A low value is a few bands nudged, and the top is most of the picture torn.
+`SLICE BANDS` is how many bands there are, and `SLICE RATE` is how many times a second the
+tear changes into a new one. A band slides off one side of the frame and comes back on the
+other. The edges of the bands move with each new tear as well. Bands that stayed where they
+were would tear along the same seams every time and read as a grid. The tear follows the
+global speed, so a global speed of 0 holds it still.
+
+The kick can drive it. `SLICE ← BASS` in AUDIO adds to `SLICE`, and it is **0 by default**.
+It adds and does not multiply, for the reason that the aberration does: this effect is off
+at rest, and a kick that could only scale a zero would never show. The setting keeps
+saying what the slider says, and only what is drawn moves.
+
+The pass is drawn above the wave and below the aberration. The tear cuts the rippled
+picture, and the fringes are put on what is left. It is off at 0 and costs nothing there.
+On, it is one full-screen pass with four fetches.
+
 ## Chromatic aberration
 
 `ABERRATION` reads each colour channel of the frame from a slightly different place.

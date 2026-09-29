@@ -179,7 +179,7 @@ func test_every_action_has_a_label_on_the_page():
 
 func test_the_effects_section_reads_effects_and_keeps_its_old_key_and_addresses():
 	same(Lang.TEXTS["section.blur"], ["EFFECTS", "EFFETS"], "what the operator reads")
-	check(PanelLayout.SETUP_SECTIONS.has("section.blur"), "the key is what saved layouts hold, so it stays")
+	check(PanelLayout.PLAY_SECTIONS.has("section.blur"), "the key is what saved layouts hold, so it stays, and the layout places it with the instruments")
 	check(param("blur/amount") != null, "and TRAIL keeps the address a console is mapped to")
 	same(param("blur/amount").section, "section.blur", "in the same section as the new ones")
 
@@ -386,3 +386,51 @@ func test_the_phase_stays_small_however_long_the_show_runs():
 	check(wave._phase >= 0.0 and wave._phase < TAU * 4.0 + 0.001, "wrapped, so a sine never loses its precision")
 	param("fx/wave").set_value(0.0)
 	param("fx/wave_speed").set_value(0.3)
+
+
+func test_the_slices_are_off_by_default_and_costs_nothing_until_asked():
+	same(show.get_meta("defaults")["fx/slice"], 0.0, "a show saved before it existed comes up unchanged")
+	same(show.get_meta("defaults")["audio/slice"], 0.0, "and the kick does not tear it")
+	param("fx/slice").set_value(0.0)
+	check(not show.slices.rect.visible, "the pass is off at 0")
+	param("fx/slice").set_value(0.5)
+	check(show.slices.rect.visible, "and on above it")
+	same(show.slices.rect.material.get_shader_parameter("strength"), 0.5, "at that strength")
+	param("fx/slice_bands").set_value(20.0)
+	same(show.slices.rect.material.get_shader_parameter("bands"), 20.0, "with that many bands")
+	param("fx/slice").set_value(0.0)
+	param("fx/slice_bands").set_value(12.0)
+	check(not show.slices.rect.visible, "and off again")
+
+
+func test_the_tear_changes_at_its_rate_and_holds_at_zero_speed():
+	var slices = show.slices
+	var material: ShaderMaterial = slices.rect.material
+	param("fx/slice").set_value(0.5)
+	param("fx/slice_rate").set_value(10.0)
+	param("global/speed").set_value(1.0)
+	slices._clock = 0.0
+	slices._process(0.05)
+	var first: float = material.get_shader_parameter("seed")
+	slices._process(0.06)
+	check(material.get_shader_parameter("seed") != first, "a new tear once the clock has passed a whole step")
+	param("global/speed").set_value(0.0)
+	var held: float = material.get_shader_parameter("seed")
+	slices._process(1.0)
+	same(material.get_shader_parameter("seed"), held, "global speed 0 holds the tear still")
+	param("global/speed").set_value(1.0)
+	param("fx/slice").set_value(0.0)
+	param("fx/slice_rate").set_value(8.0)
+
+
+func test_the_seed_stays_small_however_long_the_show_runs():
+	var slices = show.slices
+	param("fx/slice").set_value(0.5)
+	param("fx/slice_rate").set_value(30.0)
+	param("global/speed").set_value(1.0)
+	for i in 300:
+		slices._process(1.0)
+	var seed_now: float = slices.rect.material.get_shader_parameter("seed")
+	check(seed_now >= 0.0 and seed_now < 997.0, "wrapped, so the hash never loses its precision")
+	param("fx/slice").set_value(0.0)
+	param("fx/slice_rate").set_value(8.0)

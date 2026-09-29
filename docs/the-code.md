@@ -75,9 +75,11 @@ row per setting, and it had started to run off the bottom of a 1080p screen. Thi
 it cannot, at any number of settings.
 
 **The panel is grouped by when you touch a setting, not by what it drives.** The first
-column holds GLOBAL, COLOR, MIRROR, EFFECTS and AUDIO — what you settle before a set
-and then
-leave alone. The instruments follow: SPOTLIGHT, LASERS, SPHERE, HYPERSPACE. Thus the
+column holds GLOBAL, COLOR, MIRROR and AUDIO — what you settle before a set and then
+leave alone. The instruments follow: SPOTLIGHT, LASERS, SPHERE, HYPERSPACE, and then
+EFFECTS, which are played during a set like the instruments are. The effects were in
+the first column while they were one setting, the trail. With a dozen rows they would
+have pushed it past the bottom of a 1080p screen. Thus the
 hand goes to the same place every night, whatever effects the show has gained since.
 The two runs are named in `panel_layout.gd`, and a section in neither list joins the
 instruments at the end rather than disappears.

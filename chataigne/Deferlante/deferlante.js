@@ -89,6 +89,18 @@ function fxWave_speed(value) {
 	local.send("/deferlante/fx/wave_speed", value);
 }
 
+function fxSlice(value) {
+	local.send("/deferlante/fx/slice", value);
+}
+
+function fxSlice_bands(value) {
+	local.send("/deferlante/fx/slice_bands", value);
+}
+
+function fxSlice_rate(value) {
+	local.send("/deferlante/fx/slice_rate", value);
+}
+
 function fxAberration(value) {
 	local.send("/deferlante/fx/aberration", value);
 }
@@ -203,6 +215,10 @@ function audioWarp(value) {
 
 function audioAberration(value) {
 	local.send("/deferlante/audio/aberration", value);
+}
+
+function audioSlice(value) {
+	local.send("/deferlante/audio/slice", value);
 }
 
 function audioLasers(value) {

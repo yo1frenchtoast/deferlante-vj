@@ -25,6 +25,7 @@ extends Node2D
 @onready var kaleido: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Kaleidoscope
 @onready var blur: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/MotionBlur
 @onready var wave: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Wave
+@onready var slices: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Slices
 @onready var aberration: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Aberration
 @onready var panel: CanvasLayer = $ControlPanel
 @onready var osc: Node = $OscServer
@@ -69,7 +70,7 @@ func _ready():
 	launch_surface = LaunchSurface.new(lang, presets, console)
 	rig = LaserRig.new(laser_scene, show_viewport, palette,
 		func(): return get_viewport_rect().size)
-	modulation = AudioModulation.new(registry, audio, rig, circle, sphere, warp, aberration)
+	modulation = AudioModulation.new(registry, audio, rig, circle, sphere, warp, aberration, slices)
 	_build_params()
 	for p in registry.all():
 		p.use_language(lang)
@@ -225,6 +226,9 @@ func _build_params():
 	_fn("fx/wave", 0, 1, 0.02, 0.0, wave.set_amount)
 	_fn("fx/wave_count", 1, 16, 0.5, 4.0, wave.set_count)
 	_fn("fx/wave_speed", -1, 1, 0.05, 0.3, wave.set_speed, true)
+	_fn("fx/slice", 0, 1, 0.02, 0.0, slices.set_amount)
+	_fn("fx/slice_bands", 2, 40, 1, 12.0, slices.set_bands)
+	_fn("fx/slice_rate", 1, 30, 1, 8.0, slices.set_rate)
 	_fn("fx/aberration", 0, 1, 0.02, 0.0, aberration.set_amount)
 	_fn("fx/aberration_radial", 0, 1, 0.02, 0.0, aberration.set_radial)
 	_fn("fx/aberration_angle", 0, 1, 0.01, 0.0, aberration.set_angle)
@@ -283,6 +287,7 @@ func _build_params():
 	# came after — a show that already had REACTIVITY up must not find its kick
 	# throwing fringes it never asked for.
 	_fn("audio/aberration", 0, 12, 0.05, 0.0, func(v): modulation.amounts["aberration"] = v)
+	_fn("audio/slice", 0, 12, 0.05, 0.0, func(v): modulation.amounts["slice"] = v)
 	_fn("audio/lasers", 0, 12, 0.05, 2.5, func(v): modulation.amounts["lasers"] = v)
 	_fn("audio/sphere", 0, 12, 0.05, 2.5, func(v): modulation.amounts["sphere"] = v)
 	# Not a multiplier like the four above: the sound does not scale a setting here,
@@ -405,6 +410,7 @@ func _set_speed(value: float):
 	warp.speed_scale = value
 	kaleido.speed_scale = value
 	wave.speed_scale = value
+	slices.speed_scale = value
 	rig.set_speed(value)
 
 

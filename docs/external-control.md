@@ -318,6 +318,9 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/fx/wave` | 0 – 1 | 0 | EFFECTS › WAVE |
 | `/deferlante/fx/wave_count` | 1 – 16 | 4 | EFFECTS › WAVE COUNT |
 | `/deferlante/fx/wave_speed` | -1 – 1 | 0.3 | EFFECTS › WAVE SPEED |
+| `/deferlante/fx/slice` | 0 – 1 | 0 | EFFECTS › SLICE |
+| `/deferlante/fx/slice_bands` | 2 – 40 | 12 | EFFECTS › SLICE BANDS |
+| `/deferlante/fx/slice_rate` | 1 – 30 | 8 | EFFECTS › SLICE RATE |
 | `/deferlante/fx/aberration` | 0 – 1 | 0 | EFFECTS › ABERRATION |
 | `/deferlante/fx/aberration_radial` | 0 – 1 | 0 | EFFECTS › ABERRATION LENS |
 | `/deferlante/fx/aberration_angle` | 0 – 1 | 0 | EFFECTS › ABERRATION ANGLE |
@@ -347,6 +350,7 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/audio/spot` | 0 – 12 | 2.5 | AUDIO › SPOT ← BASS |
 | `/deferlante/audio/warp` | 0 – 12 | 2.5 | AUDIO › HYPERSPACE ← BASS |
 | `/deferlante/audio/aberration` | 0 – 12 | 0 | AUDIO › ABERRATION ← BASS |
+| `/deferlante/audio/slice` | 0 – 12 | 0 | AUDIO › SLICE ← BASS |
 | `/deferlante/audio/lasers` | 0 – 12 | 2.5 | AUDIO › LASERS ← MID |
 | `/deferlante/audio/sphere` | 0 – 12 | 2.5 | AUDIO › SPHERE ← TREBLE |
 | `/deferlante/audio/randomizer` | 0 – 1 | 0 | AUDIO › SHUFFLE ← KICK |

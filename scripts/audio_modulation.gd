@@ -14,7 +14,7 @@ var react: float = 0.0
 ## The aberration starts at 0, like the shuffle: a show that turned REACTIVITY up before
 ## the effect existed must not find fringes on its kick.
 var amounts := {"lasers": 2.5, "spot": 2.5, "sphere": 2.5, "warp": 2.5,
-	"aberration": 0.0, "randomizer": 0.0}
+	"aberration": 0.0, "slice": 0.0, "randomizer": 0.0}
 
 var _registry: ParamRegistry
 var _audio: Node
@@ -26,11 +26,12 @@ var _was_active: bool = false
 
 
 func _init(registry: ParamRegistry, audio: Node, rig: LaserRig,
-		circle: Node, sphere: Node, warp: Node, aberration: Node = null):
+		circle: Node, sphere: Node, warp: Node, aberration: Node = null,
+		slices: Node = null):
 	_registry = registry
 	_audio = audio
 	_rig = rig
-	_targets = _build(rig, circle, sphere, warp, aberration)
+	_targets = _build(rig, circle, sphere, warp, aberration, slices)
 
 
 ## What the sound moves, one line per target.
@@ -43,7 +44,8 @@ func _init(registry: ParamRegistry, audio: Node, rig: LaserRig,
 ##
 ## Size moves at a third of the weight of thickness — a radius reads far more
 ## strongly than a width, and matching them made every hit look like a blowout.
-func _build(rig: LaserRig, circle: Node, sphere: Node, warp: Node, aberration: Node) -> Array:
+func _build(rig: LaserRig, circle: Node, sphere: Node, warp: Node, aberration: Node,
+		slices: Node) -> Array:
 	var targets := [
 		{"slug": "lasers/width", "band": MID, "amount": "lasers", "weight": 1.0,
 			"set": rig.draw_width},
@@ -68,6 +70,10 @@ func _build(rig: LaserRig, circle: Node, sphere: Node, warp: Node, aberration: N
 		# default 2.5 of the amount slider pushes it to half strength on a full hit.
 		targets.append({"slug": "fx/aberration", "band": BASS, "amount": "aberration",
 			"weight": 0.2, "add": true, "set": aberration.draw_amount})
+	if slices != null:
+		# The same, and for the same reason: the kick tears the picture from rest.
+		targets.append({"slug": "fx/slice", "band": BASS, "amount": "slice",
+			"weight": 0.25, "add": true, "set": slices.draw_amount})
 	return targets
 
 

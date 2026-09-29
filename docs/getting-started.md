@@ -125,9 +125,9 @@ scroll away long before you need them.
 ## Settings
 
 The panel has nine sections. It groups them by **when you touch a setting**, not by
-what the setting drives. The five that you settle before a set come first: GLOBAL,
-COLOR, MIRROR, EFFECTS and AUDIO. The four instruments follow: SPOTLIGHT, LASERS,
-SPHERE and HYPERSPACE. `↑` and `↓` walk the panel in that order. The Chataigne module
+what the setting drives. The four that you settle before a set come first: GLOBAL,
+COLOR, MIRROR and AUDIO. What you play follows: the four instruments, SPOTLIGHT, LASERS,
+SPHERE and HYPERSPACE, and then EFFECTS, which you turn during a set like they are. `↑` and `↓` walk the panel in that order. The Chataigne module
 carries the same nine sections as menus, in the order that the code declares them. The labels that
 follow are the English ones.
 
@@ -169,6 +169,9 @@ costs nothing.
 | `WAVE` | 0 – 1 | The picture ripples, like heat over asphalt or a view through water. **0 is off.** See [the wave](effects.md#the-wave). |
 | `WAVE COUNT` | 1 – 16 | How many waves across the height of the screen. |
 | `WAVE SPEED` | -1 – 1 | Which way the waves travel, and how fast. 0 holds them still. It follows the global speed. |
+| `SLICE` | 0 – 1 | The picture is cut into bands and some of them slide sideways, fringed like a damaged video signal. **0 is off.** See [the slice glitch](effects.md#the-slice-glitch). |
+| `SLICE BANDS` | 2 – 40 | How many bands the picture is cut into. |
+| `SLICE RATE` | 1 – 30 | How many times a second the tear changes into a new one. It follows the global speed. |
 | `ABERRATION` | 0 – 1 | Splits the colour channels at the edges: a red fringe on one side, a blue one on the other. See [chromatic aberration](effects.md#chromatic-aberration). |
 | `ABERRATION LENS` | 0 – 1 | 0 moves the channels the same way everywhere. 1 spreads them from the centre, and the middle stays clean. |
 | `ABERRATION ANGLE` | 0 – 1 | Which way the channels move apart, once round the dial. No effect at full `LENS`. |
@@ -183,6 +186,7 @@ order that the vu-meter draws them.
 | `PUNCH` | 0 – 1 | Response curve. A higher value pushes the middle down, thus only the hits show. |
 | `SPOT ← BASS` | 0 – 12 | The kick drives the spotlight. |
 | `HYPERSPACE ← BASS` | 0 – 12 | The kick drives the star field. |
+| `SLICE ← BASS` | 0 – 12 | The kick tears the picture with [the slice glitch](effects.md#the-slice-glitch). **0 by default**, and it adds to `SLICE`, so it plays from 0. |
 | `ABERRATION ← BASS` | 0 – 12 | The kick opens the [chromatic aberration](effects.md#chromatic-aberration) fringes. **0 by default**, and it adds to `ABERRATION`, so it plays from 0. |
 | `LASERS ← MID` | 0 – 12 | Mids drive the laser strokes. |
 | `SPHERE ← TREBLE` | 0 – 12 | Treble drives the sphere. |
