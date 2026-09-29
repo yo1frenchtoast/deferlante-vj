@@ -178,11 +178,12 @@ order that the vu-meter draws them.
 | `PUNCH` | 0 – 1 | Response curve. A higher value pushes the middle down, thus only the hits show. |
 | `SPOT ← BASS` | 0 – 12 | The kick drives the spotlight. |
 | `HYPERSPACE ← BASS` | 0 – 12 | The kick drives the star field. |
+| `ABERRATION ← BASS` | 0 – 12 | The kick opens the [chromatic aberration](effects.md#chromatic-aberration) fringes. **0 by default**, and it adds to `ABERRATION`, so it plays from 0. |
 | `LASERS ← MID` | 0 – 12 | Mids drive the laser strokes. |
 | `SPHERE ← TREBLE` | 0 – 12 | Treble drives the sphere. |
 | `SHUFFLE ← KICK` | 0 – 1 | The kick shuffles the show. **0 by default.** Half way up is about one move a bar. See [the auto-pilot](effects.md#on-the-beat). |
 
-The top of the four band ranges is deliberately past good taste. See
+The top of the band ranges is deliberately past good taste. See
 [how nervous it is](external-control.md#how-nervous-it-is). A set lives in the middle
 of the range.
 

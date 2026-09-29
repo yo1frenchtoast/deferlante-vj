@@ -641,6 +641,20 @@
         }
       }
     },
+    "Audio Aberration \u2190 Bass": {
+      "menu": "Audio",
+      "callback": "audioAberration",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 12.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Audio Lasers \u2190 Mid": {
       "menu": "Audio",
       "callback": "audioLasers",

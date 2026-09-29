@@ -23,6 +23,9 @@ var angle: float = 0.0
 ## set lives.
 const MAX_SHIFT := 0.03
 
+## What is on screen: `amount`, plus whatever the sound is adding to it this frame.
+var _drawn: float = 0.0
+
 
 func _ready():
 	_apply()
@@ -30,6 +33,7 @@ func _ready():
 
 func set_amount(value: float):
 	amount = value
+	_drawn = clampf(value, 0.0, 1.0)
 	_apply()
 
 
@@ -43,11 +47,20 @@ func set_angle(value: float):
 	_apply()
 
 
+## What the sound writes: the strength that is *drawn*, which is not the setting. The
+## setting stays what the slider says, and `set_amount()` puts the drawing back.
+## Unlike the other targets this one is added to, not multiplied: the ordinary state
+## of this effect is off, and a kick that could only scale a zero would never show.
+func draw_amount(value: float):
+	_drawn = clampf(value, 0.0, 1.0)
+	_apply()
+
+
 func _apply():
-	rect.visible = amount > 0.0
+	rect.visible = _drawn > 0.0
 	if not rect.visible:
 		return
 	var material: ShaderMaterial = rect.material
-	material.set_shader_parameter("shift", amount * MAX_SHIFT)
+	material.set_shader_parameter("shift", _drawn * MAX_SHIFT)
 	material.set_shader_parameter("radial", radial)
 	material.set_shader_parameter("angle", angle * TAU)

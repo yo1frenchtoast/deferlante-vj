@@ -181,6 +181,10 @@ function audioWarp(value) {
 	local.send("/deferlante/audio/warp", value);
 }
 
+function audioAberration(value) {
+	local.send("/deferlante/audio/aberration", value);
+}
+
 function audioLasers(value) {
 	local.send("/deferlante/audio/lasers", value);
 }

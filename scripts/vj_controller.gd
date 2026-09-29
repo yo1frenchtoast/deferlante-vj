@@ -68,7 +68,7 @@ func _ready():
 	launch_surface = LaunchSurface.new(lang, presets, console)
 	rig = LaserRig.new(laser_scene, show_viewport, palette,
 		func(): return get_viewport_rect().size)
-	modulation = AudioModulation.new(registry, audio, rig, circle, sphere, warp)
+	modulation = AudioModulation.new(registry, audio, rig, circle, sphere, warp, aberration)
 	_build_params()
 	for p in registry.all():
 		p.use_language(lang)
@@ -273,6 +273,10 @@ func _build_params():
 	# spotlight takes the bass as a size, the star field takes it as a speed, and
 	# the two read as separate layers rather than as one pump.
 	_fn("audio/warp", 0, 12, 0.05, 2.5, func(v): modulation.amounts["warp"] = v)
+	# Off by default, unlike the four beside it: they arrived with the sound, and this
+	# came after — a show that already had REACTIVITY up must not find its kick
+	# throwing fringes it never asked for.
+	_fn("audio/aberration", 0, 12, 0.05, 0.0, func(v): modulation.amounts["aberration"] = v)
 	_fn("audio/lasers", 0, 12, 0.05, 2.5, func(v): modulation.amounts["lasers"] = v)
 	_fn("audio/sphere", 0, 12, 0.05, 2.5, func(v): modulation.amounts["sphere"] = v)
 	# Not a multiplier like the four above: the sound does not scale a setting here,

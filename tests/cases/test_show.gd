@@ -220,3 +220,18 @@ func test_the_chataigne_module_keeps_the_names_that_are_in_people_s_files():
 		same(commands["Motion Blur Trail"]["menu"], "Motion Blur", "in the same menu")
 	check(commands.has("Shuffle Motion Blur"), "and so is its shuffle")
 	check(commands.has("Effects Aberration"), "the new effect has its own")
+
+
+func test_the_drawn_aberration_follows_the_sound_and_comes_back_to_the_setting():
+	param("fx/aberration").set_value(0.0)
+	show.aberration.draw_amount(0.4)
+	check(show.aberration.rect.visible, "the pass is on while the sound holds it open")
+	same(show.aberration.rect.material.get_shader_parameter("shift"), 0.4 * show.aberration.MAX_SHIFT, "at the drawn strength")
+	same(param("fx/aberration").value, 0.0, "and the setting still says 0")
+	param("fx/aberration").set_value(0.0)
+	check(not show.aberration.rect.visible, "the setting puts the drawing back, and the pass off")
+
+
+func test_the_aberration_amount_is_off_by_default():
+	same(param("audio/aberration").value, 0.0, "a show saved before it existed hears no change")
+	same(show.modulation.amounts["aberration"], 0.0, "and the modulation agrees")

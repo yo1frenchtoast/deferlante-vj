@@ -94,3 +94,63 @@ func test_the_beat_chance_is_scaled_by_the_master():
 	same(mod.beat_chance(), 0.0, "master at zero")
 	mod.react = 0.5
 	same(mod.beat_chance(), 0.25, "half of half")
+
+
+class Aberration extends Node:
+	var drawn := -1.0
+
+	func draw_amount(v: float):
+		drawn = v
+
+
+## The same show with the aberration wired in: it needs a setting to read its base from.
+func _setup_with_aberration() -> Aberration:
+	_setup()
+	registry.add(VJParam.new("fx/aberration", 0, 1, 0.02, 0.0, func(_v): pass))
+	var aberration := Aberration.new()
+	var rig := LaserRig.new(null, null, null, func(): return Vector2.ZERO)
+	mod = AudioModulation.new(registry, ear, rig, circle, sphere, warp, aberration)
+	return aberration
+
+
+func test_the_kick_lifts_the_aberration_from_zero():
+	var aberration := _setup_with_aberration()
+	mod.react = 1.0
+	mod.amounts["aberration"] = 2.5
+	ear.bass = 1.0
+	mod.apply()
+	check(is_equal_approx(aberration.drawn, 0.5), "added to a setting at 0: a full hit is half strength")
+	ear.bass = 0.0
+	mod.apply()
+	same(aberration.drawn, 0.0, "and it closes again when the hit is gone")
+
+
+func test_the_aberration_adds_to_the_setting_where_the_others_multiply():
+	var aberration := _setup_with_aberration()
+	registry.find("fx/aberration").set_value(0.2)
+	mod.react = 1.0
+	mod.amounts["aberration"] = 2.5
+	ear.bass = 1.0
+	mod.apply()
+	check(is_equal_approx(aberration.drawn, 0.7), "0.2 and a full hit make 0.7, not 0.2 times something")
+
+
+func test_the_aberration_is_off_until_its_amount_is_turned_up():
+	var aberration := _setup_with_aberration()
+	mod.react = 1.0
+	ear.bass = 1.0
+	same(mod.amounts["aberration"], 0.0, "a show that already had REACTIVITY up sees no new fringes")
+	mod.apply()
+	same(aberration.drawn, 0.0, "nothing is drawn")
+
+
+func test_letting_go_puts_the_aberration_back_to_its_setting():
+	var aberration := _setup_with_aberration()
+	registry.find("fx/aberration").set_value(0.3)
+	mod.react = 1.0
+	mod.amounts["aberration"] = 2.5
+	ear.bass = 1.0
+	mod.apply()
+	mod.react = 0.0
+	mod.apply()
+	check(is_equal_approx(aberration.drawn, 0.3), "the slider says 0.3, and that is what is drawn again")

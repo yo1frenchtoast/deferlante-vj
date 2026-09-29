@@ -341,6 +341,7 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/audio/punch` | 0 – 1 | 0.35 | AUDIO › PUNCH |
 | `/deferlante/audio/spot` | 0 – 12 | 2.5 | AUDIO › SPOT ← BASS |
 | `/deferlante/audio/warp` | 0 – 12 | 2.5 | AUDIO › HYPERSPACE ← BASS |
+| `/deferlante/audio/aberration` | 0 – 12 | 0 | AUDIO › ABERRATION ← BASS |
 | `/deferlante/audio/lasers` | 0 – 12 | 2.5 | AUDIO › LASERS ← MID |
 | `/deferlante/audio/sphere` | 0 – 12 | 2.5 | AUDIO › SPHERE ← TREBLE |
 | `/deferlante/audio/randomizer` | 0 – 1 | 0 | AUDIO › SHUFFLE ← KICK |
