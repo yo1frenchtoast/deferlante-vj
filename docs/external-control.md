@@ -315,6 +315,9 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/blur/amount` | 0 – 1 | 0 | EFFECTS › TRAIL |
 | `/deferlante/fx/tunnel` | -1 – 1 | 0 | EFFECTS › TUNNEL |
 | `/deferlante/fx/tunnel_twist` | -1 – 1 | 0 | EFFECTS › TUNNEL TWIST |
+| `/deferlante/fx/wave` | 0 – 1 | 0 | EFFECTS › WAVE |
+| `/deferlante/fx/wave_count` | 1 – 16 | 4 | EFFECTS › WAVE COUNT |
+| `/deferlante/fx/wave_speed` | -1 – 1 | 0.3 | EFFECTS › WAVE SPEED |
 | `/deferlante/fx/aberration` | 0 – 1 | 0 | EFFECTS › ABERRATION |
 | `/deferlante/fx/aberration_radial` | 0 – 1 | 0 | EFFECTS › ABERRATION LENS |
 | `/deferlante/fx/aberration_angle` | 0 – 1 | 0 | EFFECTS › ABERRATION ANGLE |

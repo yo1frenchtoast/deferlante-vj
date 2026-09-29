@@ -284,6 +284,30 @@ edge instead would smear it into a frame of solid colour.
 Because the ghost is read smoothly while it moves, the trail softens a little as it falls.
 With the tunnel at 0 the pass reads exactly the pixels that it always did.
 
+## The wave
+
+`WAVE` reads the frame from a place that swings from side to side, and up and down, as a
+sine of where you are looking. A straight line comes out as a ripple: heat over asphalt,
+the view through water, a picture on a sheet that somebody is shaking.
+
+There are two waves, not one, and they share neither a direction nor a pace. A single wave
+shears the picture sideways and reads as a rendering fault. A second one across the first
+makes it read as a surface. `WAVE COUNT` is how many there are across the height of the
+screen, and more of them are shorter. `WAVE SPEED` is signed: it says which way they
+travel, and 0 holds them still. The speed follows the global speed, so a global speed of
+0 freezes the ripple with the rest of the show.
+
+The strength is a distance. At the top of the slider a point is pulled by 4 % of the
+screen, about 77 pixels on a 1920 wide one. The top of a slider should be too much.
+
+The pass is drawn above the mirror, so the ripple runs across the folded picture and a
+kaleidoscope ripples as a whole. It is below the aberration, so the fringes follow the
+waves, where the other order would wave the fringes themselves. Off the edge of the frame
+it reflects rather than clamps, for the same reason as the mirror: a clamp smears the last
+row of pixels into a flat panel.
+
+It is off at 0 and costs nothing there. On, it is one full-screen pass with one fetch.
+
 ## Chromatic aberration
 
 `ABERRATION` reads each colour channel of the frame from a slightly different place.

@@ -277,6 +277,48 @@
         }
       }
     },
+    "Effects Wave": {
+      "menu": "Effects",
+      "callback": "fxWave",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Effects Wave Count": {
+      "menu": "Effects",
+      "callback": "fxWave_count",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 1.0,
+          "max": 16.0,
+          "default": 4.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Effects Wave Speed": {
+      "menu": "Effects",
+      "callback": "fxWave_speed",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": -1.0,
+          "max": 1.0,
+          "default": 0.3,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Effects Aberration": {
       "menu": "Effects",
       "callback": "fxAberration",

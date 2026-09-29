@@ -318,3 +318,71 @@ func test_the_tunnel_brings_its_own_ghost_and_the_trail_can_lengthen_it():
 	same(blur._seconds(), blur.TUNNEL_SECONDS, "a short trail does not make it shorter")
 	param("fx/tunnel").set_value(0.0)
 	param("blur/amount").set_value(0.0)
+
+
+func test_the_wave_is_off_by_default_and_costs_nothing_until_asked():
+	same(show.get_meta("defaults")["fx/wave"], 0.0, "a show saved before it existed comes up unchanged")
+	param("fx/wave").set_value(0.0)
+	check(not show.wave.rect.visible, "the pass is off at 0")
+	param("fx/wave").set_value(0.5)
+	check(show.wave.rect.visible, "and on above it")
+	param("fx/wave").set_value(0.0)
+	check(not show.wave.rect.visible, "and off again")
+
+
+func test_the_wave_settings_reach_the_shader():
+	var material: ShaderMaterial = show.wave.rect.material
+	param("fx/wave").set_value(1.0)
+	param("fx/wave_count").set_value(9.0)
+	same(material.get_shader_parameter("amplitude"), show.wave.MAX_AMPLITUDE, "the top of the slider is the most it pulls")
+	same(material.get_shader_parameter("count"), 9.0, "the number of waves")
+	param("fx/wave").set_value(0.5)
+	check(is_equal_approx(material.get_shader_parameter("amplitude"), show.wave.MAX_AMPLITUDE * 0.5), "half way is half the pull")
+	param("fx/wave").set_value(0.0)
+	param("fx/wave_count").set_value(4.0)
+
+
+func test_the_waves_travel_the_way_the_speed_says_and_stand_still_at_zero():
+	var wave = show.wave
+	var material: ShaderMaterial = wave.rect.material
+	param("fx/wave").set_value(0.5)
+	param("fx/wave_speed").set_value(1.0)
+	wave._phase = 0.0
+	wave._process(0.1)
+	var forward: float = material.get_shader_parameter("phase")
+	check(forward > 0.0, "positive moves the phase on")
+	wave._phase = 0.0
+	param("fx/wave_speed").set_value(-1.0)
+	wave._process(0.1)
+	check(material.get_shader_parameter("phase") != forward, "negative goes the other way round")
+	param("fx/wave_speed").set_value(0.0)
+	var before: float = wave._phase
+	wave._process(0.5)
+	same(wave._phase, before, "0 holds them still")
+	param("fx/wave").set_value(0.0)
+
+
+func test_the_waves_follow_the_global_speed():
+	var wave = show.wave
+	param("fx/wave").set_value(0.5)
+	param("fx/wave_speed").set_value(1.0)
+	param("global/speed").set_value(0.0)
+	var before: float = wave._phase
+	wave._process(0.5)
+	same(wave._phase, before, "global speed 0 freezes the ripple with everything else")
+	param("global/speed").set_value(1.0)
+	wave._process(0.5)
+	check(wave._phase != before, "and it moves again with the speed")
+	param("fx/wave").set_value(0.0)
+	param("fx/wave_speed").set_value(0.3)
+
+
+func test_the_phase_stays_small_however_long_the_show_runs():
+	var wave = show.wave
+	param("fx/wave").set_value(0.5)
+	param("fx/wave_speed").set_value(1.0)
+	for i in 400:
+		wave._process(1.0)
+	check(wave._phase >= 0.0 and wave._phase < TAU * 4.0 + 0.001, "wrapped, so a sine never loses its precision")
+	param("fx/wave").set_value(0.0)
+	param("fx/wave_speed").set_value(0.3)

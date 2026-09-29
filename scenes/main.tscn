@@ -11,6 +11,8 @@
 [ext_resource type="Script" uid="uid://b76r06fscxf41" path="res://scripts/motion_blur.gd" id="17_blur"]
 [ext_resource type="Script" path="res://scripts/chromatic_aberration.gd" id="20_chroma"]
 [ext_resource type="Shader" path="res://shaders/chromatic_aberration.gdshader" id="21_chroma_shader"]
+[ext_resource type="Script" path="res://scripts/wave.gd" id="22_wave"]
+[ext_resource type="Shader" path="res://shaders/wave.gdshader" id="23_wave_shader"]
 [ext_resource type="Shader" uid="uid://dmr7woid10fbb" path="res://shaders/motion_blur.gdshader" id="18_blur_shader"]
 [ext_resource type="Script" uid="uid://lj1vhqus3h5" path="res://scripts/web_server.gd" id="8_web"]
 [ext_resource type="Script" uid="uid://cqj2ao6ebwa2y" path="res://scripts/gamepad.gd" id="9_pad"]
@@ -44,6 +46,12 @@ shader = ExtResource("21_chroma_shader")
 shader_parameter/shift = 0.0
 shader_parameter/radial = 0.0
 shader_parameter/angle = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wave"]
+shader = ExtResource("23_wave_shader")
+shader_parameter/amplitude = 0.0
+shader_parameter/count = 4.0
+shader_parameter/phase = 0.0
 
 [node name="Main" type="WorldEnvironment" unique_id=1286195540]
 environment = SubResource("Environment_te0mf")
@@ -112,8 +120,20 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Aberration" type="CanvasLayer" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport"]
+[node name="Wave" type="CanvasLayer" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport"]
 layer = 1
+script = ExtResource("22_wave")
+
+[node name="Rect" type="ColorRect" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport/Wave"]
+material = SubResource("ShaderMaterial_wave")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Aberration" type="CanvasLayer" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport"]
+layer = 3
 script = ExtResource("20_chroma")
 
 [node name="Rect" type="ColorRect" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport/Aberration"]

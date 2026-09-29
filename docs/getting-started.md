@@ -166,6 +166,9 @@ costs nothing.
 | `TRAIL` | 0 – 1 | How long the image stays on screen behind itself. 1 holds a trail for half a second. See [motion blur](effects.md#motion-blur). |
 | `TUNNEL` | -1 – 1 | The picture falls away from the centre, or into it, like a camera that films its own screen. → flies forward, ← backward. **0 is off.** See [the tunnel](effects.md#the-tunnel). |
 | `TUNNEL TWIST` | -1 – 1 | How much the tunnel turns as it falls, one way or the other. No effect while `TUNNEL` is 0. |
+| `WAVE` | 0 – 1 | The picture ripples, like heat over asphalt or a view through water. **0 is off.** See [the wave](effects.md#the-wave). |
+| `WAVE COUNT` | 1 – 16 | How many waves across the height of the screen. |
+| `WAVE SPEED` | -1 – 1 | Which way the waves travel, and how fast. 0 holds them still. It follows the global speed. |
 | `ABERRATION` | 0 – 1 | Splits the colour channels at the edges: a red fringe on one side, a blue one on the other. See [chromatic aberration](effects.md#chromatic-aberration). |
 | `ABERRATION LENS` | 0 – 1 | 0 moves the channels the same way everywhere. 1 spreads them from the centre, and the middle stays clean. |
 | `ABERRATION ANGLE` | 0 – 1 | Which way the channels move apart, once round the dial. No effect at full `LENS`. |

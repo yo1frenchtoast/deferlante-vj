@@ -24,6 +24,7 @@ extends Node2D
 @onready var warp: Node2D = $ShowLayer/ShowViewportContainer/ShowViewport/Hyperspace
 @onready var kaleido: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Kaleidoscope
 @onready var blur: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/MotionBlur
+@onready var wave: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Wave
 @onready var aberration: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Aberration
 @onready var panel: CanvasLayer = $ControlPanel
 @onready var osc: Node = $OscServer
@@ -221,6 +222,9 @@ func _build_params():
 	# Off by default: a show saved before these existed comes up unchanged.
 	_fn("fx/tunnel", -1, 1, 0.02, 0.0, blur.set_tunnel, true)
 	_fn("fx/tunnel_twist", -1, 1, 0.02, 0.0, blur.set_twist, true)
+	_fn("fx/wave", 0, 1, 0.02, 0.0, wave.set_amount)
+	_fn("fx/wave_count", 1, 16, 0.5, 4.0, wave.set_count)
+	_fn("fx/wave_speed", -1, 1, 0.05, 0.3, wave.set_speed, true)
 	_fn("fx/aberration", 0, 1, 0.02, 0.0, aberration.set_amount)
 	_fn("fx/aberration_radial", 0, 1, 0.02, 0.0, aberration.set_radial)
 	_fn("fx/aberration_angle", 0, 1, 0.01, 0.0, aberration.set_angle)
@@ -400,6 +404,7 @@ func _set_speed(value: float):
 	sphere.speed_scale = value
 	warp.speed_scale = value
 	kaleido.speed_scale = value
+	wave.speed_scale = value
 	rig.set_speed(value)
 
 

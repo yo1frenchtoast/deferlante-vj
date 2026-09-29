@@ -77,6 +77,18 @@ function fxTunnel_twist(value) {
 	local.send("/deferlante/fx/tunnel_twist", value);
 }
 
+function fxWave(value) {
+	local.send("/deferlante/fx/wave", value);
+}
+
+function fxWave_count(value) {
+	local.send("/deferlante/fx/wave_count", value);
+}
+
+function fxWave_speed(value) {
+	local.send("/deferlante/fx/wave_speed", value);
+}
+
 function fxAberration(value) {
 	local.send("/deferlante/fx/aberration", value);
 }
