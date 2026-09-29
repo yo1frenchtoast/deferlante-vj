@@ -45,10 +45,9 @@ const MODES := ["norm", "relative", "set", "toggle", "momentary", "hold", "actio
 const NEEDS_VALUE := ["set", "toggle", "momentary", "rgb"]
 
 ## Set by the controller, the same way `presets` and `api` are.
-var find_param: Callable
+var registry: ParamRegistry
 var fire: Callable
 var touched: Callable
-var all_params: Callable
 var actions: Array = []
 var preset_count: int = 0
 
@@ -300,7 +299,7 @@ func _target_exists(control: Dictionary) -> bool:
 		return _valid_actions().has(target)
 	if target == "color/rgb":
 		return control.get("mode", "") == "rgb"
-	return find_param.is_valid() and find_param.call(target) != null
+	return registry != null and registry.has(target)
 
 
 ## Every one-shot a profile may name, built from what the show actually offers
@@ -308,13 +307,9 @@ func _target_exists(control: Dictionary) -> bool:
 ## the preset slots that exist.
 func _valid_actions() -> PackedStringArray:
 	var out := PackedStringArray(actions)
-	var sections: Array = []
-	if all_params.is_valid():
-		for p in all_params.call():
-			var section: String = p.slug.get_slice("/", 0)
-			if not sections.has(section):
-				sections.append(section)
-				out.append("shuffle:" + section)
+	if registry != null:
+		for section in registry.groups():
+			out.append("shuffle:" + section)
 	for slot in range(1, preset_count + 1):
 		out.append("preset:recall:%d" % slot)
 		out.append("preset:save:%d" % slot)
@@ -356,7 +351,7 @@ func _on_cc(number: int, raw: int):
 		_button(control, raw, "cc%d" % number)
 		return
 
-	var p: VJParam = find_param.call(control["target"])
+	var p: VJParam = registry.find(control["target"])
 	if p == null:
 		return
 
@@ -436,7 +431,7 @@ func _button(control: Dictionary, raw: int, key: String):
 		"toggle":
 			# The surface already alternates, so follow it rather than flip again:
 			# its own lamp and the show then agree about which state this is.
-			var p: VJParam = find_param.call(control["target"])
+			var p: VJParam = registry.find(control["target"])
 			if p:
 				_write(p, float(control["value"]) if down else p.min_value)
 		"momentary":
@@ -466,11 +461,11 @@ func _press(control: Dictionary, key):
 		"rgb":
 			_write_rgb(control["value"])
 		"set":
-			var p: VJParam = find_param.call(target)
+			var p: VJParam = registry.find(target)
 			if p:
 				_write(p, float(control["value"]))
 		"toggle":
-			var p: VJParam = find_param.call(target)
+			var p: VJParam = registry.find(target)
 			if p:
 				# Back to the bottom of the range rather than to a second stored
 				# value: every setting worth a toggle here is an on/off whose off
@@ -478,7 +473,7 @@ func _press(control: Dictionary, key):
 				var on := float(control["value"])
 				_write(p, p.min_value if is_equal_approx(p.value, on) else on)
 		"momentary":
-			var p: VJParam = find_param.call(target)
+			var p: VJParam = registry.find(target)
 			if p == null:
 				return
 			var holders: Array = _holders.get(target, [])
@@ -507,7 +502,7 @@ func _release(control: Dictionary, key):
 	# The last finger off puts back the value from before the first one landed, so
 	# leaning on FREEZE then BOOST and letting go of both is not a way to lose the
 	# speed you were playing at.
-	var p: VJParam = find_param.call(target)
+	var p: VJParam = registry.find(target)
 	if p and _held_from.has(target):
 		_write(p, _held_from[target])
 	_held_from.erase(target)
@@ -524,7 +519,7 @@ func _write_rgb(components):
 	if typeof(components) != TYPE_ARRAY or components.size() < 3:
 		return
 	for i in range(3):
-		var p: VJParam = find_param.call(["color/red", "color/green", "color/blue"][i])
+		var p: VJParam = registry.find(["color/red", "color/green", "color/blue"][i])
 		if p:
 			_write(p, float(components[i]))
 

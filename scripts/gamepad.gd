@@ -40,8 +40,10 @@ signal connection_changed
 ## should be audible against the music, not a hair's width.
 @export var speed_step: float = 0.25
 
-## Set by the controller: called as (slug) -> VJParam.
-var find_param: Callable
+## Set by the controller.
+var registry: ParamRegistry
+## Called whenever the pad acts on a setting, so the panel can get out of the way.
+var touched: Callable
 
 var _pad: int = -1
 var _aiming: bool = false
@@ -137,12 +139,20 @@ func _read_right_stick(delta: float):
 		_shift("global/chaos", -y * stick_rate * delta)
 
 
+## Every pad interaction goes through here, which is what lets one line tell the
+## panel that somebody is at the stick.
+func _lookup(slug: String) -> VJParam:
+	if touched.is_valid():
+		touched.call()
+	return registry.find(slug)
+
+
 ## Nudges a setting by an amount in its own units, through the one entry point
 ## everything else uses.
 func _shift(slug: String, amount: float):
-	if not find_param.is_valid():
+	if registry == null:
 		return
-	var p: VJParam = find_param.call(slug)
+	var p: VJParam = _lookup(slug)
 	if p:
 		p.set_value(p.value + amount)
 
@@ -150,17 +160,17 @@ func _shift(slug: String, amount: float):
 ## Named `_write` rather than `_set`: Object already declares `_set`, and
 ## overriding it with another signature is a parse error.
 func _write(slug: String, value: float):
-	if not find_param.is_valid():
+	if registry == null:
 		return
-	var p: VJParam = find_param.call(slug)
+	var p: VJParam = _lookup(slug)
 	if p:
 		p.set_value(value)
 
 
 func _value_of(slug: String) -> float:
-	if not find_param.is_valid():
+	if registry == null:
 		return 0.0
-	var p: VJParam = find_param.call(slug)
+	var p: VJParam = _lookup(slug)
 	return p.value if p else 0.0
 
 
@@ -195,9 +205,9 @@ func _nudge_speed(amount: float):
 
 
 func _clamped_speed(value: float) -> float:
-	if not find_param.is_valid():
+	if registry == null:
 		return value
-	var p: VJParam = find_param.call("global/speed")
+	var p: VJParam = _lookup("global/speed")
 	return clampf(value, p.min_value, p.max_value) if p else value
 
 

@@ -48,7 +48,7 @@ var launch_surface: LaunchSurface
 var palette := Palette.new()
 
 var lasers: Array[Line2D] = []
-var params: Array[VJParam] = []
+var registry := ParamRegistry.new()
 var osc_routes: Dictionary = {}
 
 # Current global settings, re-applied to lasers spawned later on.
@@ -95,11 +95,11 @@ func _ready():
 	lang.set_language(Launch.language)
 	launch_surface = LaunchSurface.new(lang, presets, console)
 	_build_params()
-	for p in params:
+	for p in registry.all():
 		p.use_language(lang)
-	panel.build(params, lang)
+	panel.build(registry.all(), lang)
 
-	autopilot.all_params = func(): return params
+	autopilot.registry = registry
 	autopilot.randomize_colours = _randomize_all
 	autopilot.palette = palette
 
@@ -108,16 +108,15 @@ func _ready():
 	sphere.use_palette(palette)
 	warp.use_palette(palette)
 	_spawn_lasers(laser_count)
-	for p in params:
+	for p in registry.all():
 		p.apply_current()
 	_initializing = false
 
-	for p in params:
+	for p in registry.all():
 		osc_routes[OSC_PREFIX + p.slug] = p
 	osc.message_received.connect(_on_osc_message)
 
-	api.find_param = param
-	api.all_params = func(): return params
+	api.registry = registry
 	api.describe = func(p): return _describe(p, Lang.EN)
 	api.presets = presets
 	api.actions = ACTIONS
@@ -132,7 +131,7 @@ func _ready():
 	# crossfade and the auto-pilot both write every setting on every frame, and one
 	# message per setting per frame is a few thousand a second down a wifi link to
 	# a phone — which the phone then has to parse before it can draw anything.
-	for p in params:
+	for p in registry.all():
 		p.changed.connect(func(v): _pending_values[p.slug] = v)
 		# A fader holding this setting is now lying about where it is: a preset
 		# recall, the auto-pilot or a phone just moved it under the operator's hand.
@@ -167,7 +166,7 @@ func _ready():
 	# A deliberate click hands the panel back, exactly like a keypress does.
 	panel.mouse_reclaimed.connect(func(): panel.set_external_control(false, discreet_brightness))
 
-	presets.all_params = func(): return params
+	presets.registry = registry
 	presets.slots_changed.connect(_send_schema)
 
 	# The state the show comes up in, settled at the launcher. This is the one
@@ -183,8 +182,7 @@ func _ready():
 	# Every door the MIDI surface can open is one another surface already had: the
 	# settings by slug, and `fire_action()` for the one-shots. Nothing new to reach
 	# means the Chataigne module still covers everything a profile can.
-	midi.find_param = param
-	midi.all_params = func(): return params
+	midi.registry = registry
 	midi.fire = fire_action
 	midi.touched = _external_touch
 	midi.actions = ACTIONS
@@ -194,7 +192,8 @@ func _ready():
 
 	pad.connection_changed.connect(_refresh_status)
 	# Wrapping the lookup catches every pad interaction in one place.
-	pad.find_param = func(slug): _external_touch(); return param(slug)
+	pad.registry = registry
+	pad.touched = _external_touch
 	pad.aim.connect(circle.aim_by)
 	pad.aim.connect(func(_a, _b, _c): _external_touch())
 	pad.aim_released.connect(circle.release_aim)
@@ -343,7 +342,7 @@ func _build_params():
 			"color/saturation",
 			"color/mode", "color/red", "color/green", "color/blue",
 			"spot/track", "spot/handback"]:
-		param(slug).randomizable = false
+		registry.find(slug).randomizable = false
 
 
 func _section(key: String):
@@ -369,17 +368,9 @@ func _prop(slug: String, mn: float, mx: float, step: float, value: float,
 	return p
 
 
-## Finds a setting by its address.
-func param(slug: String) -> VJParam:
-	for p in params:
-		if p.slug == slug:
-			return p
-	return null
-
-
 func _append(p: VJParam):
 	p.section = _current_section
-	params.append(p)
+	registry.add(p)
 
 
 ## One message a frame, carrying whatever moved in it. A fade that touches fifty
@@ -663,14 +654,14 @@ func _apply_audio():
 
 	var bands := [audio.bass, audio.mid, audio.treble]
 	for m in _modulations:
-		var base: float = param(m["slug"]).value
+		var base: float = registry.find(m["slug"]).value
 		var drive: float = _react * _amounts[m["amount"]] * bands[m["band"]]
 		m["set"].call(base * (1.0 + drive * m["weight"]))
 
 
 func _reset_modulations():
 	for m in _modulations:
-		m["set"].call(param(m["slug"]).value)
+		m["set"].call(registry.find(m["slug"]).value)
 
 
 # --------------------------------------------------------------------------
@@ -789,7 +780,7 @@ func _randomize_all():
 ## Godot actually has: a setting added in _build_params() simply shows up there.
 func _send_schema():
 	var described: Array = []
-	for p in params:
+	for p in registry.all():
 		# In the room's own tongue: this one is read by a person, not a program.
 		described.append(_describe(p, lang.current))
 	web.broadcast({
@@ -815,7 +806,7 @@ func _on_web_launch_set(key: String, value: Variant):
 
 func _on_web_set(slug: String, value: float):
 	_external_touch()
-	var p := param(slug)
+	var p := registry.find(slug)
 	if p:
 		p.set_value(value)
 
@@ -911,7 +902,7 @@ func _dump_path() -> String:
 ## same reason: what reads this is a program, not a person in a room.
 func _dump(path: String):
 	var described: Array = []
-	for p in params:
+	for p in registry.all():
 		described.append(_describe(p, Lang.EN))
 	var payload := {
 		"osc_prefix": OSC_PREFIX,
@@ -1021,7 +1012,7 @@ func route_key(event: InputEvent) -> void:
 			# Comparing against the midpoint rather than against the dim level
 			# itself: the setting is snapped to its step, so the value never comes
 			# back bit-identical and `value > dim` stayed true forever.
-			var p := param("global/panel")
+			var p := registry.find("global/panel")
 			var midpoint := (discreet_brightness + 1.0) * 0.5
 			p.set_value(discreet_brightness if p.value > midpoint else 1.0)
 		KEY_SPACE:

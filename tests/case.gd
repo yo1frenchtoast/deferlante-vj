@@ -28,11 +28,11 @@ func same(got, expected, message: String):
 # lines that reach into the show's internals are these and no others.
 
 func params() -> Array:
-	return show.params
+	return show.registry.all()
 
 
 func param(slug: String) -> VJParam:
-	return show.param(slug)
+	return show.registry.find(slug)
 
 
 func osc(address: String, args: Array):

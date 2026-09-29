@@ -8,7 +8,7 @@ extends Node
 ## only about nudging them, and the controller reads better without it.
 
 ## Set by the controller.
-var all_params: Callable
+var registry: ParamRegistry
 var randomize_colours: Callable
 var palette: Palette
 
@@ -84,10 +84,10 @@ func on_beat(chance: float):
 ## the spotlight keeps doing what it was asked is a musical decision, where rolling
 ## everything at once is a scene change.
 func _roll(section: String = ""):
-	if not all_params.is_valid():
+	if registry == null:
 		return
 	var candidates: Array = []
-	for p in all_params.call():
+	for p in registry.all():
 		if not p.randomizable:
 			continue
 		if section != "" and not p.slug.begins_with(section + "/"):
