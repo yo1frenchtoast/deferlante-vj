@@ -68,7 +68,7 @@ the controller about a show rather than about JSON.
 The show builds the UI at runtime from the list of settings. The scene holds nothing
 but an empty `VBoxContainer`, not 51 pairs of nodes to maintain by hand.
 
-The panel also **lays itself out in as many columns as it takes to fit the screen**.
+The panel also **lays itself out in four columns, or as many more as it takes to fit the screen**. It scales itself down to fit the width.
 It breaks only between sections, thus it never splits a section in two. It also
 balances the columns rather than fills the first one to the brim. The panel grew by one
 row per setting, and it had started to run off the bottom of a 1080p screen. This way

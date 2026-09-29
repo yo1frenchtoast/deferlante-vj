@@ -93,15 +93,38 @@ func test_moving_across_columns():
 
 func test_a_new_column_opens_to_the_right_but_not_for_a_lone_section():
 	var layout := _layout()
-	var plan := layout.plan(GROUPS, TALL, true)
-	var last: Array = plan[-1]
-	var moved: String = last[-1]
-	check(last.size() > 1, "the last column holds more than one section")
-	check(layout.move_horizontal(plan, moved, 1), "out of the last column")
-	var after := layout.plan(GROUPS, TALL, true)
-	same(after.size(), plan.size() + 1, "one more column")
-	same(after[-1], [moved], "holding that section")
-	check(not layout.move_horizontal(after, moved, 1), "a section alone is not sent further right")
+	layout.custom = true
+	layout.columns = [["section.a", "section.b"], ["section.c", "section.d"]]
+	var groups := [{"key": "section.a", "rows": 1}, {"key": "section.b", "rows": 1},
+		{"key": "section.c", "rows": 1}, {"key": "section.d", "rows": 1}]
+	var plan := layout.plan(groups, TALL, true)
+	check(layout.move_horizontal(plan, "section.d", 1), "out of the last column")
+	var after := layout.plan(groups, TALL, true)
+	same(after.size(), 3, "one more column")
+	same(after[-1], ["section.d"], "holding that section")
+	check(not layout.move_horizontal(after, "section.d", 1), "a section alone is not sent further right")
+
+
+func test_the_automatic_layout_is_four_columns_on_a_tall_screen():
+	var plan := PanelLayout.auto_plan(GROUPS, TALL)
+	same(plan.size(), 4, "the setup column and three for what is played")
+	var setup := PanelLayout.SETUP_SECTIONS.filter(func(k): return GROUPS.any(func(g): return g["key"] == k))
+	same(plan[0], setup, "the setup column is still a column of its own, in the order the layout names")
+	for column in plan:
+		check(not column.is_empty(), "no column is empty")
+
+
+func test_a_short_screen_still_gets_more_than_four():
+	check(PanelLayout.auto_plan(GROUPS, 300.0).size() > 4, "the budget asks for more, and it gets them")
+
+
+func test_fewer_sections_than_columns_do_not_make_empty_columns():
+	var two := [{"key": "section.spot", "rows": 3}, {"key": "section.lasers", "rows": 3}]
+	var plan := PanelLayout.auto_plan(two, TALL)
+	same(plan.size(), 2, "two sections, two columns, not three")
+	for column in plan:
+		check(not column.is_empty(), "and neither is empty")
+	same(PanelLayout.auto_plan([], TALL), [], "nothing in, nothing out")
 
 
 func test_an_emptied_column_closes():

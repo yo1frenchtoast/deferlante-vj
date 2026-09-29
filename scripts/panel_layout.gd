@@ -30,6 +30,13 @@ const PLAY_SECTIONS := ["section.spot", "section.lasers", "section.sphere", "sec
 const ROW_HEIGHT := 27
 const HEADER_HEIGHT := 30
 
+## How many columns the instruments are spread over, at least. With the setup column
+## that makes four, however tall the screen: a panel of three tall columns takes most of
+## the picture, and four shorter ones take less of it. The panel then scales itself down
+## to fit the width (`control_panel.gd`), where it used to keep its size and its height.
+## A short screen still gets more, because the budget asks for it.
+const PLAY_COLUMNS := 3
+
 const PATH := "user://panel_layout.json"
 const VERSION := 1
 
@@ -61,8 +68,8 @@ func plan(groups: Array, budget: float, with_hidden: bool) -> Array:
 
 
 ## The panel's own arrangement: the setup sections in a column of their own, then the
-## instruments beside them, capped at the setup column's height so that they spread
-## sideways rather than tower over it. Anything neither list names goes in with the
+## instruments beside them, in at least `PLAY_COLUMNS` columns and capped at the setup
+## column's height so that they spread sideways rather than tower over it. Anything neither list names goes in with the
 ## instruments — a section added to the show and forgotten here then reads oddly,
 ## which is a bug somebody reports, where a section quietly dropped is not.
 static func auto_plan(groups: Array, budget: float) -> Array:
@@ -75,7 +82,7 @@ static func auto_plan(groups: Array, budget: float) -> Array:
 	var tallest := 0.0
 	for group in play:
 		tallest = maxf(tallest, height_of(group))
-	var instruments := _run(play, clampf(setup["height"], tallest, budget))
+	var instruments := _run(play, clampf(setup["height"], tallest, budget), PLAY_COLUMNS)
 	return setup["columns"] + instruments["columns"]
 
 
@@ -101,14 +108,16 @@ static func _ordered(groups: Array, wanted: Array, rest: bool = false) -> Array:
 ## section is never split in two, and aiming for equal columns rather than filling the
 ## first to the brim: two lopsided columns read worse than two balanced ones. Answers
 ## the columns and the height of the tallest.
-static func _run(groups: Array, budget: float) -> Dictionary:
+static func _run(groups: Array, budget: float, at_least: int = 1) -> Dictionary:
 	if groups.is_empty():
 		return {"columns": [], "height": 0.0}
 
 	var total := 0.0
 	for group in groups:
 		total += height_of(group)
-	var wanted := maxi(1, ceili(total / maxf(1.0, budget)))
+	# Never more columns than there are sections to put in them: a column with nothing in
+	# it is not a column.
+	var wanted := mini(groups.size(), maxi(at_least, ceili(total / maxf(1.0, budget))))
 	var target := total / wanted
 
 	var out: Array = [[]]
