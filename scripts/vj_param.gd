@@ -64,6 +64,37 @@ func label_in(tongue: int) -> String:
 	return _lang.label_in(slug, tongue) if _lang else slug
 
 
+## What every surface that is not the panel is told about this setting: the web page,
+## the REST API and the generators. The surfaces on screen speak whichever tongue
+## the launcher was set to. The API does not: its slugs, its actions and its OSC
+## addresses are English, and a spec whose labels changed with the room would be one
+## nobody could write against. So the tongue is named by the caller rather than
+## read from the room.
+func describe(tongue: int) -> Dictionary:
+	var names: Array = []
+	for c in choices:
+		names.append(_lang.text_in(c, tongue) if translate_choices and _lang else c)
+	return {
+		"slug": slug,
+		"label": label_in(tongue),
+		# One line saying what the setting does, shown when the web surface's
+		# operator hovers or holds its name. Empty when none is written yet.
+		"hint": _lang.hint_in(slug, tongue) if _lang else "",
+		"section": _lang.text_in(section, tongue) if _lang else section,
+		"min": min_value,
+		"max": max_value,
+		"step": step,
+		"value": value,
+		"choices": names,
+		"bidirectional": bidirectional,
+		# Whether the auto-pilot may move it, which is also whether a shuffle can.
+		# The surfaces need it to avoid offering a button that cannot do anything:
+		# every setting under COLOUR is a decision about the room, so that section
+		# has nothing to roll.
+		"randomizable": randomizable,
+	}
+
+
 ## The single entry point: slider, keyboard and OSC all end up here.
 func set_value(new_value: float):
 	value = clampf(snappedf(new_value, step), min_value, max_value)

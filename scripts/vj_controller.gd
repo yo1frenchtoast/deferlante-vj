@@ -1,11 +1,12 @@
 extends Node2D
 
-## Conductor: declares the settings, spawns the lasers, routes OSC.
+## Conductor: declares the settings and wires the parts of the show together.
 ##
-## Display belongs to the panel (`control_panel.gd`), the protocol to the OSC
-## server (`osc_server.gd`). All that lives here is the list of settings and what
-## they drive — adding a line to `_build_params()` creates the slider, the keyboard
-## navigation and the OSC address in one go.
+## Display belongs to the panel (`control_panel.gd`), the protocols to their servers
+## and routers, the strokes to `LaserRig`, the sound to `AudioModulation`. What lives
+## here is the list of settings and what they drive — adding a line to
+## `_build_params()` creates the slider, the keyboard navigation, the OSC address and
+## the rest in one go — plus the handful of things that need the whole show at once.
 
 @export var laser_scene: PackedScene = preload("res://scenes/laser.tscn")
 @export var laser_count: int = 3
@@ -37,6 +38,7 @@ extends Node2D
 
 var lang := Lang.new()
 var launch_surface: LaunchSurface
+var web_bridge: WebBridge
 ## Shared colour state, held by reference by every effect.
 var palette := Palette.new()
 
@@ -46,9 +48,6 @@ var actions: ShowActions
 var osc_router: OscRouter
 
 var _status_tick: float = 0.0
-## What moved since the last frame, slug -> value, waiting to go out in one message.
-var _pending_values: Dictionary = {}
-var _meter_tick: float = 0.0
 var modulation: AudioModulation
 var _mode_param: VJParam
 ## True while start-up values are being applied: without this guard, setting the
@@ -91,23 +90,16 @@ func _ready():
 	osc.message_received.connect(osc_router.handle)
 
 	api.registry = registry
-	api.describe = func(p): return _describe(p, Lang.EN)
+	api.describe = func(p): return p.describe(Lang.EN)
 	api.presets = presets
 	api.actions = ShowActions.LIST
 	api.fire = actions.fire
 	web.api_handler = api.handle
-	web.client_connected.connect(_send_schema)
-	web.set_requested.connect(_on_web_set)
-	web.action_requested.connect(_on_web_action)
-	web.launch_set_requested.connect(_on_web_launch_set)
-	# A phone must see what the keyboard, OSC or the auto-pilot just did. The value
-	# is noted here and sent once a frame rather than the moment it moves: a preset
-	# crossfade and the auto-pilot both write every setting on every frame, and one
-	# message per setting per frame is a few thousand a second down a wifi link to
-	# a phone — which the phone then has to parse before it can draw anything.
+	web_bridge = WebBridge.new(web, registry, lang, presets, launch_surface, actions,
+		modulation, audio, _external_touch)
+	web_bridge.connect_surface()
 	for p in registry.all():
-		p.changed.connect(func(v): _pending_values[p.slug] = v)
-		# A fader holding this setting is now lying about where it is: a preset
+	# A fader holding this setting is now lying about where it is: a preset
 		# recall, the auto-pilot or a phone just moved it under the operator's hand.
 		p.changed.connect(func(_v): midi.on_param_changed(p.slug))
 
@@ -125,9 +117,9 @@ func _ready():
 
 	# Asked for by a generator rather than by an operator: describe the show and
 	# stand down without ever putting anything on screen.
-	var wanted := _dump_path()
+	var wanted := ShowDump.requested_path()
 	if wanted != "":
-		_dump(wanted)
+		get_tree().quit(0 if ShowDump.write(wanted, registry, presets) else 1)
 		return
 
 	# The operator's own window, where there are two screens to put one on. After the
@@ -141,7 +133,7 @@ func _ready():
 	panel.mouse_reclaimed.connect(func(): panel.set_external_control(false, discreet_brightness))
 
 	presets.registry = registry
-	presets.slots_changed.connect(_send_schema)
+	presets.slots_changed.connect(web_bridge.send_schema)
 
 	# The state the show comes up in, settled at the launcher. This is the one
 	# decision no surface can make for us: at this moment nothing is connected, no
@@ -347,19 +339,6 @@ func _append(p: VJParam):
 	registry.add(p)
 
 
-## One message a frame, carrying whatever moved in it. A fade that touches fifty
-## settings therefore costs one message rather than fifty. The buffer is emptied
-## even with nobody listening, so that a phone connecting later is not handed a
-## backlog of values from a fade that finished minutes ago — it asks for the whole
-## schema on connect anyway.
-func _flush_values():
-	if _pending_values.is_empty():
-		return
-	if web.has_clients():
-		web.broadcast({"type": "values", "values": _pending_values})
-	_pending_values = {}
-
-
 ## The line under the panel: where to reach this machine, and what is plugged in.
 ## It is looked up rather than remembered, so it belongs on screen and not only in
 ## the console, where it scrolls away before anyone needs it.
@@ -483,34 +462,12 @@ func _audio_meter() -> String:
 	return "%s %s %.0f%%" % [label, bars, modulation.react * 100.0]
 
 
-## The same three levels the status line draws, sent to the browsers.
-##
-## On a clock rather than from the `levels` signal: that one fires every frame, and
-## sixty packets a second per phone is a lot of radio for a bar nobody can read
-## faster than about twenty. The reactivity rides along so the page can make the
-## same distinction the status line does — hearing nothing and not being turned up
-## look identical otherwise.
-func _broadcast_levels():
-	if not web.has_clients():
-		return
-	web.broadcast({
-		"type": "audio",
-		"capturing": audio.capturing,
-		"bass": audio.bass,
-		"mid": audio.mid,
-		"treble": audio.treble,
-		"silent": audio.is_silent(),
-		"reactivity": modulation.react,
-	})
-
-
 # --------------------------------------------------------------------------
 # Per-frame work
 # --------------------------------------------------------------------------
 
 func _process(delta: float):
 	modulation.apply()
-	_flush_values()
 
 	# The meter has to be refreshed on a clock: the status line is otherwise only
 	# rebuilt on events, and levels are not events.
@@ -520,19 +477,12 @@ func _process(delta: float):
 		if audio.capturing:
 			_refresh_status()
 
-	# Same reasoning for the phones, on their own clock: twenty a second while there
-	# is something to watch, one a second when there is not — a page that just
-	# connected still has to be told the machine is deaf.
-	_meter_tick += delta
-	if _meter_tick > (0.05 if audio.capturing else 1.0):
-		_meter_tick = 0.0
-		_broadcast_levels()
-
+	web_bridge.process(delta)
 	rig.process(delta)
 
 
 # --------------------------------------------------------------------------
-# OSC (Chataigne, TouchOSC, or any other sender)
+# Rolling the look
 # --------------------------------------------------------------------------
 
 ## R key: back to random colours, with a fresh draw. This is the way out of manual
@@ -547,148 +497,8 @@ func _randomize_all():
 
 
 # --------------------------------------------------------------------------
-# Web control surface
+# Show shortcuts (the panel handles its own: arrows, H, F3)
 # --------------------------------------------------------------------------
-
-## The page builds itself entirely from this, so it cannot drift from the settings
-## Godot actually has: a setting added in _build_params() simply shows up there.
-func _send_schema():
-	var described: Array = []
-	for p in registry.all():
-		# In the room's own tongue: this one is read by a person, not a program.
-		described.append(_describe(p, lang.current))
-	web.broadcast({
-		"type": "schema",
-		"params": described,
-		"presets": {"used": presets.used_slots(), "count": presets.SLOTS},
-		# Named rather than spelled out in the page: the buttons are built from this,
-		# so an action added to `ShowActions.LIST` appears on every phone without touching
-		# the HTML — the same way a setting does.
-		"actions": ShowActions.LIST.map(func(a): return {
-			"name": a, "label": lang.text("action." + a)}),
-		"launch": launch_surface.describe(),
-	})
-
-
-func _on_web_launch_set(key: String, value: Variant):
-	_external_touch()
-	# A row can move another — Compatibility empties the antialiasing beside it — and
-	# two phones on one show must not disagree about what the next start will be.
-	if launch_surface.apply(key, value):
-		_send_schema()
-
-
-func _on_web_set(slug: String, value: float):
-	_external_touch()
-	var p := registry.find(slug)
-	if p:
-		p.set_value(value)
-
-
-func _on_web_action(name: String):
-	_external_touch()
-	# Restarting is not a show action: it is not in `ShowActions.LIST`, it is not offered
-	# over OSC, and it ends this process. It stays on the surface that has a button
-	# for it, behind a confirmation.
-	if name == "restart":
-		_restart()
-		return
-	actions.fire(name)
-
-
-## Start the show again on the start-up settings as they now stand.
-##
-## The saving is done on every keystroke of that tab rather than here, so a restart
-## by any other route — the panel, a power cut — still comes up on what was asked
-## for. Standing the old show down belongs to `Launch.relaunch()`, which is the only
-## place that knows whether this platform wants it.
-##
-## A machine that will not fork is told so on the surface that asked, rather than
-## by appearing to ignore the button: nothing has changed, and the operator needs
-## to know that before reaching for it again.
-func _restart():
-	if not Launch.relaunch():
-		push_warning("Web: this platform will not start a second process")
-		web.broadcast({"type": "restart_failed"})
-
-
-
-# --------------------------------------------------------------------------
-# Describing the show to whatever builds against it
-# --------------------------------------------------------------------------
-
-## The path a generator asked us to write to, or "" for an ordinary run.
-##
-## After a bare `--`, Godot hands the rest to the project, so this reads the user
-## arguments rather than the engine's.
-func _dump_path() -> String:
-	var args := OS.get_cmdline_user_args()
-	var at := args.find("--dump-params")
-	if at == -1 or at + 1 >= args.size():
-		return ""
-	return args[at + 1]
-
-
-## Write everything a generator needs, then quit.
-##
-## The Chataigne module used to be built by running regular expressions over this
-## very file and over `lang.gd`, which made the *shape* of a declaration part of the
-## contract — a setting wrapped onto two lines would have been missed — and left the
-## tool keeping lists of its own beside it. One of those lists had already drifted in
-## both directions unnoticed.
-##
-## So the show describes itself instead. English throughout, like the API and for the
-## same reason: what reads this is a program, not a person in a room.
-func _dump(path: String):
-	var described: Array = []
-	for p in registry.all():
-		described.append(_describe(p, Lang.EN))
-	var payload := {
-		"osc_prefix": OscRouter.PREFIX,
-		"params": described,
-		"actions": ShowActions.LIST,
-		"presets": {"count": presets.SLOTS},
-	}
-	var file := FileAccess.open(path, FileAccess.WRITE)
-	if file == null:
-		push_error("Cannot write the description to %s: %s"
-			% [path, error_string(FileAccess.get_open_error())])
-		get_tree().quit(1)
-		return
-	file.store_string(JSON.stringify(payload, "\t"))
-	file.close()
-	print("Described %d settings into %s" % [described.size(), path])
-	get_tree().quit()
-
-
-## The surfaces on screen speak whichever tongue the launcher was set to. The API
-## does not: its slugs, its actions and its OSC addresses are English, and a spec
-## whose labels changed with the room would be one nobody could write against.
-## So the tongue is named by the caller rather than read from the room.
-func _describe(p: VJParam, tongue: int) -> Dictionary:
-	var choices: Array = []
-	for c in p.choices:
-		choices.append(lang.text_in(c, tongue) if p.translate_choices else c)
-	return {
-		"slug": p.slug,
-		"label": p.label_in(tongue),
-		# One line saying what the setting does, shown when the web surface's
-		# operator hovers or holds its name. Empty when none is written yet.
-		"hint": lang.hint_in(p.slug, tongue),
-		"section": lang.text_in(p.section, tongue),
-		"min": p.min_value,
-		"max": p.max_value,
-		"step": p.step,
-		"value": p.value,
-		"choices": choices,
-		"bidirectional": p.bidirectional,
-		# Whether the auto-pilot may move it, which is also whether a shuffle can.
-		# The surfaces need it to avoid offering a button that cannot do anything:
-		# every setting under COLOUR is a decision about the room, so that section
-		# has nothing to roll.
-		"randomizable": p.randomizable,
-	}
-
 
 ## Which preset slot a key means, if any.
 ##
@@ -706,9 +516,6 @@ func _preset_slot(event: InputEventKey) -> int:
 		return event.keycode - KEY_KP_0
 	return 0
 
-# --------------------------------------------------------------------------
-# Show shortcuts (the panel handles its own: arrows, H, F3)
-# --------------------------------------------------------------------------
 
 func _unhandled_input(event: InputEvent):
 	route_key(event)

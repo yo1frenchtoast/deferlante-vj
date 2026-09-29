@@ -34,7 +34,7 @@ func test_snapshot():
 	var out := {}
 	var listed := []
 	for p in _all():
-		listed.append(show._describe(p, Lang.EN))
+		listed.append(p.describe(Lang.EN))
 	out["params"] = listed
 	var launch := _launch()
 	# Machine-dependent rows are noise for a diff.
