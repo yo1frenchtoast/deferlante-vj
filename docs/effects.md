@@ -370,6 +370,35 @@ squares of one colour.
 It is off by default, so a show saved before it existed comes up unchanged. It also
 takes part in `SHUFFLE` like every other setting, under the section `fx`.
 
+## What the full-screen passes cost
+
+Every effect on this page that works on the whole picture is one pass over the frame, and
+it costs nothing at 0. Measured with no GPU at all (llvmpipe, the Compatibility renderer,
+a 1080p show, 12 lasers, 20 circles and 120 stars), the frame time in milliseconds was:
+
+| Scenario | ms a frame | Added |
+| --- | --- | --- |
+| Nothing on | 6.1 | — |
+| Wave | 9.0 | +2.9 |
+| Mirror | 9.4 | +3.3 |
+| Aberration | 9.8 | +3.7 |
+| Aberration, in lens mode | 10.0 | +3.9 |
+| Trail | 10.3 | +4.2 |
+| Slice glitch | 10.4 | +4.3 |
+| Tunnel (with its twist) | 10.5 | +4.4 |
+| Mirror, wave, slice, aberration and tunnel together | 26.8 | +20.7 |
+
+The passes add up. Five of them together are about five times one, and on a machine with
+no GPU that is past the 16.7 ms of a frame at 60. Turn on the ones that the set needs.
+
+Read the numbers for their order and not for their size. Software rendering is a bad model
+of a graphics chip: it pays for every pixel that a pass reads, where a GPU pays much less.
+The variation between two runs of the same scenario was about 0.2 ms. The new passes cost
+what the mirror costs, within a millisecond, and the mirror has been shipping for a long
+time. On the RTX 3060 of the machine this was developed on, the cost is not measurable
+against a frame of a few milliseconds. It was not measured on the projector's own machine
+or on an Android TV, and those are the weakest hardware that this show runs on.
+
 ## Scanlines
 
 `PARALLEL` does not tune the scatter. It crossfades between two different behaviors.
