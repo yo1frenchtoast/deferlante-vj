@@ -249,6 +249,34 @@
         }
       }
     },
+    "Effects Tunnel": {
+      "menu": "Effects",
+      "callback": "fxTunnel",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": -1.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Effects Tunnel Twist": {
+      "menu": "Effects",
+      "callback": "fxTunnel_twist",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": -1.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Effects Aberration": {
       "menu": "Effects",
       "callback": "fxAberration",

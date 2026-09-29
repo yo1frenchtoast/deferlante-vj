@@ -219,6 +219,8 @@ func _build_params():
 	# live under `fx/`, so that one shuffle can roll them together.
 	#
 	# Off by default: a show saved before these existed comes up unchanged.
+	_fn("fx/tunnel", -1, 1, 0.02, 0.0, blur.set_tunnel, true)
+	_fn("fx/tunnel_twist", -1, 1, 0.02, 0.0, blur.set_twist, true)
 	_fn("fx/aberration", 0, 1, 0.02, 0.0, aberration.set_amount)
 	_fn("fx/aberration_radial", 0, 1, 0.02, 0.0, aberration.set_radial)
 	_fn("fx/aberration_angle", 0, 1, 0.01, 0.0, aberration.set_angle)

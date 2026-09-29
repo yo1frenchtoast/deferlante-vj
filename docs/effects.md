@@ -256,6 +256,34 @@ turning mirror then walks the trail around the wedges, which reads as a spiral. 
 before it surprises you. It cannot run away: the pass only samples and dims, thus it
 creates no light, and the floor guarantees that each frame's leftovers reach black.
 
+## The tunnel
+
+`TUNNEL` is the trail with one change. The trail keeps the frame that was on screen and
+draws it, dimmed, under the new one. The tunnel draws that ghost a little **bigger and a
+little turned**, and the next frame does it again to the frame before. What was at the
+centre a moment ago is further out now, and the picture falls away along a spiral. It is
+what a camera does when it films its own monitor. A sphere is drawn out into a tube, and
+a laser into a ribbed sheet.
+
+The setting is a **speed**, and it has two signs. → moves the ghost outwards, as if you
+were flying forward, and ← moves it inwards, which draws everything towards the centre.
+The top of the slider is a plunge. It is measured in seconds, not in frames, so the fall
+is as fast on a projector that drops to 30 fps as it is at 60. `TUNNEL TWIST` turns the
+ghost as it falls, one way or the other. It does nothing while the tunnel is at 0.
+
+It shares the trail's pass and its copy of the frame, so it costs what the trail costs,
+and nothing at 0. It also brings a ghost of its own. A tunnel is made of ghosts, and one
+that lasted two frames would be a zoom blur. So with `TRAIL` at 0 the ghost lasts 0.4 s,
+and `TRAIL` can make it longer, up to its half second. It cannot make it shorter.
+
+The brightness cannot run away, for the same reasons as the trail: the ghost is held below
+the strokes that cast it, and a small floor is taken off every frame. What the ghost
+never held, at the edge of a picture that is shrinking, is black. Reading the pixel at the
+edge instead would smear it into a frame of solid colour.
+
+Because the ghost is read smoothly while it moves, the trail softens a little as it falls.
+With the tunnel at 0 the pass reads exactly the pixels that it always did.
+
 ## Chromatic aberration
 
 `ABERRATION` reads each colour channel of the frame from a slightly different place.

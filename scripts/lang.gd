@@ -57,6 +57,8 @@ const LABELS := {
 	"mirror/rotation": ["ROTATION", "ROTATION"],
 
 	"blur/amount": ["TRAIL", "RÉMANENCE"],
+	"fx/tunnel": ["TUNNEL", "TUNNEL"],
+	"fx/tunnel_twist": ["TUNNEL TWIST", "TUNNEL TORSION"],
 	"fx/aberration": ["ABERRATION", "ABERRATION"],
 	"fx/aberration_radial": ["ABERRATION LENS", "ABERRATION OPTIQUE"],
 	"fx/aberration_angle": ["ABERRATION ANGLE", "ABERRATION ANGLE"],
@@ -314,6 +316,8 @@ const HINTS := {
 	"mirror/segments": ["Number of mirror wedges. 6 gives the classic star.", "Nombre de quartiers du miroir. 6 donne l'étoile classique."],
 	"mirror/rotation": ["Turns the mirrors. ← left, → right. CHAOS unsettles the pace.", "Fait tourner les miroirs. ← gauche, → droite. Le CHAOS en dérègle l'allure."],
 	"blur/amount": ["Keeps the previous frames under the new one: what moves smears, what stands still does not. 0 switches the pass off.", "Garde les images précédentes sous la nouvelle : ce qui bouge file, ce qui reste net reste net. 0 coupe la passe."],
+	"fx/tunnel": ["The picture falls away from the centre, or into it, as a camera does that films its own screen. Right flies forward, left backward. 0 switches it off. Uses the trail's copy of the frame.", "L'image s'échappe du centre, ou y tombe, comme une caméra qui filme son propre écran. À droite on avance, à gauche on recule. 0 coupe l'effet. Utilise la copie de l'image de la rémanence."],
+	"fx/tunnel_twist": ["How much the tunnel turns as it falls. Right and left turn the two ways. It does nothing while TUNNEL is at 0.", "De combien le tunnel tourne en tombant. Droite et gauche tournent dans les deux sens. Sans effet tant que TUNNEL est à 0."],
 	"fx/aberration": ["Splits the colour channels at the edges, like a cheap lens: a red fringe on one side, a blue one on the other. 0 switches the pass off.", "Sépare les canaux de couleur sur les bords, comme une optique bon marché : une frange rouge d'un côté, bleue de l'autre. 0 coupe la passe."],
 	"fx/aberration_radial": ["From 0, the channels move the same way everywhere, along the angle, to 1, where they spread out from the centre and the middle stays clean.", "De 0, où les canaux bougent partout dans le même sens, selon l'angle, à 1, où ils s'écartent depuis le centre et le milieu reste net."],
 	"fx/aberration_angle": ["Which way the channels move apart, once round the dial. It does nothing at full LENS, where they move from the centre.", "Dans quel sens les canaux s'écartent, un tour de cadran. Sans effet à fond sur OPTIQUE, où ils partent du centre."],

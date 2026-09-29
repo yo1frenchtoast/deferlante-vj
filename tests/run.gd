@@ -35,6 +35,14 @@ func _ready():
 	await get_tree().process_frame
 	await get_tree().process_frame
 
+	# What every setting says before any case has touched it. A case that fires SHUFFLE
+	# or a preset leaves the settings wherever the dice put them, so "what is the
+	# default" cannot be read back from the show halfway through.
+	var defaults := {}
+	for p in show.registry.all():
+		defaults[p.slug] = p.value
+	show.set_meta("defaults", defaults)
+
 	for file in files:
 		if not file.ends_with(".gd") or (only != "" and file.get_basename() != only):
 			continue

@@ -187,8 +187,10 @@ func test_the_effects_section_reads_effects_and_keeps_its_old_key_and_addresses(
 func test_the_aberration_is_off_by_default_and_costs_nothing_until_asked():
 	for slug in ["fx/aberration", "fx/aberration_radial", "fx/aberration_angle"]:
 		check(param(slug) != null, "%s is declared" % slug)
-		same(param(slug).value, 0.0, "%s starts at 0, so a show saved before it comes up unchanged" % slug)
+		same(show.get_meta("defaults")[slug], 0.0, "%s starts at 0, so a show saved before it comes up unchanged" % slug)
 		same(param(slug).section, "section.blur", "%s sits in the effects section" % slug)
+	# Whatever an earlier case left it at: SHUFFLE rolls these like any other setting.
+	param("fx/aberration").set_value(0.0)
 	check(not show.aberration.rect.visible, "the pass is switched off at 0")
 	param("fx/aberration").set_value(0.5)
 	check(show.aberration.rect.visible, "and on above it")
@@ -233,5 +235,86 @@ func test_the_drawn_aberration_follows_the_sound_and_comes_back_to_the_setting()
 
 
 func test_the_aberration_amount_is_off_by_default():
-	same(param("audio/aberration").value, 0.0, "a show saved before it existed hears no change")
-	same(show.modulation.amounts["aberration"], 0.0, "and the modulation agrees")
+	same(show.get_meta("defaults")["audio/aberration"], 0.0, "a show saved before it existed hears no change")
+	same(AudioModulation.new(show.registry, show.audio, show.rig, show.circle, show.sphere, show.warp).amounts["aberration"], 0.0, "and the modulation agrees")
+
+
+func test_the_tunnel_runs_the_trail_pass_on_its_own_and_only_then():
+	var blur = show.blur
+	param("blur/amount").set_value(0.0)
+	param("fx/tunnel").set_value(0.0)
+	check(not blur.rect.visible, "trail 0 and tunnel 0: the pass is off, and the copy stops")
+	param("fx/tunnel").set_value(0.5)
+	check(blur.rect.visible, "the tunnel alone switches it on")
+	same(blur.echo.render_target_update_mode, SubViewport.UPDATE_ALWAYS, "and the copy of the frame starts")
+	param("fx/tunnel").set_value(-0.5)
+	check(blur.rect.visible, "backwards too")
+	param("fx/tunnel").set_value(0.0)
+	check(not blur.rect.visible, "and back off")
+
+
+func test_the_tunnel_falls_outwards_forwards_and_inwards_backwards():
+	var blur = show.blur
+	var material: ShaderMaterial = blur.rect.material
+	param("fx/tunnel").set_value(0.5)
+	blur._process(1.0 / 60.0)
+	check(material.get_shader_parameter("zoom") > 1.0, "positive magnifies the ghost: flying forward")
+	param("fx/tunnel").set_value(-0.5)
+	blur._process(1.0 / 60.0)
+	check(material.get_shader_parameter("zoom") < 1.0, "negative shrinks it")
+	param("fx/tunnel").set_value(0.0)
+
+
+func test_the_tunnel_is_a_rate_not_a_step():
+	var blur = show.blur
+	var material: ShaderMaterial = blur.rect.material
+	param("fx/tunnel").set_value(1.0)
+	blur._process(1.0 / 60.0)
+	var at_60: float = material.get_shader_parameter("zoom")
+	blur._process(1.0 / 30.0)
+	var at_30: float = material.get_shader_parameter("zoom")
+	check(is_equal_approx(at_30, at_60 * at_60), "a slow frame falls twice as far, so the speed is the same at 30 fps")
+	param("fx/tunnel").set_value(0.0)
+
+
+func test_the_twist_turns_only_while_the_tunnel_is_on():
+	var blur = show.blur
+	var material: ShaderMaterial = blur.rect.material
+	param("blur/amount").set_value(0.3)
+	param("fx/tunnel_twist").set_value(1.0)
+	blur._process(1.0 / 60.0)
+	same(material.get_shader_parameter("turn"), 0.0, "twist alone does nothing to a plain trail")
+	param("fx/tunnel").set_value(0.5)
+	blur._process(1.0 / 60.0)
+	check(material.get_shader_parameter("turn") > 0.0, "with the tunnel it turns")
+	param("fx/tunnel_twist").set_value(-1.0)
+	blur._process(1.0 / 60.0)
+	check(material.get_shader_parameter("turn") < 0.0, "and the other way")
+	param("fx/tunnel").set_value(0.0)
+	param("fx/tunnel_twist").set_value(0.0)
+	param("blur/amount").set_value(0.0)
+
+
+func test_a_plain_trail_is_exactly_what_it_was():
+	var blur = show.blur
+	var material: ShaderMaterial = blur.rect.material
+	param("blur/amount").set_value(0.5)
+	blur._process(1.0 / 60.0)
+	same(material.get_shader_parameter("zoom"), 1.0, "no magnification")
+	same(material.get_shader_parameter("turn"), 0.0, "no turn")
+	var expected := exp(-(1.0 / 60.0) / lerpf(blur.SHORTEST, blur.LONGEST, 0.5))
+	check(is_equal_approx(material.get_shader_parameter("keep"), expected), "and the same decay as before the tunnel existed")
+	param("blur/amount").set_value(0.0)
+
+
+func test_the_tunnel_brings_its_own_ghost_and_the_trail_can_lengthen_it():
+	var blur = show.blur
+	param("blur/amount").set_value(0.0)
+	param("fx/tunnel").set_value(0.5)
+	same(blur._seconds(), blur.TUNNEL_SECONDS, "a tunnel with no trail still lasts long enough to be one")
+	param("blur/amount").set_value(1.0)
+	same(blur._seconds(), blur.LONGEST, "TRAIL makes it longer")
+	param("blur/amount").set_value(0.1)
+	same(blur._seconds(), blur.TUNNEL_SECONDS, "a short trail does not make it shorter")
+	param("fx/tunnel").set_value(0.0)
+	param("blur/amount").set_value(0.0)

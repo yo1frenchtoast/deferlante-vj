@@ -69,6 +69,14 @@ function blurAmount(value) {
 	local.send("/deferlante/blur/amount", value);
 }
 
+function fxTunnel(value) {
+	local.send("/deferlante/fx/tunnel", value);
+}
+
+function fxTunnel_twist(value) {
+	local.send("/deferlante/fx/tunnel_twist", value);
+}
+
 function fxAberration(value) {
 	local.send("/deferlante/fx/aberration", value);
 }

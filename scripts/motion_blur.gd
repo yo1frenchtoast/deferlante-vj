@@ -31,6 +31,23 @@ extends CanvasLayer
 ## spare — the machine in the room is often the weakest one the show ever runs on.
 var amount: float = 0.0
 
+## The tunnel, signed: positive falls outwards from the centre as if flying forward,
+## negative falls inwards, 0 is off. See `motion_blur.gdshader`.
+var tunnel: float = 0.0
+## How much the tunnel turns as it falls, signed. It does nothing without the tunnel.
+var twist: float = 0.0
+
+## How much one full step of TUNNEL grows the ghost each second, as a rate: e^rate a
+## second, so 1 doubles the picture about every 0.7 s — a comfortable fall — and the
+## top of the slider (2.4) is a plunge. The top of a slider should be too much.
+const ZOOM_RATE := 2.4
+## The turn at the top of TWIST, in radians a second: about a quarter turn a second.
+const TWIST_RATE := 1.6
+## How long the ghost lasts when the tunnel is on and TRAIL is not. A tunnel is made of
+## ghosts, and one that lived two frames would be a zoom blur, not a tunnel. TRAIL can
+## still make it longer.
+const TUNNEL_SECONDS := 0.4
+
 ## Seconds for the trail to fade out, at the two ends of the setting. The floor is
 ## a couple of frames, which reads as a softened edge rather than an echo; the
 ## ceiling is half a second, by which point a laser sweep writes a solid ribbon.
@@ -52,6 +69,7 @@ func _ready():
 	# no path to resolve and nothing to break when a node is moved.
 	frame.texture = show.get_texture()
 	rect.material.set_shader_parameter("echo_tex", echo.get_texture())
+	rect.material.set_shader_parameter("echo_smooth", echo.get_texture())
 	_apply()
 
 
@@ -60,8 +78,22 @@ func set_amount(value: float):
 	_apply()
 
 
+func set_tunnel(value: float):
+	tunnel = value
+	_apply()
+
+
+func set_twist(value: float):
+	twist = value
+
+
+## The pass runs for the trail and for the tunnel, and only for them.
+func _running() -> bool:
+	return amount > 0.0 or tunnel != 0.0
+
+
 func _apply():
-	rect.visible = amount > 0.0
+	rect.visible = _running()
 	echo.render_target_update_mode = (SubViewport.UPDATE_ALWAYS if rect.visible
 		else SubViewport.UPDATE_DISABLED)
 
@@ -73,7 +105,19 @@ func _process(delta: float):
 	# trail on a laptop at 60 and on the projector when it drops to 30. `keep` is
 	# what survives one frame of that decay, so a slow frame eats proportionally
 	# more of the ghost.
-	var seconds: float = lerpf(SHORTEST, LONGEST, clampf(amount, 0.0, 1.0))
+	var seconds := _seconds()
 	var material: ShaderMaterial = rect.material
 	material.set_shader_parameter("keep", exp(-delta / seconds))
 	material.set_shader_parameter("bias", FLOOR_PER_FRAME * delta * 60.0)
+	# Per frame, from a rate per second, for the same reason as the decay: the fall is
+	# the same speed on a projector that drops to 30.
+	material.set_shader_parameter("zoom", exp(tunnel * ZOOM_RATE * delta))
+	material.set_shader_parameter("turn", twist * TWIST_RATE * delta if tunnel != 0.0 else 0.0)
+	material.set_shader_parameter("aspect", echo.size.x / maxf(1.0, float(echo.size.y)))
+
+
+## How long a ghost lasts: what TRAIL asks for, or the tunnel's own minimum, whichever
+## is the longer.
+func _seconds() -> float:
+	var trail := lerpf(SHORTEST, LONGEST, clampf(amount, 0.0, 1.0)) if amount > 0.0 else 0.0
+	return maxf(trail, TUNNEL_SECONDS if tunnel != 0.0 else SHORTEST)
