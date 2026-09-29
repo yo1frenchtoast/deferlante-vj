@@ -5,7 +5,7 @@
 VJ visuals in Godot 4: neon strokes on black, additively blended.
 Built for video projection with a haze machine.
 
-![A run through the effects: lasers, sphere, spotlight, kaleidoscope](docs/demo.gif)
+![A run through the instrument: lasers, sphere, spotlight and mirror, then the effects: wave, aberration, slice glitch and tunnel](docs/demo.gif)
 
 *Déferlante* is French for the breaking wave — the one that surges in and takes the
 room. Pull the word apart in English and something else surfaces: **defer**, and a
@@ -19,9 +19,9 @@ swept by a light that is always about to arrive, and never does.
 
 ![A red kaleidoscope mandala folding and unfolding](docs/kaleidoscope.gif)
 
-*The same show, set up differently and filmed off the projector itself, which is
-where it is meant to end up. One color, folded twelve ways, with the strokes long and
-thin so the mirror has something to repeat:*
+*The same show, set up differently. One color, folded twelve ways, with the strokes long
+and thin so the mirror has something to repeat. The clip is played by the show itself
+from the settings below, so it is a recipe and not a screenshot:*
 
 - **MIRROR** — `EFFECT ON` · `SEGMENTS 12` · `ROTATION 0.22`
 - **COLOR** — `MODE MANUAL` · `RED 1` · `GREEN 0` · `BLUE 0` · `SATURATION 1`
@@ -32,9 +32,10 @@ thin so the mirror has something to repeat:*
 
 ![Lasers, the sphere and the spotlight, with the panel open](docs/screenshot.png)
 
-*The whole instrument in one frame: the room on the right, the panel on the left. The
-panel dims itself the moment that something else takes over — a phone, a console, the
-pad — and comes back on the first key press.*
+*The whole instrument in one frame: the room, and the panel laid over it in four columns.
+The settings that you set before a set are on the left, then the instruments, then the
+effects. The panel dims itself the moment that something else takes over — a phone, a
+console, the pad — and comes back on the first key press.*
 
 ## Documentation
 

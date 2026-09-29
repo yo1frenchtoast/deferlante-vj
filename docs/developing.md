@@ -204,6 +204,37 @@ It has been `major × 100 + minor × 10 + patch` (`1.4.1` is 141, `1.10` is 200)
 for a patch and **10** for a minor version, and round up to the next hundred for a major
 one, so that it never goes down.
 
+## The pictures of the README
+
+The two clips and the still at the top of the README are played by the show itself, and not
+filmed. They come from three small scenes in `tools/demo/`:
+
+```
+tools/make_demo.sh                  # the opening clip, docs/demo.gif
+tools/make_demo.sh kaleidoscope     # the second clip, docs/kaleidoscope.gif
+tools/make_demo.sh screenshot       # the still, docs/screenshot.png
+tools/make_demo.sh all
+```
+
+Each scene sets the show up and then does something at chosen times, and the script films
+it with `--write-movie` and turns the frames into a GIF. Two things to know before you
+change one:
+
+- **Every beat is a timer or a tween on game time.** A movie is rendered on its own clock,
+  and a script that drives the show over HTTP drifts. It drifted by eight seconds against a
+  fifteen-second plan the first time.
+- **A GIF pays for every pixel that changes.** The picture is strokes on black, so the black
+  is what makes it cheap. The wave and the tunnel change almost every pixel, and the first
+  take of the opening clip was 13 MB. The clip is kept short, at 8 frames a second and with
+  few strokes, and it is 5 MB. Check the size before you commit one: GitHub loads it every
+  time somebody opens the page.
+
+`sphere/count` cannot be swept in a scene, because its setter rebuilds every circle and the
+sphere renders as nothing. Step it once.
+
+If you change the recipe under the second clip in the README, change
+`tools/demo/kaleidoscope.gd` with it.
+
 ## Tests
 
 ```
