@@ -545,3 +545,88 @@ func test_a_hidden_section_in_the_edit_mode_takes_no_double_click():
 		same(panel._name_labels[index].mouse_filter, Control.MOUSE_FILTER_IGNORE, "its names are out of reach")
 		same(panel._value_labels[index].mouse_filter, Control.MOUSE_FILTER_IGNORE, "and so are its numbers")
 	_end()
+
+
+# --------------------------------------------------------------------------
+# A double click on the name of a section
+# --------------------------------------------------------------------------
+
+func _header_double_click(key: String):
+	var e := _slider_click(true)
+	panel._header_of(key).gui_input.emit(e)
+
+
+func test_a_double_click_on_a_section_name_resets_all_of_its_settings():
+	_begin()
+	await _settle()
+	var lasers: Array = panel.params.filter(func(p): return p.section == "section.lasers")
+	check(lasers.size() >= 5, "the section has a few settings")
+	for p in lasers:
+		p.set_value(p.max_value)
+	var other: VJParam = show.registry.find("spot/radius")
+	other.set_value(500.0)
+	_header_double_click("section.lasers")
+	for p in lasers:
+		same(p.value, p.default_value, "%s is back to its default" % p.slug)
+	same(other.value, 500.0, "and a setting in another section is left alone")
+	same(panel.selected, panel.params.find(lasers[0]), "the first row of the section is selected")
+	other.reset()
+	_end()
+
+
+func test_a_single_click_on_a_section_name_does_nothing():
+	_begin()
+	await _settle()
+	var p: VJParam = show.registry.find("lasers/width")
+	p.set_value(17.0)
+	panel._header_of("section.lasers").gui_input.emit(_slider_click(false))
+	same(p.value, 17.0, "one click is not a reset")
+	p.reset()
+	_end()
+
+
+func test_resetting_the_colour_section_leaves_the_colour_mode_random():
+	_begin()
+	await _settle()
+	# Written channels flip the mode to manual; the reset has to end on the mode.
+	show.registry.find("color/red").set_value(0.9)
+	same(show.registry.find("color/mode").value, 1.0, "touching a channel made it manual")
+	_header_double_click("section.color")
+	same(show.registry.find("color/mode").value, show.registry.find("color/mode").default_value,
+		"reset to random, not knocked back to manual by the channels")
+	same(show.registry.find("color/red").value, show.registry.find("color/red").default_value, "and the channel is reset too")
+
+
+func test_the_section_names_refuse_the_mouse_while_a_surface_is_driving():
+	_begin()
+	await _settle()
+	var header: Label = panel._header_of("section.lasers")
+	same(header.mouse_filter, Control.MOUSE_FILTER_STOP, "a name takes the double click")
+	panel.set_external_control(true, 0.15)
+	same(header.mouse_filter, Control.MOUSE_FILTER_IGNORE, "and refuses it while a phone or a pad has the wheel")
+	var p: VJParam = show.registry.find("lasers/width")
+	p.set_value(17.0)
+	panel.relayout()
+	await _settle()
+	same(panel._header_of("section.lasers").mouse_filter, Control.MOUSE_FILTER_IGNORE, "a header built during the hand-over comes up refusing it")
+	panel.set_external_control(false, 0.15)
+	same(panel._header_of("section.lasers").mouse_filter, Control.MOUSE_FILTER_STOP, "and takes it back after")
+	p.reset()
+	_end()
+
+
+func test_in_the_edit_mode_the_same_double_click_hides_the_section_and_resets_nothing():
+	_begin()
+	panel.handle_key(_key(KEY_F6))
+	await _settle()
+	var p: VJParam = show.registry.find("lasers/width")
+	p.set_value(17.0)
+	var at := _centre("section.lasers")
+	panel._input(_button(at, true))
+	panel._input(_button(at, false))
+	panel._input(_double_click(at))
+	panel._input(_button(at, false))
+	check(panel.layout.hidden.has("section.lasers"), "the section is put away")
+	same(p.value, 17.0, "and its settings were not reset")
+	p.reset()
+	_end()

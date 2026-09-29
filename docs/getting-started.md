@@ -106,8 +106,11 @@ adjust the settings.
 
 The mouse also works on the sliders. **A double click on a slider, or on its name or its
 number, puts its setting back to the value that it was declared with**, the one that the show starts on. It is not the
-value that a preset or the auto-pilot last left. But the keyboard is safer during a
-show, because you do not aim in the dark.
+value that a preset or the auto-pilot last left. **A double click on the name of a section
+does the same for every setting in it.** In the arrange mode (`F6`) that same double click
+puts the section away instead, and resets nothing. While a phone, a pad or Chataigne is
+driving, the panel refuses the mouse, and that includes these clicks. But the keyboard is
+safer during a show, because you do not aim in the dark.
 
 Below the sliders is a status line. It shows four things, then the shortcuts:
 

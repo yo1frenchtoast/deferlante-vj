@@ -405,6 +405,12 @@ func _build_section_header(key: String, spaced: bool):
 		# label only has to be there to hit, and to say so with the cursor.
 		header.mouse_filter = Control.MOUSE_FILTER_STOP
 		header.mouse_default_cursor_shape = Control.CURSOR_MOVE
+	else:
+		# Outside the edit mode a double click on the name of a section puts every
+		# setting in it back to its default. Not in the edit mode, where the same
+		# gesture puts the section away.
+		header.mouse_filter = _row_mouse_filter()
+		header.gui_input.connect(_on_header_input.bind(key))
 	_column.add_child(header)
 	# The two cells the header does not use. A grid row is three cells wide whether
 	# or not anything is in them.
@@ -808,6 +814,33 @@ func _on_slider_input(event: InputEvent, index: int):
 		get_viewport().set_input_as_handled()
 
 
+## A double click on the name of a section puts every setting in it back to the value it
+## was declared with. It does what a double click on one row does, for all of them.
+func _on_header_input(event: InputEvent, key: String):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT \
+			and event.pressed and event.double_click:
+		reset_section(key)
+		get_viewport().set_input_as_handled()
+
+
+## Every setting of a section back to its declared value.
+##
+## Done from the last to the first. The colour channels flip the colour mode to manual
+## when they are written — that is what makes a RED slider do something in random mode —
+## and the mode is declared before them, so resetting in declaration order would put the
+## mode back to random and then have the channels knock it over again. The other way
+## round, the mode is the last word, and a reset colour section is a random one.
+func reset_section(key: String):
+	var first := -1
+	for i in range(params.size() - 1, -1, -1):
+		if params[i].section == key:
+			params[i].reset()
+			first = i
+	if first >= 0:
+		select(first)
+		wake()
+
+
 func _on_slider_moved(value: float, index: int):
 	params[index].set_value(value)
 	select(index)
@@ -879,6 +912,13 @@ func set_external_control(active: bool, dim_to: float):
 		for control in row:
 			if control != null:
 				control.mouse_filter = _row_mouse_filter()
+	# The names of the sections as well, or a double click on one would reset a whole
+	# section under a hand that is not the operator's. In the edit mode they take the
+	# mouse for the edit mode itself, and that is not affected.
+	if not editing:
+		for header in _section_labels:
+			if is_instance_valid(header):
+				header.mouse_filter = _row_mouse_filter()
 	if active:
 		_restore_brightness = brightness
 		set_brightness(dim_to)
