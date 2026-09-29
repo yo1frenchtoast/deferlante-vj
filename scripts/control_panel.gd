@@ -96,6 +96,19 @@ var _edit_key: String = ""
 ## being edited: they are on screen, and they are not to be selected or read.
 var _dimmed: Dictionary = {}
 var _edit_banner: Label
+
+## The mouse's half of the edit mode. A press on a section name chooses it; moved past
+## a few pixels it becomes a drag, and the section lands where it is let go.
+const DRAG_THRESHOLD := 6.0
+## How far right of the last column a drop still means "beside it" rather than in it.
+const NEW_COLUMN_MARGIN := 30.0
+var _pressed_key: String = ""
+## The release that ends a double click, which has nothing left to do.
+var _swallow_release: bool = false
+var _press_at: Vector2 = Vector2.ZERO
+var _dragging: bool = false
+var _ghost: Label
+var _marker: ColorRect
 ## The run of columns, kept so the panel can be measured against the window it is
 ## in. See `_fit_window()`.
 var _columns: HBoxContainer
@@ -271,6 +284,8 @@ func relayout():
 	# viewport this panel has already left.
 	if params.is_empty() or get_viewport() == null:
 		return
+	# The widgets a drag is holding are about to be replaced.
+	_end_drag()
 	for pair in _row_listeners:
 		pair[0].changed.disconnect(pair[1])
 	_row_listeners.clear()
@@ -376,9 +391,10 @@ func _build_section_header(key: String, spaced: bool):
 	header.add_theme_font_size_override("font_size", 13)
 	header.add_theme_color_override("font_color", SECTION_COLOR)
 	if editing:
-		# Clicking a section is the mouse's way of choosing it; the keys do the rest.
+		# The mouse takes a section by its name; `_edit_mouse()` does the rest. The
+		# label only has to be there to hit, and to say so with the cursor.
 		header.mouse_filter = Control.MOUSE_FILTER_STOP
-		header.gui_input.connect(_on_header_input.bind(key))
+		header.mouse_default_cursor_shape = Control.CURSOR_MOVE
 	_column.add_child(header)
 	# The two cells the header does not use. A grid row is three cells wide whether
 	# or not anything is in them.
@@ -563,9 +579,188 @@ func _choose_section(key: String):
 		_style_header(_section_labels[i], _section_keys[i])
 
 
-func _on_header_input(event: InputEvent, key: String):
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		_choose_section(key)
+## The mouse in the edit mode. Answers whether it took the event.
+##
+## Everything is worked out in the panel's own canvas coordinates, from the on-screen
+## rectangles of what is there. The columns may be scaled down to fit a small window,
+## and a rectangle read through its transform is still right when they are.
+func _edit_mouse(event: InputEvent) -> bool:
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			var at := _canvas_position(event)
+			if event.pressed:
+				var key := _header_at(at)
+				if key == "":
+					return false
+				_choose_section(key)
+				if event.double_click:
+					# Twice on a name puts the section away, or brings it back. Taken
+					# on the second press, and its release is swallowed with it, so
+					# that a hand still moving cannot start a drag from a section that
+					# is about to be redrawn.
+					_swallow_release = true
+					_apply_edit(layout.toggle_hidden(key))
+					get_viewport().set_input_as_handled()
+					return true
+				_pressed_key = key
+				_press_at = at
+				_dragging = false
+				get_viewport().set_input_as_handled()
+				return true
+			if _swallow_release:
+				_swallow_release = false
+				get_viewport().set_input_as_handled()
+				return true
+			if _pressed_key != "":
+				if _dragging:
+					_drop(at)
+				_end_drag()
+				get_viewport().set_input_as_handled()
+				return true
+		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			if _dragging:
+				# The way out of a drag that was a mistake. Not ESC: that quits the show.
+				_end_drag()
+				get_viewport().set_input_as_handled()
+				return true
+			# Not dragging, the right button is free: on a name it puts the section
+			# away, or brings it back, like a double click and like ENTER.
+			var key := _header_at(_canvas_position(event))
+			if key == "":
+				return false
+			_choose_section(key)
+			_end_drag()
+			_apply_edit(layout.toggle_hidden(key))
+			get_viewport().set_input_as_handled()
+			return true
+	elif event is InputEventMouseMotion and _pressed_key != "":
+		var at := _canvas_position(event)
+		if not _dragging and at.distance_to(_press_at) > DRAG_THRESHOLD:
+			_begin_drag()
+		if _dragging:
+			_update_drag(at)
+		get_viewport().set_input_as_handled()
+		return true
+	return false
+
+
+## Where an event is, in the coordinates the panel's controls are drawn in.
+func _canvas_position(event: InputEvent) -> Vector2:
+	var local := rows.make_input_local(event) as InputEventMouse
+	return rows.get_global_transform() * local.position
+
+
+static func _rect_of(control: Control) -> Rect2:
+	var t := control.get_global_transform()
+	return Rect2(t * Vector2.ZERO, Vector2.ZERO).expand(t * control.size)
+
+
+## The section whose name is under this point, or "".
+func _header_at(at: Vector2) -> String:
+	for i in range(_section_labels.size()):
+		if is_instance_valid(_section_labels[i]) and _rect_of(_section_labels[i]).has_point(at):
+			return _section_keys[i]
+	return ""
+
+
+func _header_of(key: String) -> Label:
+	var at := _section_keys.find(key)
+	return _section_labels[at] if at >= 0 else null
+
+
+func _begin_drag():
+	_dragging = true
+	if _ghost == null:
+		_ghost = Label.new()
+		_ghost.add_theme_font_size_override("font_size", 15)
+		_ghost.add_theme_color_override("font_color", Color.WHITE)
+		_ghost.modulate.a = 0.85
+		_ghost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_ghost.z_index = 10
+		add_child(_ghost)
+		_marker = ColorRect.new()
+		_marker.color = SECTION_COLOR
+		_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_marker.z_index = 10
+		add_child(_marker)
+	_ghost.text = _lang.text(_pressed_key)
+	_ghost.visible = true
+
+
+## The section follows the pointer, and a bar shows where it would land — or nothing,
+## where letting go would change nothing, so that the bar never promises a move that
+## does not happen.
+func _update_drag(at: Vector2):
+	_ghost.position = at + Vector2(14.0, 10.0)
+	var target := _drop_target(at)
+	_marker.visible = false
+	if target.is_empty() or not _would_change(target):
+		return
+	var wrappers := _columns.get_children()
+	if target["column"] >= wrappers.size():
+		var last := _rect_of(wrappers[-1])
+		_marker.position = Vector2(last.end.x + NEW_COLUMN_MARGIN * 0.5, last.position.y)
+		_marker.size = Vector2(3.0, last.size.y)
+	else:
+		var column := _rect_of(wrappers[target["column"]])
+		var kept: Array = target["kept"]
+		var y := column.end.y - 2.0
+		if target["index"] < kept.size():
+			y = _rect_of(_header_of(kept[target["index"]])).position.y - 8.0
+		_marker.position = Vector2(column.position.x, y)
+		_marker.size = Vector2(column.size.x, 3.0)
+	_marker.visible = true
+
+
+## Which column, and which place in it, a drop at this point means. `kept` is that
+## column without the section being dragged, which is what `index` counts.
+func _drop_target(at: Vector2) -> Dictionary:
+	var plan := _plan(_group_by_section(), true)
+	var wrappers := _columns.get_children()
+	if plan.is_empty() or wrappers.size() != plan.size():
+		return {}
+	if at.x > _rect_of(wrappers[-1]).end.x + NEW_COLUMN_MARGIN:
+		return {"column": plan.size(), "index": 0, "kept": []}
+
+	var best := 0
+	var best_gap := INF
+	for i in range(wrappers.size()):
+		var r := _rect_of(wrappers[i])
+		var gap := 0.0 if (at.x >= r.position.x and at.x <= r.end.x) \
+				else minf(absf(at.x - r.position.x), absf(at.x - r.end.x))
+		if gap < best_gap:
+			best = i
+			best_gap = gap
+
+	var kept: Array = plan[best].filter(func(k): return k != _pressed_key)
+	var index := 0
+	for key in kept:
+		if _rect_of(_header_of(key)).get_center().y < at.y:
+			index += 1
+	return {"column": best, "index": index, "kept": kept}
+
+
+func _would_change(target: Dictionary) -> bool:
+	# Tried on a copy: the real layout is not touched until the drop.
+	var trial := PanelLayout.from_dict(layout.to_dict())
+	return trial.move_to(_plan(_group_by_section(), true), _pressed_key,
+		target["column"], target["index"])
+
+
+func _drop(at: Vector2):
+	var target := _drop_target(at)
+	if target.is_empty():
+		return
+	_apply_edit(layout.move_to(_plan(_group_by_section(), true), _pressed_key,
+		target["column"], target["index"]))
+
+
+func _end_drag():
+	_pressed_key = ""
+	_dragging = false
+	if _ghost:
+		_ghost.visible = false
+		_marker.visible = false
 
 
 # --------------------------------------------------------------------------
@@ -678,6 +873,8 @@ signal mouse_reclaimed
 
 
 func _input(event: InputEvent):
+	if editing and _edit_mouse(event):
+		return
 	if external_control and event is InputEventMouse:
 		# A click asks for the panel back; motion does not.
 		if event is InputEventMouseButton and event.pressed:

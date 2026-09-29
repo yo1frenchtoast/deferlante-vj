@@ -85,7 +85,7 @@ instruments at the end rather than disappears.
 **The operator can rearrange all of this.** `F6` opens an edit mode: sections move up
 and down, across columns, and can be put away. `PanelLayout` holds the result and works
 on lists of section keys, with no nodes in it, so that its rules are tested without a
-screen. The automatic layout is one of its two ways to make a plan, and it is the
+screen. The mouse and the keys both end in `move_to()`, which takes a column and a place in it. The automatic layout is one of its two ways to make a plan, and it is the
 algorithm above, unchanged. The first move adopts what was on screen as the operator's
 own layout; from then on the columns stay where they were put, and the panel still
 scales itself down when a window is too small. Hiding is separate from both, and it is

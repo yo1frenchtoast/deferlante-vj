@@ -143,8 +143,8 @@ const TEXTS := {
 		"H figer l'UI    F2 discrétion    F3 fps    F4 console    F6 disposition    F11 plein écran    ÉCHAP quitter",
 	],
 	"layout.help": [
-		"LAYOUT    ↑↓ section    Shift+↑↓ move up/down    ←→ other column    ENTER hide/show    BACKSPACE reset    F6 done",
-		"DISPOSITION    ↑↓ section    Maj+↑↓ monter/descendre    ←→ autre colonne    ENTRÉE masquer/afficher    RETOUR ARRIÈRE réinitialiser    F6 terminé",
+		"LAYOUT    ↑↓ section    Shift+↑↓ move up/down    ←→ other column    ENTER hide/show    BACKSPACE reset    MOUSE drag a name, double-click or right button hides    F6 done",
+		"DISPOSITION    ↑↓ section    Maj+↑↓ monter/descendre    ←→ autre colonne    ENTRÉE masquer/afficher    RETOUR ARRIÈRE réinitialiser    SOURIS glisser un nom, double-clic ou clic droit masque    F6 terminé",
 	],
 	"layout.hidden": ["(hidden)", "(masquée)"],
 	"help.pad": [

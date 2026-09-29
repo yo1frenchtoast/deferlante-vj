@@ -162,48 +162,59 @@ func _reconcile(groups: Array) -> Array:
 # --------------------------------------------------------------------------
 
 ## Each of these takes the plan that is on screen, so that the first edit of an
-## automatic layout starts from what the operator was looking at. They answer whether
-## anything changed.
+## automatic layout starts from what the operator was looking at, and answers whether
+## anything changed. A move that changes nothing — up from the top, right from the
+## last column — leaves the layout exactly as it was, automatic included: an edit that
+## did not happen must not quietly freeze the panel in place.
 
 ## One place up or down within the column. At the edge nothing happens: crossing to
 ## the next column is what left and right are for.
 func move_vertical(current: Array, key: String, direction: int) -> bool:
-	_adopt(current)
-	var c := _column_of(key)
+	var next := _copy(current)
+	var c := _column_in(next, key)
 	if c < 0:
 		return false
-	var at: int = columns[c].find(key)
+	var at: int = next[c].find(key)
 	var to := at + direction
-	if to < 0 or to >= columns[c].size():
+	if to < 0 or to >= next[c].size():
 		return false
-	columns[c][at] = columns[c][to]
-	columns[c][to] = key
-	return true
+	next[c][at] = next[c][to]
+	next[c][to] = key
+	return _commit(current, next)
 
 
 ## One column left or right, landing at the same height where the target is that tall.
 ## Past the last column it opens a new one — unless the section is already alone in
 ## its column, which would only move an empty one along.
 func move_horizontal(current: Array, key: String, direction: int) -> bool:
-	_adopt(current)
-	var c := _column_of(key)
+	var c := _column_in(current, key)
 	if c < 0:
 		return false
 	var to := c + direction
 	if to < 0:
 		return false
-	var at: int = columns[c].find(key)
-	if to >= columns.size():
-		if columns[c].size() == 1:
+	return move_to(current, key, to, current[c].find(key))
+
+
+## To a given column and place in it, which is what a drag says. `index` counts the
+## sections of the target column *without* this one, so it means the same thing
+## whether the section came from that column or another. A `column` one past the last
+## opens a new column on the right.
+func move_to(current: Array, key: String, column: int, index: int) -> bool:
+	var next := _copy(current)
+	var c := _column_in(next, key)
+	if c < 0 or column < 0 or column > next.size():
+		return false
+	next[c].erase(key)
+	if column == next.size():
+		if next[c].is_empty():
 			return false
-		columns[c].remove_at(at)
-		columns.append([key])
-		return true
-	columns[c].remove_at(at)
-	columns[to].insert(mini(at, columns[to].size()), key)
-	if columns[c].is_empty():
-		columns.remove_at(c)
-	return true
+		next.append([key])
+	else:
+		next[column].insert(clampi(index, 0, next[column].size()), key)
+	# A column that was emptied closes, and everything after it moves one along.
+	next = next.filter(func(col): return not col.is_empty())
+	return _commit(current, next)
 
 
 func toggle_hidden(key: String) -> bool:
@@ -225,16 +236,24 @@ func reset():
 ## The plan on screen becomes the arrangement, whether or not it was custom already:
 ## it is the saved one held against the sections that exist now, so it also carries a
 ## section that arrived since the file was written.
-func _adopt(current: Array):
+func _commit(current: Array, next: Array) -> bool:
+	if next == current:
+		return false
 	custom = true
-	columns = []
-	for column in current:
-		columns.append(column.duplicate())
+	columns = next
+	return true
 
 
-func _column_of(key: String) -> int:
-	for i in range(columns.size()):
-		if columns[i].has(key):
+static func _copy(plan: Array) -> Array:
+	var out: Array = []
+	for column in plan:
+		out.append(column.duplicate())
+	return out
+
+
+static func _column_in(plan: Array, key: String) -> int:
+	for i in range(plan.size()):
+		if plan[i].has(key):
 			return i
 	return -1
 

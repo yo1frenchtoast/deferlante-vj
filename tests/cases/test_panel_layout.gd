@@ -149,6 +149,53 @@ func test_reset_returns_to_automatic_with_everything_shown():
 	same(layout.hidden.size(), 0, "nothing put away")
 
 
+func test_move_to_lands_at_the_place_it_was_dropped():
+	var layout := _layout()
+	var plan := layout.plan(GROUPS, TALL, true)
+	check(layout.move_to(plan, "section.warp", 0, 1), "into the first column, second place")
+	var after := layout.plan(GROUPS, TALL, true)
+	same(after[0][1], "section.warp", "there")
+	check(not _flat(after.slice(1)).has("section.warp"), "and not where it was")
+
+
+func test_the_index_counts_the_target_column_without_the_moved_section():
+	var layout := _layout()
+	layout.custom = true
+	layout.columns = [["section.global", "section.color", "section.mirror"]]
+	var groups := [{"key": "section.global", "rows": 1}, {"key": "section.color", "rows": 1},
+		{"key": "section.mirror", "rows": 1}]
+	var plan := layout.plan(groups, TALL, true)
+	# Dropped in its own column, "after the one that is now second": the last place.
+	check(layout.move_to(plan, "section.global", 0, 2), "the first, dropped at the end")
+	same(layout.plan(groups, TALL, true)[0], ["section.color", "section.mirror", "section.global"], "at the end")
+	check(not layout.move_to(layout.plan(groups, TALL, true), "section.global", 0, 2), "dropped where it already is")
+
+
+func test_dropping_on_a_new_column_and_the_refusals():
+	var layout := _layout()
+	layout.custom = true
+	layout.columns = [["section.a", "section.b"], ["section.c"]]
+	var groups := [{"key": "section.a", "rows": 1}, {"key": "section.b", "rows": 1},
+		{"key": "section.c", "rows": 1}]
+	var plan := layout.plan(groups, TALL, true)
+	check(layout.move_to(plan, "section.a", 2, 0), "a new column past the last")
+	same(layout.plan(groups, TALL, true), [["section.b"], ["section.c"], ["section.a"]], "opened on the right")
+	var now := layout.plan(groups, TALL, true)
+	check(not layout.move_to(now, "section.a", 3, 0), "a section alone is not sent to a new column")
+	check(not layout.move_to(now, "section.a", 9, 0), "a column that does not exist")
+	check(not layout.move_to(now, "section.zzz", 0, 0), "a section that does not exist")
+	check(not layout.move_to(now, "section.a", -1, 0), "a negative column")
+
+
+func test_a_move_that_changes_nothing_leaves_an_automatic_layout_automatic():
+	var layout := _layout()
+	var plan := layout.plan(GROUPS, TALL, true)
+	check(not layout.move_vertical(plan, plan[0][0], -1), "up from the top")
+	check(not layout.move_horizontal(plan, plan[0][0], -1), "left from the first column")
+	check(not layout.move_to(plan, plan[0][0], 0, 0), "dropped where it already is")
+	check(not layout.custom, "still arranging itself, so it still follows the window")
+
+
 func test_it_goes_to_disk_and_comes_back():
 	var layout := _layout()
 	layout.move_horizontal(layout.plan(GROUPS, TALL, true), "section.mirror", 1)
