@@ -40,30 +40,16 @@ var launch_surface: LaunchSurface
 ## Shared colour state, held by reference by every effect.
 var palette := Palette.new()
 
-var lasers: Array[Line2D] = []
+var rig: LaserRig
 var registry := ParamRegistry.new()
 var actions: ShowActions
 var osc_router: OscRouter
 
-# Current global settings, re-applied to lasers spawned later on.
-var v_speed: float = 1.0
-var v_chaos: float = 0.0
-var v_laser_width: float = 5.0
-var v_halo: float = 0.0
 var _audio_was_active: bool = false
 var _status_tick: float = 0.0
 ## What moved since the last frame, slug -> value, waiting to go out in one message.
 var _pending_values: Dictionary = {}
 var _meter_tick: float = 0.0
-var v_length: float = 1.0
-var v_spin: float = 1.0
-var v_align: float = 0.0
-## The fan's shared angle and its scrolling phase. Kept here rather than in each
-## stroke so they agree even when a stroke is spawned mid-set.
-var _align_angle: float = 0.0
-var _scroll: float = 0.0
-var _scroll_phase: float = 0.0
-
 # Audio reactivity. The master is zero by default, so nothing moves until asked.
 var _react: float = 0.0
 var _amounts := {"lasers": 2.5, "spot": 2.5, "sphere": 2.5, "warp": 2.5,
@@ -88,6 +74,8 @@ func _ready():
 	# before the show rather than during it.
 	lang.set_language(Launch.language)
 	launch_surface = LaunchSurface.new(lang, presets, console)
+	rig = LaserRig.new(laser_scene, show_viewport, palette,
+		func(): return get_viewport_rect().size)
 	_build_params()
 	for p in registry.all():
 		p.use_language(lang)
@@ -101,7 +89,7 @@ func _ready():
 	circle.use_palette(palette)
 	sphere.use_palette(palette)
 	warp.use_palette(palette)
-	_spawn_lasers(laser_count)
+	rig.spawn(laser_count)
 	for p in registry.all():
 		p.apply_current()
 	_initializing = false
@@ -246,11 +234,11 @@ func _build_params():
 
 	_section("section.lasers")
 	_fn("lasers/count", 0, 40, 1, laser_count, _set_laser_count)
-	_fn("lasers/width", 1, 24, 0.5, 5.0, _set_laser_width)
-	_fn("lasers/length", 0.1, 2, 0.05, 1.0, _set_length)
-	_fn("lasers/spin", -1, 1, 0.05, 1.0, _set_spin, true)
-	_fn("lasers/parallel", 0, 1, 0.02, 0.0, _set_align)
-	_fn("lasers/scroll", -1, 1, 0.02, 0.0, func(v): _scroll = v, true)
+	_fn("lasers/width", 1, 24, 0.5, 5.0, rig.set_width)
+	_fn("lasers/length", 0.1, 2, 0.05, 1.0, rig.set_length)
+	_fn("lasers/spin", -1, 1, 0.05, 1.0, rig.set_spin, true)
+	_fn("lasers/parallel", 0, 1, 0.02, 0.0, rig.set_align)
+	_fn("lasers/scroll", -1, 1, 0.02, 0.0, func(v): rig.scroll = v, true)
 
 	_section("section.spot")
 	# Settings that only write a property are declared, not coded.
@@ -424,76 +412,33 @@ func _set_manual_lock(value: float):
 
 
 func _set_speed(value: float):
-	v_speed = value
 	circle.speed_scale = value
 	sphere.speed_scale = value
 	warp.speed_scale = value
 	kaleido.speed_scale = value
-	for l in lasers:
-		l.speed_scale = value
+	rig.set_speed(value)
 
 
 func _set_chaos(value: float):
-	v_chaos = value
 	circle.chaos = value
 	sphere.chaos = value
 	warp.chaos = value
 	kaleido.chaos = value
-	for l in lasers:
-		l.chaos = value
+	rig.set_chaos(value)
 
 
 ## HALO. No longer the post-process glow: each stroke draws its own wide, faint
 ## echo (see `halo.gd`). The setting keeps its name, its range and its OSC address —
 ## what changed is who does the work, not what the operator reaches for.
 func _set_glow(value: float):
-	v_halo = value
 	circle.set_halo(value)
 	sphere.halo_amount = value
 	warp.halo_amount = value
-	for l in lasers:
-		l.set_halo(value)
+	rig.set_halo(value)
 
 
 func _set_laser_count(value: float):
-	var target := int(value)
-	while lasers.size() > target:
-		lasers.pop_back().queue_free()
-	if lasers.size() < target:
-		_spawn_lasers(target - lasers.size())
-	_reslot()
-
-
-## Spreads the strokes evenly across the fan. Without this the scanlines would
-## inherit the random spacing they had as a scatter, which is most of what makes
-## them read as scanlines rather than as parallel lines that happen to coincide.
-func _reslot():
-	for i in range(lasers.size()):
-		lasers[i].slot = float(i) / maxf(1.0, float(lasers.size()))
-
-
-func _set_laser_width(value: float):
-	v_laser_width = value
-	for l in lasers:
-		l.width = value
-
-
-func _set_length(value: float):
-	v_length = value
-	for l in lasers:
-		l.set_length_scale(value)
-
-
-func _set_spin(value: float):
-	v_spin = value
-	for l in lasers:
-		l.spin_scale = value
-
-
-func _set_align(value: float):
-	v_align = value
-	for l in lasers:
-		l.align = value
+	rig.set_count(int(value))
 
 
 func _set_saturation(value: float):
@@ -516,27 +461,6 @@ func _set_channel(value: float, index: int):
 		return
 	if palette.mode != Palette.MANUAL and _mode_param:
 		_mode_param.set_value(Palette.MANUAL)
-
-
-func _spawn_lasers(count: int):
-	var screen_size := get_viewport_rect().size
-	for i in range(count):
-		var laser: Line2D = laser_scene.instantiate()
-		show_viewport.add_child(laser)
-		laser.position = Vector2(
-			randf_range(0, screen_size.x),
-			randf_range(0, screen_size.y)
-		)
-		# A laser spawned mid-set must inherit the current settings.
-		laser.speed_scale = v_speed
-		laser.spin_scale = v_spin
-		laser.chaos = v_chaos
-		laser.width = v_laser_width
-		laser.use_palette(palette)
-		laser.set_length_scale(v_length)
-		laser.align = v_align
-		laser.set_halo(v_halo)
-		lasers.append(laser)
 
 
 # --------------------------------------------------------------------------
@@ -607,9 +531,9 @@ func _broadcast_levels():
 func _build_modulations():
 	_modulations = [
 		{"slug": "lasers/width", "band": MID, "amount": "lasers", "weight": 1.0,
-			"set": func(v: float): _write_lasers("width", v)},
+			"set": rig.draw_width},
 		{"slug": "lasers/length", "band": MID, "amount": "lasers", "weight": 0.33,
-			"set": func(v: float): for l in lasers: l.set_length_scale(v)},
+			"set": rig.draw_length},
 		{"slug": "spot/width", "band": BASS, "amount": "spot", "weight": 1.0,
 			"set": circle.set_line_width},
 		{"slug": "spot/radius", "band": BASS, "amount": "spot", "weight": 0.33,
@@ -623,11 +547,6 @@ func _build_modulations():
 		{"slug": "warp/width", "band": BASS, "amount": "warp", "weight": 0.33,
 			"set": func(v: float): warp.line_width = v},
 	]
-
-
-func _write_lasers(property: String, value: float):
-	for l in lasers:
-		l.set(property, value)
 
 
 ## The sound *adds* to each target rather than setting it, and nothing here writes
@@ -682,15 +601,7 @@ func _process(delta: float):
 		_meter_tick = 0.0
 		_broadcast_levels()
 
-	# The fan turns and scrolls once per frame, and every stroke reads the same
-	# two numbers — that is what keeps them parallel and evenly spaced.
-	if v_align > 0.0:
-		var step := delta * v_speed
-		_align_angle += v_spin * step * 0.4
-		_scroll_phase += _scroll * step * 0.25
-		for l in lasers:
-			l.align_angle = _align_angle
-			l.scroll_phase = _scroll_phase
+	rig.process(delta)
 
 
 # --------------------------------------------------------------------------
@@ -705,8 +616,7 @@ func _randomize_all():
 	circle.randomize_look()
 	sphere.randomize_look()
 	warp.randomize_look()
-	for l in lasers:
-		l.randomize_look()
+	rig.randomize_look()
 
 
 # --------------------------------------------------------------------------

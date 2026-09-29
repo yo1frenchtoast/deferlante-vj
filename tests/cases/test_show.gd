@@ -91,16 +91,16 @@ func test_actions():
 
 func test_laser_count_follows_its_setting():
 	param("lasers/count").set_value(6.0)
-	same(show.lasers.size(), 6, "grown")
+	same(show.rig.lasers.size(), 6, "grown")
 	param("lasers/count").set_value(2.0)
-	same(show.lasers.size(), 2, "shrunk")
+	same(show.rig.lasers.size(), 2, "shrunk")
 	param("lasers/count").set_value(3.0)
 
 
 func test_a_new_laser_inherits_the_current_look():
 	param("lasers/width").set_value(11.0)
-	param("lasers/count").set_value(show.lasers.size() + 2)
-	same(show.lasers.back().width, 11.0, "width")
+	param("lasers/count").set_value(show.rig.lasers.size() + 2)
+	same(show.rig.lasers.back().width, 11.0, "width")
 	param("lasers/width").set_value(5.0)
 
 

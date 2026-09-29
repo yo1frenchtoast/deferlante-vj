@@ -65,8 +65,8 @@ func test_snapshot():
 	for p in _all():
 		values[p.slug] = p.value
 	out["after_osc"] = values
-	out["laser_count"] = show.lasers.size()
-	out["laser_width"] = show.lasers[0].width if show.lasers.size() > 0 else null
+	out["laser_count"] = show.rig.lasers.size()
+	out["laser_width"] = show.rig.lasers[0].width if show.rig.lasers.size() > 0 else null
 
 	var fired := {}
 	for a in ["glitch", "randomize", "shuffle", "shuffle:lasers", "shuffle:nope",
