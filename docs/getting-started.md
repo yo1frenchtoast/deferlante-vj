@@ -100,6 +100,7 @@ adjust the settings.
 | `F2` | Dim the panel to discreet, and back |
 | `F3` | FPS readout |
 | `F4` | Open or close the console window. See [two screens](#two-screens-the-console-window) |
+| `F6` | Arrange the panel. See [arranging the panel](#arranging-the-panel) |
 | `F11` | Fullscreen |
 | `Esc` | Quit |
 
@@ -262,6 +263,36 @@ The preview costs a second window to draw each frame. On a GPU, measured, the co
 open costs about **1.5 ms a frame** at 2560 × 1020; on a machine with no GPU at all it
 costs far more, around 14 ms. Make the window smaller if the frame rate matters more
 than the size of the preview.
+
+### Arranging the panel
+
+The panel lays itself out by default: the settings that you settle before a set in the
+first column, and the instruments beside them. `F6` lets you arrange it yourself.
+
+| Key | In arrange mode |
+| --- | --- |
+| `↑` `↓` | Choose a section (a click on its name also works) |
+| `Shift` + `↑` `↓` | Move the section up or down in its column |
+| `←` `→` | Move the section to the column on the left or right. Past the last column, it opens a new one |
+| `Enter` | Hide the section, or bring it back |
+| `Backspace` | Go back to the automatic layout, with every section shown |
+| `F6` | Done |
+
+A hidden section stays on screen while you arrange, dimmed, so that you can bring it
+back. When you are done it is gone from the panel. **Hiding changes the display and
+nothing else.** Its settings still answer to OSC, MIDI, the phone and the presets, and
+they stay in the Chataigne module.
+
+Your first move turns the automatic layout into one of your own, starting from what was
+on screen. From then on the columns stay where you put them. The panel still scales
+itself down when a window is too small, so a layout made on the projector also fits the
+[console](#two-screens-the-console-window). `Backspace` gives the automatic layout back.
+
+The arrangement is saved as you make it, in `panel_layout.json` next to the presets. It
+is a preference of the operator, not part of a look: a preset does not hold it. It also
+does not change the phone page, which has its own order. A projector that shows no panel
+(`PANEL` at the launcher) cannot be arranged, because there is nothing to see. Open the
+console with `F4` and arrange it there.
 
 ### Working discreetly
 

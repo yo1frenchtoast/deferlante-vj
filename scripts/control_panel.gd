@@ -71,24 +71,7 @@ const HELP_KEYS := ["help.params", "help.actions", "help.keys", "help.pad"]
 ## pulling more attention than the settings themselves.
 const SECTION_COLOR := Color(1.0, 0.72, 0.35)
 
-## The panel's reading order, which is deliberately not the order the settings are
-## declared in. `_build_params()` is grouped by what drives what; the panel is
-## grouped by when you touch it.
-##
-## SETUP is what you settle before a set and then leave alone — the room, the track,
-## the colour. It gets the first column to itself, so the hand goes to the same place
-## every night whatever effects the show has gained since.
-##
-## PLAY is the instruments, and it spreads over the columns after it.
-const SETUP_SECTIONS := ["section.global", "section.color", "section.mirror", "section.blur",
-	"section.audio"]
-const PLAY_SECTIONS := ["section.spot", "section.lasers", "section.sphere", "section.warp"]
-
-# Rough heights, used only to decide where to break into a new column. They do not
-# have to be exact — being a few pixels out costs nothing, and the alternative is
-# building the panel, measuring it, then rebuilding it a frame later.
-const ROW_HEIGHT := 27
-const HEADER_HEIGHT := 30
+# Rough heights used for the automatic layout live in `PanelLayout`.
 const HELP_HEIGHT := 0
 
 ## Narrowest a column may be, so a panel of short labels does not look cramped. The
@@ -100,13 +83,26 @@ const MIN_VALUE_WIDTH := 100.0
 @export var vertical_margin: float = 48.0
 
 var _column: GridContainer
+
+## Which section goes where, and which are put away. See `PanelLayout`.
+var layout := PanelLayout.new()
+## Where it is kept. A variable so that a test can point it somewhere it may write.
+var layout_path: String = PanelLayout.PATH
+## True while the operator is arranging the panel. See `set_editing()`.
+var editing: bool = false
+## The section the edit keys act on.
+var _edit_key: String = ""
+## Settings whose section is hidden but shown anyway, dimmed, because the panel is
+## being edited: they are on screen, and they are not to be selected or read.
+var _dimmed: Dictionary = {}
+var _edit_banner: Label
 ## The run of columns, kept so the panel can be measured against the window it is
 ## in. See `_fit_window()`.
 var _columns: HBoxContainer
 ## What `_build_row()` connected to each setting, so `relayout()` can take it back
 ## off again. Rebuilding without this leaves every old row still listening, and the
 ## count grows by one panel every time the window changes size.
-var _row_listeners: Array[Callable] = []
+var _row_listeners: Array = []
 ## The viewport the layout is currently measured against. The panel moves between
 ## two of them — the projection and the console — and each has its own size to
 ## follow, so the connection moves with it.
@@ -131,6 +127,7 @@ func build(p_params: Array[VJParam], lang: Lang):
 	_lang = lang
 	_lang.changed.connect(_retranslate)
 	hidden_for_good = Launch.hide_panel
+	layout = PanelLayout.load_from(layout_path)
 
 	_build_columns()
 	_build_help()
@@ -152,15 +149,19 @@ func build(p_params: Array[VJParam], lang: Lang):
 ## was added; this way it cannot.
 func _build_columns():
 	var groups := _group_by_section()
-	var budget := get_viewport().get_visible_rect().size.y - vertical_margin - HELP_HEIGHT
 
 	# A widget per setting, put in place by the setting's own index rather than
 	# appended. The panel no longer builds the settings in the order they were
-	# declared, and `select()` reads these arrays alongside `params`.
+	# declared, and `select()` reads these arrays alongside `params`. A setting in a
+	# hidden section has no widgets at all, and its slot stays null.
+	_name_labels.clear()
+	_sliders.clear()
+	_value_labels.clear()
 	_name_labels.resize(params.size())
 	_sliders.resize(params.size())
 	_value_labels.resize(params.size())
 	_reading_order.clear()
+	_dimmed.clear()
 
 	var columns := HBoxContainer.new()
 	_columns = columns
@@ -177,25 +178,54 @@ func _build_columns():
 	# once but followed — every time the run of columns settles on a new size.
 	columns.resized.connect(_fit_window)
 
-	var play := _ordered(groups, PLAY_SECTIONS, true)
-	var setup_height := _lay_out(_ordered(groups, SETUP_SECTIONS), columns, budget)
+	var plan := _plan(groups, editing)
+	if editing and not _section_in(plan, _edit_key):
+		_edit_key = plan[0][0] if not plan.is_empty() else ""
 
-	# The setup column sets the height of the panel, and the instruments spread
-	# sideways rather than tower over it. Without this cap they make one column as
-	# tall as the screen allows: legal, and it puts the top of the panel level with
-	# the help text while the width beside it stays empty. The panel belongs in the
-	# bottom band of the screen, which is where the hand and the eye both go.
-	#
-	# Floored at the tallest single section, because a column shorter than that
-	# could hold nothing, and a setup list that ever shrank would otherwise drive
-	# the count of columns up without limit.
-	var tallest := 0.0
-	for group in play:
-		tallest = maxf(tallest, _height_of(group))
-	# Anything the two lists do not name goes in with the instruments, at the end. A
-	# section added to the show and forgotten here then reads oddly, which is a bug
-	# somebody reports — where a section quietly dropped from the panel is not.
-	_lay_out(play, columns, clampf(setup_height, tallest, budget))
+	for keys in plan:
+		_column = _new_column(columns)
+		for at in range(keys.size()):
+			_build_section(_group_of(groups, keys[at]), at > 0)
+
+
+## What the layout says goes where, for the window the panel is in now.
+func _plan(groups: Array, with_hidden: bool) -> Array:
+	var infos: Array = []
+	for group in groups:
+		infos.append({"key": group["key"], "rows": group["params"].size()})
+	var budget := get_viewport().get_visible_rect().size.y - vertical_margin - HELP_HEIGHT
+	return layout.plan(infos, budget, with_hidden)
+
+
+## One section: its header, then a row per setting. In edit mode a hidden section is
+## drawn too, dimmed, and its settings stay out of the reading order.
+func _build_section(group: Dictionary, spaced: bool):
+	var key: String = group["key"]
+	var away := layout.hidden.has(key)
+	_build_section_header(key, spaced)
+	for p in group["params"]:
+		var index := params.find(p)
+		_build_row(p, index)
+		if away:
+			_dimmed[index] = true
+			# On screen so that it can be brought back, and out of reach until then.
+			_sliders[index].mouse_filter = Control.MOUSE_FILTER_IGNORE
+		else:
+			_reading_order.append(index)
+
+
+static func _group_of(groups: Array, key: String) -> Dictionary:
+	for group in groups:
+		if group["key"] == key:
+			return group
+	return {}
+
+
+static func _section_in(plan: Array, key: String) -> bool:
+	for column in plan:
+		if column.has(key):
+			return true
+	return false
 
 
 ## Moves the panel to the console window, or brings it back over the projection.
@@ -241,8 +271,8 @@ func relayout():
 	# viewport this panel has already left.
 	if params.is_empty() or get_viewport() == null:
 		return
-	for i in range(_row_listeners.size()):
-		params[i].changed.disconnect(_row_listeners[i])
+	for pair in _row_listeners:
+		pair[0].changed.disconnect(pair[1])
 	_row_listeners.clear()
 	for child in rows.get_children():
 		child.queue_free()
@@ -291,66 +321,6 @@ func _fit_window():
 	# anchored and where the hand looks for it.
 	_columns.pivot_offset = Vector2(0.0, _columns.size.y)
 	_columns.scale = Vector2(factor, factor)
-
-
-## The groups this list names, in the order it names them. With `rest`, everything
-## it does not name follows, in the order the show declared it.
-func _ordered(groups: Array, wanted: Array, rest: bool = false) -> Array:
-	var out: Array = []
-	for key in wanted:
-		for group in groups:
-			if group["key"] == key:
-				out.append(group)
-	for group in groups:
-		if rest and not SETUP_SECTIONS.has(group["key"]) and not wanted.has(group["key"]):
-			out.append(group)
-	return out
-
-
-## Fills as many columns as this run of sections needs, breaking only between them so
-## a section is never split in two. Called once per run, so the setup sections keep a
-## column of their own however tall the instruments grow.
-## Hands back the height of its tallest column, which is what the next run is
-## measured against.
-func _lay_out(groups: Array, columns: HBoxContainer, budget: float) -> float:
-	if groups.is_empty():
-		return 0.0
-
-	var total := 0.0
-	for group in groups:
-		total += _height_of(group)
-
-	# Work out how many columns are needed, then aim for equal columns rather than
-	# filling the first one to the brim. Two lopsided columns read worse than two
-	# balanced ones, and the eye has to travel further to find anything.
-	var wanted := maxi(1, ceili(total / maxf(1.0, budget)))
-	var target := total / wanted
-
-	_column = _new_column(columns)
-	var used := 0.0
-	var remaining := wanted
-	var tallest := 0.0
-
-	for group in groups:
-		var height := _height_of(group)
-		# Break when this section's midpoint would land past the target: the usual
-		# balancing rule, and it keeps a section whole either side of the break.
-		if used > 0.0 and remaining > 1 and used + height * 0.5 > target:
-			_column = _new_column(columns)
-			used = 0.0
-			remaining -= 1
-		_build_section_header(group["key"], used > 0.0)
-		for p in group["params"]:
-			var index := params.find(p)
-			_reading_order.append(index)
-			_build_row(p, index)
-		used += height
-		tallest = maxf(tallest, used)
-	return tallest
-
-
-func _height_of(group: Dictionary) -> float:
-	return HEADER_HEIGHT + group["params"].size() * ROW_HEIGHT
 
 
 func _group_by_section() -> Array:
@@ -402,9 +372,13 @@ func _build_section_header(key: String, spaced: bool):
 			_column.add_child(spacer)
 
 	var header := Label.new()
-	header.text = _lang.text(key)
+	header.text = _header_text(key)
 	header.add_theme_font_size_override("font_size", 13)
 	header.add_theme_color_override("font_color", SECTION_COLOR)
+	if editing:
+		# Clicking a section is the mouse's way of choosing it; the keys do the rest.
+		header.mouse_filter = Control.MOUSE_FILTER_STOP
+		header.gui_input.connect(_on_header_input.bind(key))
 	_column.add_child(header)
 	# The two cells the header does not use. A grid row is three cells wide whether
 	# or not anything is in them.
@@ -412,6 +386,25 @@ func _build_section_header(key: String, spaced: bool):
 	_column.add_child(Control.new())
 	_section_labels.append(header)
 	_section_keys.append(key)
+	_style_header(header, key)
+
+
+func _header_text(key: String) -> String:
+	var text := _lang.text(key)
+	if not editing:
+		return text
+	if layout.hidden.has(key):
+		text += "  " + _lang.text("layout.hidden")
+	return ("▸ " if key == _edit_key else "  ") + text
+
+
+## In edit mode the section being moved is the bright one, and a hidden one is faint.
+func _style_header(header: Label, key: String):
+	var color := SECTION_COLOR
+	if editing and key == _edit_key:
+		color = Color.WHITE
+	header.add_theme_color_override("font_color", color)
+	header.modulate.a = 0.35 if (editing and layout.hidden.has(key)) else 1.0
 
 
 func _build_row(p: VJParam, index: int):
@@ -444,7 +437,7 @@ func _build_row(p: VJParam, index: int):
 
 	var listener := _on_param_changed.bind(index)
 	p.changed.connect(listener)
-	_row_listeners.append(listener)
+	_row_listeners.append([p, listener])
 
 
 func _build_help():
@@ -452,6 +445,11 @@ func _build_help():
 	_status.add_theme_font_size_override("font_size", 13)
 	_status.add_theme_color_override("font_color", SECTION_COLOR)
 	help_box.add_child(_status)
+
+	_edit_banner = Label.new()
+	_edit_banner.add_theme_font_size_override("font_size", 13)
+	_edit_banner.visible = false
+	help_box.add_child(_edit_banner)
 
 	for key in HELP_KEYS:
 		var label := Label.new()
@@ -474,10 +472,100 @@ func set_status(text: String):
 ## far less disruptive than tearing the panel down and rebuilding it.
 func _retranslate():
 	for i in range(_section_labels.size()):
-		_section_labels[i].text = _lang.text(_section_keys[i])
+		_section_labels[i].text = _header_text(_section_keys[i])
+	_refresh_banner()
 	for i in range(_help_labels.size()):
 		_help_labels[i].text = _lang.text(HELP_KEYS[i])
 	select(selected)
+
+
+# --------------------------------------------------------------------------
+# Arranging the panel
+# --------------------------------------------------------------------------
+
+## Enters or leaves the edit mode, in which the sections can be moved, put away and
+## brought back. It is left with the same key, and the arrangement is saved as it goes
+## and again on the way out.
+##
+## Refused on a projection that was told to show no panel: the operator cannot see
+## what they would be moving. On the console there is nothing to refuse.
+func set_editing(on: bool):
+	if on == editing:
+		return
+	if on and hidden_for_good and not on_console:
+		return
+	editing = on
+	if not on:
+		layout.save(layout_path)
+	relayout()
+	_refresh_banner()
+	wake()
+
+
+func _refresh_banner():
+	if _edit_banner == null:
+		return
+	_edit_banner.visible = editing
+	_edit_banner.text = _lang.text("layout.help")
+	_edit_banner.add_theme_color_override("font_color", Color.WHITE)
+
+
+## The keys of the edit mode. Everything else falls through to the show, so the
+## presets and the rest still answer while the panel is being arranged — but not
+## SPACE and R, which the operator has no reason to press here and would fire in
+## front of the room.
+func _handle_edit_key(event: InputEventKey) -> bool:
+	match event.keycode:
+		KEY_UP, KEY_DOWN:
+			var direction := -1 if event.keycode == KEY_UP else 1
+			if event.shift_pressed:
+				_apply_edit(layout.move_vertical(_plan(_group_by_section(), true), _edit_key, direction))
+			else:
+				_step_section(direction)
+		KEY_LEFT, KEY_RIGHT:
+			var direction := -1 if event.keycode == KEY_LEFT else 1
+			_apply_edit(layout.move_horizontal(_plan(_group_by_section(), true), _edit_key, direction))
+		KEY_ENTER, KEY_KP_ENTER, KEY_X:
+			if _edit_key != "":
+				_apply_edit(layout.toggle_hidden(_edit_key))
+		KEY_BACKSPACE, KEY_DELETE:
+			layout.reset()
+			_apply_edit(true)
+		KEY_SPACE, KEY_R:
+			pass
+		_:
+			return false
+	return true
+
+
+func _apply_edit(changed: bool):
+	if not changed:
+		return
+	layout.save(layout_path)
+	relayout()
+
+
+## Previous or next section in the order the panel shows them, wrapping.
+func _step_section(direction: int):
+	var order: Array = []
+	for column in _plan(_group_by_section(), true):
+		order.append_array(column)
+	if order.is_empty():
+		return
+	var at := order.find(_edit_key)
+	_choose_section(order[wrapi(at + direction, 0, order.size())])
+
+
+func _choose_section(key: String):
+	_edit_key = key
+	for i in range(_section_labels.size()):
+		_section_labels[i].text = _header_text(_section_keys[i])
+		_style_header(_section_labels[i], _section_keys[i])
+
+
+func _on_header_input(event: InputEvent, key: String):
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_choose_section(key)
 
 
 # --------------------------------------------------------------------------
@@ -508,11 +596,21 @@ func _step(direction: int) -> int:
 
 func select(index: int):
 	selected = wrapi(index, 0, params.size())
+	# A setting in a hidden section is not on the panel to be selected: land on the
+	# first one that is.
+	if not _reading_order.is_empty() and not _reading_order.has(selected):
+		selected = _reading_order[0]
 	for i in range(params.size()):
+		if _name_labels[i] == null:
+			continue
 		var on := i == selected
+		var alpha := 1.0 if on else 0.5
+		if _dimmed.has(i):
+			on = false
+			alpha = 0.2
 		_name_labels[i].text = ("  ▸ " if on else "     ") + params[i].label()
-		_name_labels[i].modulate = Color.WHITE if on else Color(1, 1, 1, 0.5)
-		_value_labels[i].modulate = Color.WHITE if on else Color(1, 1, 1, 0.5)
+		_name_labels[i].modulate = Color(1, 1, 1, alpha)
+		_value_labels[i].modulate = Color(1, 1, 1, alpha)
 		_value_labels[i].text = params[i].format_value()
 
 
@@ -542,6 +640,8 @@ func set_external_control(active: bool, dim_to: float):
 		return
 	external_control = active
 	for slider in _sliders:
+		if slider == null:
+			continue
 		slider.mouse_filter = Control.MOUSE_FILTER_IGNORE if active else Control.MOUSE_FILTER_STOP
 	if active:
 		_restore_brightness = brightness
@@ -601,15 +701,22 @@ func _input(event: InputEvent):
 func handle_key(event: InputEventKey) -> bool:
 	if not event.pressed:
 		return false
+	if event.keycode == KEY_F6:
+		set_editing(not editing)
+		return true
+	if editing and _handle_edit_key(event):
+		return true
 	match event.keycode:
 		KEY_UP:
 			select(_step(-1))
 		KEY_DOWN:
 			select(_step(1))
 		KEY_LEFT:
-			params[selected].nudge(-1, event.shift_pressed)
+			if _reading_order.has(selected):
+				params[selected].nudge(-1, event.shift_pressed)
 		KEY_RIGHT:
-			params[selected].nudge(1, event.shift_pressed)
+			if _reading_order.has(selected):
+				params[selected].nudge(1, event.shift_pressed)
 		KEY_H:
 			pinned = not pinned
 			wake()
@@ -627,7 +734,7 @@ func handle_key(event: InputEventKey) -> bool:
 # --------------------------------------------------------------------------
 
 func _process(delta: float):
-	if rows.visible and not pinned and not on_console and _fade == null:
+	if rows.visible and not pinned and not editing and not on_console and _fade == null:
 		_idle += delta
 		if _idle >= hide_delay:
 			_fade_out()
