@@ -276,7 +276,13 @@ first column, and the instruments beside them. `F6` lets you arrange it yourself
 | `←` `→` | Move the section to the column on the left or right. Past the last column, it opens a new one |
 | `Enter` | Hide the section, or bring it back |
 | `Backspace` | Go back to the automatic layout, with every section shown |
+| Mouse | Take a section by its name and drag it. Let go where it must go |
 | `F6` | Done |
+
+A bar shows where the section will land, and shows nothing where letting go would change
+nothing. A drag past the last column opens a new column on the right. The right button
+cancels a drag. (`Esc` does not: it quits the show.) A click on a name, without moving,
+only chooses the section. The keys and the mouse do the same thing, and you can mix them.
 
 A hidden section stays on screen while you arrange, dimmed, so that you can bring it
 back. When you are done it is gone from the panel. **Hiding changes the display and

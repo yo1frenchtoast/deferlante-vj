@@ -152,3 +152,163 @@ func _infos() -> Array:
 	for g in panel._group_by_section():
 		out.append({"key": g["key"], "rows": g["params"].size()})
 	return out
+
+
+# --------------------------------------------------------------------------
+# The mouse
+# --------------------------------------------------------------------------
+
+## Where a point of the panel's canvas is in the viewport, which is what an event
+## carries. The two only differ when the window is stretched.
+func _at(canvas_point: Vector2) -> Vector2:
+	var through: Transform2D = panel.rows.get_global_transform_with_canvas() \
+		* panel.rows.get_global_transform().affine_inverse()
+	return through * canvas_point
+
+
+func _button(canvas_point: Vector2, pressed: bool, button := MOUSE_BUTTON_LEFT) -> InputEventMouseButton:
+	var e := InputEventMouseButton.new()
+	e.button_index = button
+	e.pressed = pressed
+	e.position = _at(canvas_point)
+	return e
+
+
+func _move(canvas_point: Vector2) -> InputEventMouseMotion:
+	var e := InputEventMouseMotion.new()
+	e.position = _at(canvas_point)
+	return e
+
+
+func _centre(key: String) -> Vector2:
+	return panel._rect_of(panel._header_of(key)).get_center()
+
+
+## A container puts its children in place on the next frame, so a rectangle read
+## straight after a rebuild is the rectangle of nothing yet.
+func _settle():
+	await show.get_tree().process_frame
+	await show.get_tree().process_frame
+
+
+func _plan() -> Array:
+	return panel._plan(panel._group_by_section(), true)
+
+
+## Press on a section's name, carry it to `to`, let go.
+func _drag(key: String, to: Vector2):
+	var from := _centre(key)
+	panel._input(_button(from, true))
+	panel._input(_move((from + to) * 0.5))
+	panel._input(_move(to))
+	panel._input(_button(to, false))
+
+
+func test_a_click_on_a_name_chooses_the_section_and_moves_nothing():
+	_begin()
+	panel.handle_key(_key(KEY_F6))
+	await _settle()
+	var at := _centre("section.mirror")
+	check(panel._edit_mouse(_button(at, true)), "the press is the panel's")
+	panel._input(_button(at, false))
+	same(panel._edit_key, "section.mirror", "chosen")
+	check(not panel.layout.custom, "and nothing was moved, so the layout is still automatic")
+	_end()
+
+
+func test_dragging_a_name_into_another_column_drops_it_where_it_is_let_go():
+	_begin()
+	panel.handle_key(_key(KEY_F6))
+	await _settle()
+	var before := _plan()
+	check(before.size() >= 3, "the panel has a few columns to move between")
+	var target := _centre("section.lasers") - Vector2(0.0, 6.0)
+	_drag("section.mirror", target)
+	var after := _plan()
+	check(not after[0].has("section.mirror"), "gone from its column")
+	var column: Array = after.filter(func(c): return c.has("section.lasers"))[0]
+	check(column.has("section.mirror"), "in the column it was dropped on")
+	same(column.find("section.mirror"), column.find("section.lasers") - 1, "just above the one it was dropped on")
+	check(panel.layout.custom, "the arrangement is now the operator's")
+	check(FileAccess.file_exists(PATH), "and saved")
+	_end()
+
+
+func test_dropping_past_the_last_column_opens_a_new_one():
+	_begin()
+	panel.handle_key(_key(KEY_F6))
+	await _settle()
+	var count := _plan().size()
+	var last: Rect2 = panel._rect_of(panel._columns.get_children()[-1])
+	_drag("section.mirror", Vector2(last.end.x + 80.0, last.get_center().y))
+	var after := _plan()
+	same(after.size(), count + 1, "one more column")
+	same(after[-1], ["section.mirror"], "holding that section")
+	_end()
+
+
+func test_the_right_button_cancels_a_drag():
+	_begin()
+	panel.handle_key(_key(KEY_F6))
+	await _settle()
+	var before := _plan()
+	var from := _centre("section.mirror")
+	var to := _centre("section.lasers")
+	panel._input(_button(from, true))
+	panel._input(_move(to))
+	check(panel._dragging, "a drag is under way")
+	check(panel._ghost.visible, "the name follows the pointer")
+	panel._input(_button(to, true, MOUSE_BUTTON_RIGHT))
+	check(not panel._dragging and not panel._ghost.visible, "cancelled")
+	panel._input(_button(to, false))
+	same(_plan(), before, "nothing moved")
+	check(not panel.layout.custom, "and the layout is still automatic")
+	_end()
+
+
+func test_a_small_wobble_is_still_a_click():
+	_begin()
+	panel.handle_key(_key(KEY_F6))
+	await _settle()
+	var from := _centre("section.mirror")
+	panel._input(_button(from, true))
+	panel._input(_move(from + Vector2(3.0, 2.0)))
+	check(not panel._dragging, "under the threshold")
+	panel._input(_button(from + Vector2(3.0, 2.0), false))
+	check(not panel.layout.custom, "nothing moved")
+	_end()
+
+
+func test_the_bar_only_shows_where_a_drop_would_change_something():
+	_begin()
+	panel.handle_key(_key(KEY_F6))
+	await _settle()
+	var from := _centre("section.mirror")
+	panel._input(_button(from, true))
+	panel._input(_move(from + Vector2(40.0, 0.0)))
+	panel._input(_move(from + Vector2(0.0, 2.0)))
+	check(not panel._marker.visible, "over its own place: no bar, because nothing would happen")
+	panel._input(_move(_centre("section.lasers") - Vector2(0.0, 6.0)))
+	check(panel._marker.visible, "over another column: a bar")
+	panel._input(_button(from, false))
+	check(not panel._marker.visible and not panel._ghost.visible, "both put away afterwards")
+	_end()
+
+
+func test_the_mouse_does_nothing_outside_the_edit_mode():
+	_begin()
+	await _settle()
+	var at := _centre("section.mirror")
+	panel._input(_button(at, true))
+	check(panel._pressed_key == "", "not editing: the press is not taken")
+	panel._input(_button(at, false))
+	check(not panel.editing and not panel.layout.custom, "nothing changed")
+	_end()
+
+
+func test_a_press_that_is_not_on_a_name_is_left_alone():
+	_begin()
+	panel.handle_key(_key(KEY_F6))
+	await _settle()
+	check(not panel._edit_mouse(_button(Vector2(1800.0, 5.0), true)), "empty space is not the panel's")
+	_end()
