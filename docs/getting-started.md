@@ -104,8 +104,8 @@ adjust the settings.
 | `F11` | Fullscreen |
 | `Esc` | Quit |
 
-The mouse also works on the sliders. **A double click on a slider puts its setting back
-to the value that it was declared with**, the one that the show starts on. It is not the
+The mouse also works on the sliders. **A double click on a slider, or on its name or its
+number, puts its setting back to the value that it was declared with**, the one that the show starts on. It is not the
 value that a preset or the auto-pilot last left. But the keyboard is safer during a
 show, because you do not aim in the dark.
 

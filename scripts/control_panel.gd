@@ -231,6 +231,8 @@ func _build_section(group: Dictionary, spaced: bool):
 			_dimmed[index] = true
 			# On screen so that it can be brought back, and out of reach until then.
 			_sliders[index].mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_name_labels[index].mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_value_labels[index].mouse_filter = Control.MOUSE_FILTER_IGNORE
 		else:
 			_reading_order.append(index)
 
@@ -436,6 +438,10 @@ func _build_row(p: VJParam, index: int):
 	name_label.custom_minimum_size.x = MIN_NAME_WIDTH
 	if p.tint.a > 0.0:
 		name_label.add_theme_color_override("font_color", p.tint)
+	# The name is a place to double click as much as the slider is: a label ignores the
+	# mouse by default, so it has to be told not to.
+	name_label.mouse_filter = _row_mouse_filter()
+	name_label.gui_input.connect(_on_slider_input.bind(index))
 	_column.add_child(name_label)
 
 	var slider := HSlider.new()
@@ -449,11 +455,14 @@ func _build_row(p: VJParam, index: int):
 	slider.focus_mode = Control.FOCUS_NONE
 	slider.value_changed.connect(_on_slider_moved.bind(index))
 	slider.gui_input.connect(_on_slider_input.bind(index))
+	slider.mouse_filter = _row_mouse_filter()
 	_column.add_child(slider)
 
 	var value_label := Label.new()
 	value_label.custom_minimum_size.x = MIN_VALUE_WIDTH
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	value_label.mouse_filter = _row_mouse_filter()
+	value_label.gui_input.connect(_on_slider_input.bind(index))
 	_column.add_child(value_label)
 
 	_name_labels[index] = name_label
@@ -463,6 +472,15 @@ func _build_row(p: VJParam, index: int):
 	var listener := _on_param_changed.bind(index)
 	p.changed.connect(listener)
 	_row_listeners.append([p, listener])
+
+
+## Whether a row takes the mouse. Not while an external surface has the wheel: the panel
+## refuses the mouse then, so a stray touch on a projected panel cannot move anything, and
+## that has to hold for the names and the numbers as much as for the sliders. Asked at the
+## moment a row is built too, because the panel is rebuilt whenever its window changes,
+## and a row built during a hand-over would otherwise come up taking the mouse.
+func _row_mouse_filter() -> int:
+	return Control.MOUSE_FILTER_IGNORE if external_control else Control.MOUSE_FILTER_STOP
 
 
 func _build_help():
@@ -776,17 +794,18 @@ func _end_drag():
 # Keeping values and display in step
 # --------------------------------------------------------------------------
 
-## A double click on a slider puts its setting back to the value it was declared with.
-## The first click of the pair has already moved the slider to where it landed, and
-## this then overrides it, so the double click ends at the default wherever it fell.
-## Taken with `accept_event()` so the slider does not go on to start a drag from it.
+## A double click on a row — its slider, its name or its number — puts the setting back to
+## the value it was declared with. On a slider the first click of the pair has already
+## moved it to where it landed, and this then overrides it, so the double click ends at
+## the default wherever it fell. Taken, so that the slider does not go on to start a drag
+## from it.
 func _on_slider_input(event: InputEvent, index: int):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT \
 			and event.pressed and event.double_click:
 		params[index].reset()
 		select(index)
 		wake()
-		_sliders[index].accept_event()
+		get_viewport().set_input_as_handled()
 
 
 func _on_slider_moved(value: float, index: int):
@@ -856,10 +875,10 @@ func set_external_control(active: bool, dim_to: float):
 	if active == external_control:
 		return
 	external_control = active
-	for slider in _sliders:
-		if slider == null:
-			continue
-		slider.mouse_filter = Control.MOUSE_FILTER_IGNORE if active else Control.MOUSE_FILTER_STOP
+	for row in [_sliders, _name_labels, _value_labels]:
+		for control in row:
+			if control != null:
+				control.mouse_filter = _row_mouse_filter()
 	if active:
 		_restore_brightness = brightness
 		set_brightness(dim_to)

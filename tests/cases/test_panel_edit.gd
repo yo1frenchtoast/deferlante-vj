@@ -496,3 +496,52 @@ func test_a_panel_that_fits_is_not_touched():
 		check(panel._columns.scale.x <= 1.0, "it never grows")
 	panel.vertical_margin = 48.0
 	_end()
+
+
+# --------------------------------------------------------------------------
+# A double click on the name of a setting
+# --------------------------------------------------------------------------
+
+func test_a_double_click_on_the_name_or_the_number_resets_too():
+	_begin()
+	var index: int = panel.params.find(show.registry.find("lasers/width"))
+	var p: VJParam = panel.params[index]
+	for control in [panel._name_labels[index], panel._value_labels[index]]:
+		p.set_value(17.0)
+		control.gui_input.emit(_slider_click(false))
+		same(p.value, 17.0, "a single click on it leaves the setting alone")
+		control.gui_input.emit(_slider_click(true))
+		same(p.value, p.default_value, "a double click sends it back to the declared value")
+		same(panel.selected, index, "and selects the row")
+	_end()
+
+
+func test_the_names_and_numbers_take_the_mouse_only_when_they_can_use_it():
+	_begin()
+	var index: int = panel.params.find(show.registry.find("lasers/width"))
+	same(panel._name_labels[index].mouse_filter, Control.MOUSE_FILTER_STOP, "a name has to be there to be hit")
+	same(panel._value_labels[index].mouse_filter, Control.MOUSE_FILTER_STOP, "and so has a number")
+	panel.set_external_control(true, 0.15)
+	for control in [panel._sliders[index], panel._name_labels[index], panel._value_labels[index]]:
+		same(control.mouse_filter, Control.MOUSE_FILTER_IGNORE, "while a phone or a pad has the wheel, none of the row takes the mouse")
+	panel.relayout()
+	await _settle()
+	same(panel._name_labels[index].mouse_filter, Control.MOUSE_FILTER_IGNORE, "and a row built during the hand-over comes up the same")
+	panel.set_external_control(false, 0.15)
+	for control in [panel._sliders[index], panel._name_labels[index], panel._value_labels[index]]:
+		same(control.mouse_filter, Control.MOUSE_FILTER_STOP, "and they take it back when the wheel is handed back")
+	_end()
+
+
+func test_a_hidden_section_in_the_edit_mode_takes_no_double_click():
+	_begin()
+	panel.handle_key(_key(KEY_F6))
+	await _settle()
+	panel.handle_key(_key(KEY_ENTER))
+	await _settle()
+	var away: Array = panel._dimmed.keys()
+	check(not away.is_empty(), "a section is put away and dimmed")
+	for index in away:
+		same(panel._name_labels[index].mouse_filter, Control.MOUSE_FILTER_IGNORE, "its names are out of reach")
+		same(panel._value_labels[index].mouse_filter, Control.MOUSE_FILTER_IGNORE, "and so are its numbers")
+	_end()
