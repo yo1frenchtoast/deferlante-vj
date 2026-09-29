@@ -7,13 +7,6 @@ extends Node2D
 ## they drive — adding a line to `_build_params()` creates the slider, the keyboard
 ## navigation and the OSC address in one go.
 
-## The one-shot actions every surface offers. Named once: the REST spec advertises
-## these, the Chataigne module is built from them, and `_on_web_action()` wires them.
-const ACTIONS := ["glitch", "randomize", "shuffle"]
-
-## Where OSC addresses and Chataigne callbacks are rooted.
-const OSC_PREFIX := "/deferlante/"
-
 @export var laser_scene: PackedScene = preload("res://scenes/laser.tscn")
 @export var laser_count: int = 3
 ## Where the D key ducks the panel to: readable up close, all but gone on a wall.
@@ -49,7 +42,8 @@ var palette := Palette.new()
 
 var lasers: Array[Line2D] = []
 var registry := ParamRegistry.new()
-var osc_routes: Dictionary = {}
+var actions: ShowActions
+var osc_router: OscRouter
 
 # Current global settings, re-applied to lasers spawned later on.
 var v_speed: float = 1.0
@@ -112,15 +106,15 @@ func _ready():
 		p.apply_current()
 	_initializing = false
 
-	for p in registry.all():
-		osc_routes[OSC_PREFIX + p.slug] = p
-	osc.message_received.connect(_on_osc_message)
+	actions = ShowActions.new(circle, autopilot, presets, _randomize_all)
+	osc_router = OscRouter.new(registry, actions, presets, _external_touch)
+	osc.message_received.connect(osc_router.handle)
 
 	api.registry = registry
 	api.describe = func(p): return _describe(p, Lang.EN)
 	api.presets = presets
-	api.actions = ACTIONS
-	api.fire = fire_action
+	api.actions = ShowActions.LIST
+	api.fire = actions.fire
 	web.api_handler = api.handle
 	web.client_connected.connect(_send_schema)
 	web.set_requested.connect(_on_web_set)
@@ -180,12 +174,12 @@ func _ready():
 		presets.recall(Launch.auto_start, true)
 
 	# Every door the MIDI surface can open is one another surface already had: the
-	# settings by slug, and `fire_action()` for the one-shots. Nothing new to reach
+	# settings by slug, and `ShowActions.fire()` for the one-shots. Nothing new to reach
 	# means the Chataigne module still covers everything a profile can.
 	midi.registry = registry
-	midi.fire = fire_action
+	midi.fire = actions.fire
 	midi.touched = _external_touch
-	midi.actions = ACTIONS
+	midi.actions = ShowActions.LIST
 	midi.preset_count = presets.SLOTS
 	midi.surface_changed.connect(_refresh_status)
 	midi.start()
@@ -703,63 +697,6 @@ func _process(delta: float):
 # OSC (Chataigne, TouchOSC, or any other sender)
 # --------------------------------------------------------------------------
 
-func _on_osc_message(address: String, args: Array):
-	match address:
-		"/deferlante/glitch_now":
-			circle.apply_glitch()
-			return
-		"/deferlante/randomize":
-			_randomize_all()
-			return
-		"/deferlante/shuffle":
-			autopilot.roll_now()
-			return
-	if address.begins_with("/deferlante/shuffle/"):
-		_external_touch()
-		autopilot.roll_now(address.substr("/deferlante/shuffle/".length()))
-		return
-	match address:
-		"/deferlante/preset/recall":
-			if not args.is_empty():
-				presets.recall(int(args[0]))
-			return
-		"/deferlante/preset/save":
-			if not args.is_empty():
-				presets.save_slot(int(args[0]))
-			return
-		"/deferlante/color/rgb":
-			# A colour picker sends its components in one go.
-			if args.size() >= 3:
-				_set_rgb_from_osc(args)
-			return
-
-	if args.is_empty() or not (args[0] is float or args[0] is int):
-		return
-	var value := float(args[0])
-
-	# Normalised form: /deferlante/norm/<address> takes 0..1 and spreads it over
-	# the setting's range. For a MIDI fader or a touch surface that can only send
-	# 0..1 without knowing each setting's bounds.
-	var normalized := address.begins_with("/deferlante/norm/")
-	var key := address.replace("/norm/", "/") if normalized else address
-
-	var p: VJParam = osc_routes.get(key)
-	if p == null:
-		return
-	_external_touch()
-	if normalized:
-		value = lerpf(p.min_value, p.max_value, clampf(value, 0.0, 1.0))
-	p.set_value(value)
-
-
-func _set_rgb_from_osc(args: Array):
-	var names := ["color/red", "color/green", "color/blue"]
-	for i in range(3):
-		var p: VJParam = osc_routes.get("/deferlante/" + names[i])
-		if p:
-			p.set_value(float(args[i]))
-
-
 ## R key: back to random colours, with a fresh draw. This is the way out of manual
 ## mode, the one you find without thinking mid-set.
 func _randomize_all():
@@ -788,9 +725,9 @@ func _send_schema():
 		"params": described,
 		"presets": {"used": presets.used_slots(), "count": presets.SLOTS},
 		# Named rather than spelled out in the page: the buttons are built from this,
-		# so an action added to `ACTIONS` appears on every phone without touching
+		# so an action added to `ShowActions.LIST` appears on every phone without touching
 		# the HTML — the same way a setting does.
-		"actions": ACTIONS.map(func(a): return {
+		"actions": ShowActions.LIST.map(func(a): return {
 			"name": a, "label": lang.text("action." + a)}),
 		"launch": launch_surface.describe(),
 	})
@@ -813,48 +750,13 @@ func _on_web_set(slug: String, value: float):
 
 func _on_web_action(name: String):
 	_external_touch()
-	# Restarting is not a show action: it is not in `ACTIONS`, it is not offered
+	# Restarting is not a show action: it is not in `ShowActions.LIST`, it is not offered
 	# over OSC, and it ends this process. It stays on the surface that has a button
 	# for it, behind a confirmation.
 	if name == "restart":
 		_restart()
 		return
-	fire_action(name)
-
-
-## Fire a one-shot action by name, or answer false if there is no such thing.
-##
-## Every surface routes through here, which is the point: the REST spec advertises
-## `ACTIONS`, and for a while the API itself matched on a hand-written list beside
-## it. They came apart the moment an action was added — the spec offered `shuffle`
-## and the endpoint answered "unknown action". One door now, and it is the same
-## list that describes it.
-func fire_action(name: String) -> bool:
-	if name.begins_with("preset:"):
-		var bits := name.split(":")
-		if bits.size() < 3:
-			return false
-		if bits[1] == "save":
-			presets.save_slot(int(bits[2]))
-		else:
-			presets.recall(int(bits[2]))
-		return true
-
-	# "shuffle:lasers" rolls one section; bare "shuffle" rolls the whole show.
-	if name.begins_with("shuffle:"):
-		autopilot.roll_now(name.substr("shuffle:".length()))
-		return true
-
-	if not ACTIONS.has(name):
-		return false
-	match name:
-		"glitch":
-			circle.apply_glitch()
-		"randomize":
-			_randomize_all()
-		"shuffle":
-			autopilot.roll_now()
-	return true
+	actions.fire(name)
 
 
 ## Start the show again on the start-up settings as they now stand.
@@ -905,9 +807,9 @@ func _dump(path: String):
 	for p in registry.all():
 		described.append(_describe(p, Lang.EN))
 	var payload := {
-		"osc_prefix": OSC_PREFIX,
+		"osc_prefix": OscRouter.PREFIX,
 		"params": described,
-		"actions": ACTIONS,
+		"actions": ShowActions.LIST,
 		"presets": {"count": presets.SLOTS},
 	}
 	var file := FileAccess.open(path, FileAccess.WRITE)

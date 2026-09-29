@@ -27,8 +27,9 @@ func test_every_slug_named_in_the_code_exists():
 	for p in params():
 		known[p.slug] = true
 	var pattern := RegEx.create_from_string('"([a-z]+/[a-z_]+)"')
-	# Two that are not settings: an address with a slash in it, and a MIME type.
-	var not_slugs := ["color/rgb", "application/json"]
+	# Not settings, though they read like slugs: OSC addresses that take arguments,
+	# and a MIME type.
+	var not_slugs := ["color/rgb", "preset/recall", "preset/save", "application/json"]
 	for file in DirAccess.get_files_at("res://scripts/"):
 		if not file.ends_with(".gd") or file == "lang.gd":
 			continue
@@ -125,7 +126,7 @@ func test_the_spec_lists_every_setting_and_action():
 	var text := JSON.stringify(spec)
 	for p in params():
 		check(text.contains(p.slug), "the OpenAPI document omits %s" % p.slug)
-	for a in show.ACTIONS:
+	for a in ShowActions.LIST:
 		check(text.contains(a), "the OpenAPI document omits the action %s" % a)
 
 

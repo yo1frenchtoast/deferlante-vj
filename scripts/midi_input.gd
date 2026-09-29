@@ -15,7 +15,7 @@ extends Node
 ## one dialect that several devices speak, and adding a third controller is a third
 ## file — no GDScript, no export.
 ##
-## Everything lands in `VJParam.set_value()` and `fire_action()`, the same doors the
+## Everything lands in `VJParam.set_value()` and `ShowActions.fire()`, the same doors the
 ## keyboard, OSC and the web surface use.
 
 signal surface_changed
@@ -303,7 +303,7 @@ func _target_exists(control: Dictionary) -> bool:
 
 
 ## Every one-shot a profile may name, built from what the show actually offers
-## rather than from a list kept beside it: `ACTIONS`, one shuffle per section, and
+## rather than from a list kept beside it: `ShowActions.LIST`, one shuffle per section, and
 ## the preset slots that exist.
 func _valid_actions() -> PackedStringArray:
 	var out := PackedStringArray(actions)

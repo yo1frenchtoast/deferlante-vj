@@ -36,11 +36,11 @@ func param(slug: String) -> VJParam:
 
 
 func osc(address: String, args: Array):
-	show._on_osc_message(address, args)
+	show.osc_router.handle(address, args)
 
 
 func fire(name: String) -> bool:
-	return show.fire_action(name)
+	return show.actions.fire(name)
 
 
 func rest(method: String, path: String, body: String = "") -> Dictionary:
