@@ -154,3 +154,15 @@ func test_midi_profiles_only_name_what_the_show_answers_to():
 			var key = "cc%d" % control["cc"] if control.has("cc") else "note%d" % control["note"]
 			check(not claimed.has(key), "%s: %s is claimed twice" % [label, key])
 			claimed[key] = true
+
+
+func test_the_launch_tab_describes_every_row_it_can_change():
+	var described: Dictionary = show.launch_surface.describe()
+	var keys := []
+	for row in described["settings"]:
+		keys.append(row["key"])
+		check(["choice", "bool", "int"].has(row["type"]), "%s has an unknown type" % row["key"])
+	same(keys.size(), 15, "the rows the launcher offers, minus the audio ones")
+	check(keys.has("renderer") and keys.has("osc_port"), "the first and the last are there")
+	# Unknown keys are refused before anything is written to disk.
+	check(not show.launch_surface.apply("nonsense", 1), "an unknown key changes nothing")

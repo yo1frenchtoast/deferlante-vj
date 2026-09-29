@@ -11,9 +11,20 @@ extends Node
 const CASES := "res://tests/cases/"
 
 
+## `--name=value` after the bare `--`, or "" — a flatpak drops the environment, and
+## the arguments are what every way of starting Godot passes on.
+static func arg(name: String) -> String:
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--%s=" % name):
+			return a.substr(name.length() + 3)
+	return ""
+
+
 func _ready():
 	var files := DirAccess.get_files_at(CASES)
 	files.sort()
+	# `tests/run.sh --only=test_osc` runs one file.
+	var only := arg("only")
 	var checks := 0
 	var failed: Array[String] = []
 
@@ -25,7 +36,7 @@ func _ready():
 	await get_tree().process_frame
 
 	for file in files:
-		if not file.ends_with(".gd"):
+		if not file.ends_with(".gd") or (only != "" and file.get_basename() != only):
 			continue
 		var script: GDScript = load(CASES + file)
 		if script == null or not script.can_instantiate():

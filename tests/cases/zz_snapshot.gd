@@ -1,9 +1,9 @@
 extends TestCase
 
-## Not an assertion: a photograph. With `SNAP=<file>` set, writes what the show
+## Not an assertion: a photograph. With `--snap=<file>`, writes what the show
 ## answers on every surface to that file, so that a refactor can be checked by
-## taking one photograph before it and one after, and diffing them. Without the
-## variable it does nothing. The adapters at the top are the only lines that touch
+## taking one photograph before it and one after, and diffing them. Without it
+## this does nothing. The adapters at the top are the only lines that touch
 ## the show's internals.
 
 
@@ -12,7 +12,7 @@ func _all() -> Array:
 
 
 func _launch() -> Dictionary:
-	return show._describe_launch()
+	return show.launch_surface.describe()
 
 
 func _osc(address: String, args: Array):
@@ -24,9 +24,13 @@ func _fire(name: String) -> bool:
 
 
 func test_snapshot():
-	var path := OS.get_environment("SNAP")
+	var path: String = load("res://tests/run.gd").arg("snap")
 	if path == "":
 		return
+	# The show draws from the one generator, so a fixed seed makes two runs of the
+	# same code give the same photograph. Run it alone (`--only=zz_snapshot`): the other
+	# cases leave the settings wherever they last put them.
+	seed(1234)
 	var out := {}
 	var listed := []
 	for p in _all():

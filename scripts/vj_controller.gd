@@ -43,6 +43,7 @@ const OSC_PREFIX := "/deferlante/"
 @onready var console: Node = $Console
 
 var lang := Lang.new()
+var launch_surface: LaunchSurface
 ## Shared colour state, held by reference by every effect.
 var palette := Palette.new()
 
@@ -92,6 +93,7 @@ func _ready():
 	# once; it is a decision about who is standing in front of the machine, made
 	# before the show rather than during it.
 	lang.set_language(Launch.language)
+	launch_surface = LaunchSurface.new(lang, presets, console)
 	_build_params()
 	for p in params:
 		p.use_language(lang)
@@ -799,123 +801,16 @@ func _send_schema():
 		# the HTML — the same way a setting does.
 		"actions": ACTIONS.map(func(a): return {
 			"name": a, "label": lang.text("action." + a)}),
-		"launch": _describe_launch(),
+		"launch": launch_surface.describe(),
 	})
 
 
-## The start-up settings, described the same way the live ones are, so the page can
-## build its tab from this and never drift from what Godot holds.
-##
-## These are the launcher's rows minus the audio ones. Which output the show listens
-## to is bound when capture opens and cannot be moved afterwards — the very reason
-## it lives in the launcher — and answering it honestly needs a live meter and a
-## subprocess per candidate. A phone across the room is the wrong place to ask.
-##
-## Every one of these takes effect on the next process, not this one, which is what
-## the restart button is for. `apply_runtime()` could reach some of them live, but a
-## tab where three rows bite immediately and six wait would be worse than one where
-## none do.
-func _describe_launch() -> Dictionary:
-	var resolutions: Array = [lang.text("launch.resolution.native")]
-	for i in range(1, Launch.RESOLUTIONS.size()):
-		var r: Vector2i = Launch.RESOLUTIONS[i]
-		resolutions.append("%d × %d" % [r.x, r.y])
-
-	var rates: Array = [lang.text("launch.maxfps.free")]
-	for i in range(1, Launch.MAX_FPS.size()):
-		rates.append(str(Launch.MAX_FPS[i]))
-
-	var samples: Array = [lang.text("launch.msaa.off")]
-	for i in range(1, Launch.MSAA_SAMPLES.size()):
-		samples.append("%d×" % Launch.MSAA_SAMPLES[i])
-
-	# The same list the launcher offers, and the same re-check: an address saved
-	# last night may not be one this machine still holds.
-	var addresses: Array = [lang.text("launch.access.local")]
-	for a in Launch.local_addresses():
-		addresses.append(a)
-
-	return {
-		"tab": lang.text("launch.tab"),
-		"restart": lang.text("launch.restart.now"),
-		"applies": lang.text("launch.restart.applies"),
-		"web_warning": lang.text("launch.restart.web"),
-		"failed": lang.text("launch.restart.failed"),
-		# Asked before the button is drawn, not after it is pressed: a control that
-		# can never work is worse than a sentence saying so.
-		"can_restart": Launch.can_relaunch(),
-		"settings": [
-			_launch_choice("language", "launch.language", Lang.LANGUAGES, Lang.choice_of(Launch.language)),
-			_launch_choice("renderer", "launch.renderer", [
-				lang.text("launch.renderer.compat"), lang.text("launch.renderer.forward"),
-			], 1 if Launch.rendering_method == "forward_plus" else 0),
-			# Offered against the renderer *chosen*, not the one running: the next
-			# process is the one that will honour it, and it is the one being
-			# configured here.
-			_launch_choice("msaa", "launch.msaa", samples,
-				maxi(0, Launch.MSAA_SAMPLES.find(Launch.msaa)),
-				"" if Launch.msaa_available() else lang.text("launch.msaa.unavailable")),
-			_launch_choice("resolution", "launch.resolution", resolutions,
-				maxi(0, Launch.RESOLUTIONS.find(Launch.resolution))),
-			_launch_toggle("fullscreen", "launch.fullscreen", Launch.fullscreen),
-			_launch_toggle("vsync", "launch.vsync", Launch.vsync),
-			_launch_choice("max_fps", "launch.maxfps", rates,
-				maxi(0, Launch.MAX_FPS.find(Launch.max_fps))),
-			_launch_toggle("spout_enabled", "launch.spout", Launch.spout_enabled,
-				lang.text("launch.spout.on")),
-			_launch_toggle("hide_panel", "launch.panel", Launch.hide_panel,
-				lang.text("launch.panel.hidden")),
-			# Offered with a note rather than left out where the platform has one
-			# window only: a row that quietly vanishes on the phone is a row nobody
-			# can find out about. The note is the page's way of saying "this one
-			# cannot bite", which is why the hint the launcher prints is not passed
-			# on here — a working row would come out looking like a dead one.
-			_launch_toggle("console_window", "launch.console", Launch.console_window,
-				lang.text("launch.console.on"),
-				"" if console.available() else lang.text("launch.console.unavailable")),
-			_launch_choice("auto_start", "launch.autostart", _auto_start_choices(),
-				clampi(Launch.auto_start, 0, presets.SLOTS),
-				lang.text("launch.autostart.hint")),
-			_launch_choice("web_bind", "launch.access", addresses,
-				maxi(0, addresses.find(Launch.web_bind))),
-			_launch_port("web_port", "launch.webport", Launch.web_port),
-			_launch_choice("osc_bind", "launch.oscaccess", addresses,
-				maxi(0, addresses.find(Launch.osc_bind))),
-			_launch_port("osc_port", "launch.oscport", Launch.osc_port),
-		],
-	}
-
-
-## The same nine rows the launcher offers, each saying whether it holds anything.
-## Read live rather than from disk: this show has the slots in memory, and a slot
-## saved from a phone a moment ago must appear here without a restart.
-func _auto_start_choices() -> Array:
-	var used: Array = presets.used_slots()
-	var choices: Array = [lang.text("launch.autostart.none")]
-	for i in range(1, presets.SLOTS + 1):
-		var key := "launch.autostart.slot" if used.has(i) else "launch.autostart.empty"
-		choices.append(lang.text(key) % i)
-	return choices
-
-
-func _launch_choice(key: String, label_key: String, choices: Array, index: int,
-		note: String = "") -> Dictionary:
-	return {"key": key, "label": lang.text(label_key), "type": "choice",
-		"choices": choices, "value": index, "note": note}
-
-
-## `caption` is the words beside the box rather than a warning under the row: the
-## launcher writes PANNEAU ☐ masqué pour tout le set, and a bare switch labelled
-## only PANNEAU would not say which way is which.
-func _launch_toggle(key: String, label_key: String, on: bool,
-		caption: String = "", note: String = "") -> Dictionary:
-	return {"key": key, "label": lang.text(label_key), "type": "bool",
-		"value": on, "caption": caption, "note": note}
-
-
-func _launch_port(key: String, label_key: String, port: int) -> Dictionary:
-	return {"key": key, "label": lang.text(label_key), "type": "int",
-		"value": port, "min": 1024, "max": 65535, "note": ""}
+func _on_web_launch_set(key: String, value: Variant):
+	_external_touch()
+	# A row can move another — Compatibility empties the antialiasing beside it — and
+	# two phones on one show must not disagree about what the next start will be.
+	if launch_surface.apply(key, value):
+		_send_schema()
 
 
 func _on_web_set(slug: String, value: float):
@@ -986,71 +881,6 @@ func _restart():
 		push_warning("Web: this platform will not start a second process")
 		web.broadcast({"type": "restart_failed"})
 
-
-## A start-up setting, changed from the web surface.
-##
-## Written straight to disk. The tab is a way to set up the next start from across
-## the room — often from the sofa, minutes before the room fills — and a value that
-## only lived until the process ended would be exactly the wrong promise.
-##
-## Nothing here touches the running show. Every one of these is a setting Godot
-## fixes before a script runs, or binds before anything can listen; that is the
-## reason they are start-up settings at all.
-func _on_web_launch_set(key: String, value: Variant):
-	_external_touch()
-	var index := int(value) if typeof(value) != TYPE_BOOL else 0
-	match key:
-		"language":
-			Launch.language = Lang.value_of(index)
-		"renderer":
-			Launch.rendering_method = "forward_plus" if index == 1 else "gl_compatibility"
-			# Antialiasing only exists under Forward+, and a value left behind by
-			# the other renderer would be applied the moment one switched back.
-			if not Launch.msaa_available():
-				Launch.msaa = 0
-		"msaa":
-			Launch.msaa = Launch.MSAA_SAMPLES[clampi(index, 0, Launch.MSAA_SAMPLES.size() - 1)]
-		"resolution":
-			Launch.resolution = Launch.RESOLUTIONS[clampi(index, 0, Launch.RESOLUTIONS.size() - 1)]
-		"fullscreen":
-			Launch.fullscreen = bool(value)
-		"vsync":
-			Launch.vsync = bool(value)
-		"max_fps":
-			Launch.max_fps = Launch.MAX_FPS[clampi(index, 0, Launch.MAX_FPS.size() - 1)]
-		"spout_enabled":
-			Launch.spout_enabled = bool(value)
-		"hide_panel":
-			Launch.hide_panel = bool(value)
-		"console_window":
-			Launch.console_window = bool(value)
-		"auto_start":
-			Launch.auto_start = clampi(index, 0, presets.SLOTS)
-		"web_bind":
-			Launch.web_bind = _launch_address(index)
-		"osc_bind":
-			Launch.osc_bind = _launch_address(index)
-		"web_port":
-			Launch.web_port = clampi(index, 1024, 65535)
-		"osc_port":
-			Launch.osc_port = clampi(index, 1024, 65535)
-		_:
-			return
-	Launch.save()
-	# Two phones on the same show must not disagree about what the next start will
-	# be, and one row can move another: picking Compatibility empties the
-	# antialiasing beside it.
-	_send_schema()
-
-
-## The address behind an index in the list `_describe_launch()` offered. Out of
-## range reads as loopback rather than as the nearest guess: a stale index should
-## narrow what can reach the show, never widen it.
-func _launch_address(index: int) -> String:
-	if index <= 0:
-		return Launch.LOCAL
-	var addresses := Launch.local_addresses()
-	return addresses[index - 1] if index - 1 < addresses.size() else Launch.LOCAL
 
 
 # --------------------------------------------------------------------------
