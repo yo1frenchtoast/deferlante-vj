@@ -172,6 +172,38 @@ others (`use_palette`).
 To make it react to sound, add an entry to `AudioModulation._build()`: a slug, a band
 (`BASS` / `MID` / `TREBLE`), the amount that governs it, a weight, and a setter.
 
+## Releases
+
+A push to `main` builds and checks. A **tag** that starts with `v` builds the three
+exports again and attaches them to a GitHub release. So a release is: change the version,
+push, tag, write the notes.
+
+1. In `export_presets.cfg`, in the Android preset, set `version/name` and `version/code`.
+2. Commit it as `Call the next build 1.10.1` and push `main`.
+3. Tag it, `git tag v1.10.1`, and push the tag. Watch the run: the release appears when it
+   ends, with the four files.
+4. Write the notes on the release, with the title `v1.10.1`, the same as the tag.
+
+### Minor and patch versions
+
+- **A minor version (`1.11`)** is for a new feature, or anything that changes what an
+  operator sees or has to learn again. Automatic layouts are the example: if the panel
+  does not look the same when you install it, it is a minor version, and the notes say so
+  in their first lines.
+- **A patch version (`1.10.1`)** is for a fix, or for a small addition that stands on its
+  own and changes nothing that was already there: a new gesture, a corrected behaviour. A
+  show saved with the version before it comes up the same. You can install it over the top
+  without reading anything first, and the notes say only what changed. It can come out
+  alone, the day it is needed, so there is no reason to keep a fix waiting for a feature.
+- **Not every commit is a release.** A change to the tests, the documentation or the
+  tooling alone does not need one. A patch is worth cutting when somebody who downloads the
+  release gets something out of it.
+
+The Android `version/code` has to grow with every release, and that is all it has to do.
+It has been `major × 100 + minor × 10 + patch` (`1.4.1` is 141, `1.10` is 200). Add **1**
+for a patch and **10** for a minor version, and round up to the next hundred for a major
+one, so that it never goes down.
+
 ## Tests
 
 ```
