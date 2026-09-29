@@ -190,6 +190,14 @@ func _build_columns():
 	# until it has been drawn (see `_new_column()`). Thus the fit is not computed
 	# once but followed — every time the run of columns settles on a new size.
 	columns.resized.connect(_fit_window)
+	# The scale has to be put back after every sort. A container fits each child into its
+	# rectangle and, doing so, resets that child's scale to 1 — so a scale set once was
+	# undone by the next sort, and how long it lived was a matter of timing. Measured
+	# with four columns: the panel came up 2062 px wide in a 1920 window and stayed that
+	# wide, with its last column off the right edge. `resized` alone cannot catch this,
+	# because the run of columns does not change size when its scale is taken away.
+	if not rows.sort_children.is_connected(_fit_window):
+		rows.sort_children.connect(_fit_window)
 
 	var plan := _plan(groups, editing)
 	if editing and not _section_in(plan, _edit_key):

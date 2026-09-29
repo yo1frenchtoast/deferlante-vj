@@ -456,3 +456,43 @@ func test_only_a_left_double_click_resets():
 	same(p.value, 17.0, "the right button, a release and a movement leave it alone")
 	p.reset()
 	_end()
+
+
+# --------------------------------------------------------------------------
+# Fitting the window
+# --------------------------------------------------------------------------
+
+func test_the_panel_stays_scaled_down_after_the_container_sorts_again():
+	_begin()
+	# A window far too short for the panel, so the fit has something to do.
+	panel.vertical_margin = 1500.0
+	panel.relayout()
+	await _settle()
+	var columns: Control = panel._columns
+	check(columns.scale.x < 0.95, "shrunk to fit")
+	var fitted := columns.scale.x
+	# A container resets the scale of its children each time it sorts them. Whatever
+	# sorts it, the fit has to be put back, or the panel springs back to full size and
+	# runs off the edge of the screen.
+	panel.rows.queue_sort()
+	await _settle()
+	panel.rows.queue_sort()
+	await _settle()
+	check(is_equal_approx(columns.scale.x, fitted), "still %.2f after two more sorts, not back to 1" % fitted)
+	panel.vertical_margin = 48.0
+	_end()
+
+
+func test_a_panel_that_fits_is_not_touched():
+	_begin()
+	panel.vertical_margin = 0.0
+	panel.relayout()
+	await _settle()
+	var needed: Vector2 = panel._columns.get_combined_minimum_size()
+	var room: Vector2 = panel.get_viewport().get_visible_rect().size
+	if needed.x <= room.x - 48.0 and needed.y <= room.y:
+		same(panel._columns.scale, Vector2.ONE, "it only ever shrinks: a fitting panel keeps its size")
+	else:
+		check(panel._columns.scale.x <= 1.0, "it never grows")
+	panel.vertical_margin = 48.0
+	_end()
