@@ -24,6 +24,7 @@ extends Node2D
 @onready var warp: Node2D = $ShowLayer/ShowViewportContainer/ShowViewport/Hyperspace
 @onready var kaleido: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Kaleidoscope
 @onready var blur: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/MotionBlur
+@onready var aberration: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Aberration
 @onready var panel: CanvasLayer = $ControlPanel
 @onready var osc: Node = $OscServer
 @onready var web: Node = $WebServer
@@ -210,6 +211,17 @@ func _build_params():
 	# them. A second slider for the strength of the ghost would be a second way of
 	# saying the same thing, out of step with the first.
 	_fn("blur/amount", 0, 1, 0.02, 0.0, blur.set_amount)
+
+	# The section holds every full-screen effect, and started as the motion blur
+	# alone. Its key, `section.blur`, and TRAIL's address, `blur/amount`, kept their
+	# names: one is written into saved panel layouts and the other is mapped in
+	# consoles. What the operator reads is EFFECTS. The effects that came after it
+	# live under `fx/`, so that one shuffle can roll them together.
+	#
+	# Off by default: a show saved before these existed comes up unchanged.
+	_fn("fx/aberration", 0, 1, 0.02, 0.0, aberration.set_amount)
+	_fn("fx/aberration_radial", 0, 1, 0.02, 0.0, aberration.set_radial)
+	_fn("fx/aberration_angle", 0, 1, 0.01, 0.0, aberration.set_angle)
 
 	_section("section.lasers")
 	_fn("lasers/count", 0, 40, 1, laser_count, _set_laser_count)

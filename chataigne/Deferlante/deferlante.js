@@ -69,6 +69,18 @@ function blurAmount(value) {
 	local.send("/deferlante/blur/amount", value);
 }
 
+function fxAberration(value) {
+	local.send("/deferlante/fx/aberration", value);
+}
+
+function fxAberration_radial(value) {
+	local.send("/deferlante/fx/aberration_radial", value);
+}
+
+function fxAberration_angle(value) {
+	local.send("/deferlante/fx/aberration_angle", value);
+}
+
 function lasersCount(value) {
 	local.send("/deferlante/lasers/count", value);
 }
@@ -260,6 +272,10 @@ function shuffleMirror(value) {
 
 function shuffleBlur(value) {
 	local.send("/deferlante/shuffle/blur");
+}
+
+function shuffleFx(value) {
+	local.send("/deferlante/shuffle/fx");
 }
 
 function shuffleLasers(value) {

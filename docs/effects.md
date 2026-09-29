@@ -256,6 +256,44 @@ turning mirror then walks the trail around the wedges, which reads as a spiral. 
 before it surprises you. It cannot run away: the pass only samples and dims, thus it
 creates no light, and the floor guarantees that each frame's leftovers reach black.
 
+## Chromatic aberration
+
+`ABERRATION` reads each colour channel of the frame from a slightly different place.
+Green stays where it is, red moves one way and blue the other. Every edge then grows a
+red fringe on one side and a blue one on the other, which is what a cheap lens does,
+because glass bends each wavelength by a little more or less than the next. A stroke
+keeps its centre and gains two coloured edges. Moving only one channel would drag the
+whole picture to a side instead.
+
+The strength is a distance: 32 pixels on a 1080p screen at the top of the slider. The
+top of a slider should be too much. The middle is where the set lives. At **0** the pass
+is switched off, not left to run as an identity transform.
+
+Two more settings say which way the channels move.
+
+- `ABERRATION LENS` at **0** moves them the same way everywhere, along `ABERRATION
+  ANGLE`. At **1** they move along the line from the centre, and by more the further
+  out. The middle of the picture stays clean and the edges carry the fringe, like a
+  real lens. Between the two, the direction is a mix.
+- `ABERRATION ANGLE` is once round the dial. It does nothing at full `LENS`, where the
+  direction comes from the position on screen.
+
+The pass is drawn **above** the mirror and below the panel. The fringes therefore
+follow the folded shapes, and the sliders are not part of the picture. Under a turning
+mirror the fringes turn with the wedges, and that reads as one lens looking at a
+kaleidoscope, which is the right picture. With the trail on, the ghost that it holds is
+already fringed, and it is fringed again on every frame it lives. The older the tail,
+the further its colours have parted, which is a smear that the aberration alone does not
+make. At the top of both sliders it is long.
+
+At the edge of the frame a channel that is read from beyond it gives black, and the
+fringe simply stops there. Reading the pixel at the edge instead would smear it out
+into a solid block, which is what it did at first: strokes that run into a corner drew
+squares of one colour.
+
+It is off by default, so a show saved before it existed comes up unchanged. It also
+takes part in `SHUFFLE` like every other setting, under the section `fx`.
+
 ## Scanlines
 
 `PARALLEL` does not tune the scatter. It crossfades between two different behaviors.

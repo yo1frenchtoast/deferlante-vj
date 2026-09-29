@@ -126,7 +126,7 @@ scroll away long before you need them.
 
 The panel has nine sections. It groups them by **when you touch a setting**, not by
 what the setting drives. The five that you settle before a set come first: GLOBAL,
-COLOR, MIRROR, MOTION BLUR and AUDIO. The four instruments follow: SPOTLIGHT, LASERS,
+COLOR, MIRROR, EFFECTS and AUDIO. The four instruments follow: SPOTLIGHT, LASERS,
 SPHERE and HYPERSPACE. `↑` and `↓` walk the panel in that order. The Chataigne module
 carries the same nine sections as menus, in the order that the code declares them. The labels that
 follow are the English ones.
@@ -156,10 +156,17 @@ follow are the English ones.
 | `SEGMENTS` | 2 – 16 | Number of wedges. It starts at 5. 6 gives the classic star. |
 | `ROTATION` | -1 – 1 | Turns the mirrors. ← left, → right. |
 
-### Motion blur
+### Effects
+This section held only the motion blur, and was called MOTION BLUR. It holds the effects
+that work on the whole picture. Every one of them is **off at 0**, and a pass that is off
+costs nothing.
+
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `TRAIL` | 0 – 1 | How long the image stays on screen behind itself. **0 is off**, and the show does not pay for the pass. 1 holds a trail for half a second. See [motion blur](effects.md#motion-blur). |
+| `TRAIL` | 0 – 1 | How long the image stays on screen behind itself. 1 holds a trail for half a second. See [motion blur](effects.md#motion-blur). |
+| `ABERRATION` | 0 – 1 | Splits the colour channels at the edges: a red fringe on one side, a blue one on the other. See [chromatic aberration](effects.md#chromatic-aberration). |
+| `ABERRATION LENS` | 0 – 1 | 0 moves the channels the same way everywhere. 1 spreads them from the centre, and the middle stays clean. |
+| `ABERRATION ANGLE` | 0 – 1 | Which way the channels move apart, once round the dial. No effect at full `LENS`. |
 
 ### Audio
 The rows run in the order that the ear takes the bands, low to high. That is also the

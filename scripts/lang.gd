@@ -57,6 +57,9 @@ const LABELS := {
 	"mirror/rotation": ["ROTATION", "ROTATION"],
 
 	"blur/amount": ["TRAIL", "RÉMANENCE"],
+	"fx/aberration": ["ABERRATION", "ABERRATION"],
+	"fx/aberration_radial": ["ABERRATION LENS", "ABERRATION OPTIQUE"],
+	"fx/aberration_angle": ["ABERRATION ANGLE", "ABERRATION ANGLE"],
 
 	"lasers/count": ["COUNT", "NOMBRE"],
 	"lasers/width": ["WIDTH", "ÉPAISSEUR"],
@@ -109,7 +112,7 @@ const TEXTS := {
 	"section.global": ["GLOBAL", "GLOBAL"],
 	"section.color": ["COLOR", "COULEUR"],
 	"section.mirror": ["MIRROR", "MIROIR"],
-	"section.blur": ["MOTION BLUR", "FLOU CINÉTIQUE"],
+	"section.blur": ["EFFECTS", "EFFETS"],
 	"section.lasers": ["LASERS", "LASERS"],
 	"section.spot": ["SPOTLIGHT", "POURSUITE"],
 	"section.audio": ["AUDIO", "SON"],
@@ -310,6 +313,9 @@ const HINTS := {
 	"mirror/segments": ["Number of mirror wedges. 6 gives the classic star.", "Nombre de quartiers du miroir. 6 donne l'étoile classique."],
 	"mirror/rotation": ["Turns the mirrors. ← left, → right. CHAOS unsettles the pace.", "Fait tourner les miroirs. ← gauche, → droite. Le CHAOS en dérègle l'allure."],
 	"blur/amount": ["Keeps the previous frames under the new one: what moves smears, what stands still does not. 0 switches the pass off.", "Garde les images précédentes sous la nouvelle : ce qui bouge file, ce qui reste net reste net. 0 coupe la passe."],
+	"fx/aberration": ["Splits the colour channels at the edges, like a cheap lens: a red fringe on one side, a blue one on the other. 0 switches the pass off.", "Sépare les canaux de couleur sur les bords, comme une optique bon marché : une frange rouge d'un côté, bleue de l'autre. 0 coupe la passe."],
+	"fx/aberration_radial": ["From 0, the channels move the same way everywhere, along the angle, to 1, where they spread out from the centre and the middle stays clean.", "De 0, où les canaux bougent partout dans le même sens, selon l'angle, à 1, où ils s'écartent depuis le centre et le milieu reste net."],
+	"fx/aberration_angle": ["Which way the channels move apart, once round the dial. It does nothing at full LENS, where they move from the centre.", "Dans quel sens les canaux s'écartent, un tour de cadran. Sans effet à fond sur OPTIQUE, où ils partent du centre."],
 
 	"lasers/count": ["Number of strokes. The show adds and removes them live.", "Nombre de traits. Ajoutés et retirés en direct."],
 	"lasers/width": ["Stroke width.", "Épaisseur des traits."],

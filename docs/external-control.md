@@ -312,7 +312,10 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/mirror/effect` | 0 – 1 | 0 | MIRROR › EFFECT |
 | `/deferlante/mirror/segments` | 2 – 16 | 5 | MIRROR › SEGMENTS |
 | `/deferlante/mirror/rotation` | -1 – 1 | 0 | MIRROR › ROTATION |
-| `/deferlante/blur/amount` | 0 – 1 | 0 | MOTION BLUR › TRAIL |
+| `/deferlante/blur/amount` | 0 – 1 | 0 | EFFECTS › TRAIL |
+| `/deferlante/fx/aberration` | 0 – 1 | 0 | EFFECTS › ABERRATION |
+| `/deferlante/fx/aberration_radial` | 0 – 1 | 0 | EFFECTS › ABERRATION LENS |
+| `/deferlante/fx/aberration_angle` | 0 – 1 | 0 | EFFECTS › ABERRATION ANGLE |
 | `/deferlante/lasers/count` | 0 – 40 | 3 | LASERS › COUNT |
 | `/deferlante/lasers/width` | 1 – 24 | 5 | LASERS › WIDTH |
 | `/deferlante/lasers/length` | 0.1 – 2 | 1 | LASERS › LENGTH |

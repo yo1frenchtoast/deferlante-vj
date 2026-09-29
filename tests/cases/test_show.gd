@@ -175,3 +175,48 @@ func test_the_launch_tab_describes_every_row_it_can_change():
 func test_every_action_has_a_label_on_the_page():
 	for a in ShowActions.LIST:
 		check(Lang.TEXTS.has("action." + a), "the action %s has no label (action.%s)" % [a, a])
+
+
+func test_the_effects_section_reads_effects_and_keeps_its_old_key_and_addresses():
+	same(Lang.TEXTS["section.blur"], ["EFFECTS", "EFFETS"], "what the operator reads")
+	check(PanelLayout.SETUP_SECTIONS.has("section.blur"), "the key is what saved layouts hold, so it stays")
+	check(param("blur/amount") != null, "and TRAIL keeps the address a console is mapped to")
+	same(param("blur/amount").section, "section.blur", "in the same section as the new ones")
+
+
+func test_the_aberration_is_off_by_default_and_costs_nothing_until_asked():
+	for slug in ["fx/aberration", "fx/aberration_radial", "fx/aberration_angle"]:
+		check(param(slug) != null, "%s is declared" % slug)
+		same(param(slug).value, 0.0, "%s starts at 0, so a show saved before it comes up unchanged" % slug)
+		same(param(slug).section, "section.blur", "%s sits in the effects section" % slug)
+	check(not show.aberration.rect.visible, "the pass is switched off at 0")
+	param("fx/aberration").set_value(0.5)
+	check(show.aberration.rect.visible, "and on above it")
+	param("fx/aberration").set_value(0.0)
+	check(not show.aberration.rect.visible, "and off again")
+
+
+func test_the_aberration_settings_reach_the_shader():
+	var material: ShaderMaterial = show.aberration.rect.material
+	param("fx/aberration").set_value(1.0)
+	param("fx/aberration_radial").set_value(0.5)
+	param("fx/aberration_angle").set_value(0.25)
+	same(material.get_shader_parameter("shift"), show.aberration.MAX_SHIFT, "the top of the slider is the most it moves")
+	same(material.get_shader_parameter("radial"), 0.5, "the lens mix")
+	check(is_equal_approx(material.get_shader_parameter("angle"), PI * 0.5), "a quarter turn, in radians")
+	param("fx/aberration").set_value(0.5)
+	check(is_equal_approx(material.get_shader_parameter("shift"), show.aberration.MAX_SHIFT * 0.5), "half way is half the distance")
+	param("fx/aberration").set_value(0.0)
+	param("fx/aberration_radial").set_value(0.0)
+	param("fx/aberration_angle").set_value(0.0)
+
+
+func test_the_chataigne_module_keeps_the_names_that_are_in_people_s_files():
+	var module: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://chataigne/Deferlante/module.json"))
+	var commands: Dictionary = module["commands"]
+	check(commands.has("Motion Blur Trail"), "TRAIL is still 'Motion Blur Trail' on the console")
+	if commands.has("Motion Blur Trail"):
+		same(commands["Motion Blur Trail"]["callback"], "blurAmount", "and calls the same function")
+		same(commands["Motion Blur Trail"]["menu"], "Motion Blur", "in the same menu")
+	check(commands.has("Shuffle Motion Blur"), "and so is its shuffle")
+	check(commands.has("Effects Aberration"), "the new effect has its own")

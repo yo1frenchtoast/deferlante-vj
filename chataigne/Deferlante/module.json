@@ -249,6 +249,48 @@
         }
       }
     },
+    "Effects Aberration": {
+      "menu": "Effects",
+      "callback": "fxAberration",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Effects Aberration Lens": {
+      "menu": "Effects",
+      "callback": "fxAberration_radial",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Effects Aberration Angle": {
+      "menu": "Effects",
+      "callback": "fxAberration_angle",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Lasers Count": {
       "menu": "Lasers",
       "callback": "lasersCount",
@@ -901,6 +943,17 @@
     "Shuffle Motion Blur": {
       "menu": "Shuffle",
       "callback": "shuffleBlur",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Shuffle Effects": {
+      "menu": "Shuffle",
+      "callback": "shuffleFx",
       "parameters": {
         "Trigger": {
           "type": "Boolean",
