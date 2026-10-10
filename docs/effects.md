@@ -98,6 +98,28 @@ a glass sphere, which is busier but stranger.
 Measured cost: **+0.32 ms** at 40 circles, **+0.77 ms** at 80. The show neither
 computes nor draws the circles past the horizon.
 
+## Curves
+
+`CURVES` draws cubic Bézier curves that bounce around the screen, like the old Windows
+screensaver. Each curve is four control points. Each point is a ball with its own
+velocity that bounces off the edges of the picture, and the curve is whatever the four
+balls describe at that moment. It folds, unfolds and loops with no shape being animated.
+
+**The effect keeps no history.** The ghost of the old screensaver, the same curve
+repeated a little further back, is the job of `TRAIL`. That setting echoes everything
+in the picture, in one pass, and costs the same however many curves there are. Raise
+`TRAIL` to get the ghost. At 0, each curve is drawn once, where it is now.
+
+`LENGTH` is how much of each curve is drawn, taken from the middle. At 1 it is the whole
+curve. Lower, it is a stretch of it that still follows every fold of the four points:
+a window on the curve, not a smaller curve. Above 1 the curve is carried on past its
+end points, along the line it already draws, and reaches for the edges of the picture.
+
+`COLOUR DRIFT` slides each curve through the palette, one turn of the wheel in
+`10 / DRIFT` seconds. At 0 each curve keeps the colour it was born with. The global
+`SPEED` scales the pace of the points and reverses them at a negative value. The global
+`CHAOS` lets each point accelerate and hang back on its own.
+
 ## Hyperspace
 
 `STARS` fills a tube ahead of the eye and flies down it. Each star holds a fixed
@@ -445,6 +467,8 @@ What it does, effect by effect:
 - **Hyperspace.** The vanishing point wanders, and each star takes its own pace. This
   is what stops the field reading as a screensaver: a ship on a heading rather than a
   fixed tunnel.
+- **Curves.** Each control point accelerates and hangs back at its own pace, so the
+  curve stops moving as one body.
 - **Mirror.** The `ROTATION` of the fold no longer holds its pace. It speeds up, slows
   down, and at 1 it goes through a standstill and turns back the other way. Chaos only
   unsettles a turn that is already there: at `ROTATION` 0 the mirror stays still.

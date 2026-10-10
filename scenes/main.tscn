@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://d4kegm87j06ne" path="res://scripts/vj_controller.gd" id="2_wjtrd"]
 [ext_resource type="Script" uid="uid://dhj8r6okm386c" path="res://scripts/sphere_circles.gd" id="3_sphere"]
 [ext_resource type="Script" uid="uid://0r3tskcm0bun" path="res://scripts/hyperspace.gd" id="14_hyper"]
+[ext_resource type="Script" path="res://scripts/bezier.gd" id="26_bezier"]
 [ext_resource type="Script" uid="uid://grko7wg7oul1" path="res://scripts/osc_server.gd" id="4_osc"]
 [ext_resource type="Script" uid="uid://c7ds0h68455h4" path="res://scripts/control_panel.gd" id="5_panel"]
 [ext_resource type="Script" uid="uid://hyk3mrjde3i0" path="res://scripts/kaleidoscope.gd" id="6_kaleido"]
@@ -109,6 +110,9 @@ expand_mode = 1
 
 [node name="Hyperspace" type="Node2D" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport"]
 script = ExtResource("14_hyper")
+
+[node name="Bezier" type="Node2D" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport"]
+script = ExtResource("26_bezier")
 
 [node name="GlitchCircle" type="Line2D" parent="VJController/ShowLayer/ShowViewportContainer/ShowViewport" unique_id=183842512]
 material = SubResource("CanvasItemMaterial_wjtrd")

@@ -25,7 +25,7 @@ const SETUP_SECTIONS := ["section.global", "section.color", "section.mirror", "s
 ## played during a set like the rest. With a dozen rows they would also have pushed the
 ## setup column past the bottom of a 1080p screen, and it would have split in two.
 const PLAY_SECTIONS := ["section.spot", "section.lasers", "section.sphere", "section.warp",
-	"section.blur"]
+	"section.bezier", "section.blur"]
 
 # Rough heights, used only to decide where to break into a new column. They do not
 # have to be exact — being a few pixels out costs nothing, and the alternative is

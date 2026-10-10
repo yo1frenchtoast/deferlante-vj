@@ -52,6 +52,7 @@ scripts/
   rest_api.gd       The /api endpoints and the OpenAPI document
   sphere_circles.gd Circles projected onto a virtual sphere
   hyperspace.gd     A star field rushing past the eye, drawn as streaks
+  bezier.gd         Cubic curves whose control points bounce off the edges
   presets.gd        Nine slots on disk, recalled as a crossfade
   audio_reactor.gd  Captures the output, reads bass / mid / treble
   audio_routing.gd  Points the machine's capture at the output being played
@@ -76,7 +77,7 @@ it cannot, at any number of settings.
 
 **The panel is grouped by when you touch a setting, not by what it drives.** The first
 column holds GLOBAL, COLOR, MIRROR and AUDIO — what you settle before a set and then
-leave alone. The instruments follow: SPOTLIGHT, LASERS, SPHERE, HYPERSPACE, and then
+leave alone. The instruments follow: SPOTLIGHT, LASERS, SPHERE, HYPERSPACE, CURVES, and then
 EFFECTS, which are played during a set like the instruments are. The effects were in
 the first column while they were one setting, the trail. With a dozen rows they would
 have pushed it past the bottom of a 1080p screen. Thus the

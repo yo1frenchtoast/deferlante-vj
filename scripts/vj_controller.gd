@@ -22,6 +22,7 @@ extends Node2D
 @onready var circle: Line2D = $ShowLayer/ShowViewportContainer/ShowViewport/GlitchCircle
 @onready var sphere: Node2D = $ShowLayer/ShowViewportContainer/ShowViewport/SphereCircles
 @onready var warp: Node2D = $ShowLayer/ShowViewportContainer/ShowViewport/Hyperspace
+@onready var curves: Node2D = $ShowLayer/ShowViewportContainer/ShowViewport/Bezier
 @onready var kaleido: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Kaleidoscope
 @onready var blur: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/MotionBlur
 @onready var wave: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Wave
@@ -83,6 +84,7 @@ func _ready():
 	circle.use_palette(palette)
 	sphere.use_palette(palette)
 	warp.use_palette(palette)
+	curves.use_palette(palette)
 	rig.spawn(laser_count)
 	for p in registry.all():
 		p.apply_current()
@@ -317,6 +319,16 @@ func _build_params():
 	_prop("warp/width", 0.5, 12, 0.5, 2.0, warp, "line_width")
 	_prop("warp/spread", 0.1, 2, 0.05, 0.7, warp, "field")
 
+	_section("section.bezier")
+	# Off by default, for the reason given under HYPERSPACE: a preset saved before this
+	# effect existed carries no value for it, and one that lit itself on recall would
+	# put curves in every show already filled.
+	_prop("bezier/count", 0, 12, 1, 0.0, curves, "count")
+	_prop("bezier/speed", 0, 4, 0.05, 1.0, curves, "pace")
+	_prop("bezier/length", 0.05, 2, 0.01, 1.0, curves, "length")
+	_prop("bezier/width", 0.5, 12, 0.5, 2.0, curves, "line_width")
+	_prop("bezier/drift", 0, 1, 0.02, 0.3, curves, "hue_drift")
+
 	# Out of the auto-pilot's reach: tempo, glow and colour are decisions — the
 	# room, the track — rather than variations to be subjected to.
 	#
@@ -408,6 +420,7 @@ func _set_speed(value: float):
 	circle.speed_scale = value
 	sphere.speed_scale = value
 	warp.speed_scale = value
+	curves.speed_scale = value
 	kaleido.speed_scale = value
 	wave.speed_scale = value
 	slices.speed_scale = value
@@ -418,6 +431,7 @@ func _set_chaos(value: float):
 	circle.chaos = value
 	sphere.chaos = value
 	warp.chaos = value
+	curves.chaos = value
 	kaleido.chaos = value
 	rig.set_chaos(value)
 
@@ -429,6 +443,7 @@ func _set_glow(value: float):
 	circle.set_halo(value)
 	sphere.halo_amount = value
 	warp.halo_amount = value
+	curves.halo_amount = value
 	rig.set_halo(value)
 
 
@@ -517,6 +532,7 @@ func _randomize_all():
 	circle.randomize_look()
 	sphere.randomize_look()
 	warp.randomize_look()
+	curves.randomize_look()
 	rig.randomize_look()
 
 

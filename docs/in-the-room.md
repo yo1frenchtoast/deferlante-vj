@@ -16,7 +16,7 @@ hard to read over the top of it. Everything is one slider away from where it was
 intensity. The same is true for `RANDOMIZER`, and for the `EFFECT` of the mirror, which
 starts at `OFF` and has no setting between `OFF` and `ON`.
 
-`STARS` starts at 0 as well, and for one more reason. This effect arrived after nine
+`STARS` and `CURVES` start at 0 as well, and for one more reason. This effect arrived after nine
 preset slots had been filled on machines already in use. A preset saved before it
 existed carries no value for it. A star field that lit itself up on launch would thus
 appear in every one of those shows, uninvited, until each was saved again.

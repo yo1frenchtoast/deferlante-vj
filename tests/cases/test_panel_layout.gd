@@ -13,6 +13,7 @@ const GROUPS := [
 	{"key": "section.audio", "rows": 8},
 	{"key": "section.sphere", "rows": 8},
 	{"key": "section.warp", "rows": 5},
+	{"key": "section.bezier", "rows": 5},
 ]
 
 const TALL := 2000.0
@@ -29,7 +30,7 @@ func test_automatic_puts_setup_first_then_instruments_in_their_order():
 	# The instruments are capped at the height of the setup column, so they spread
 	# sideways over as many columns as that takes.
 	same(_flat(plan.slice(1)), ["section.spot", "section.lasers", "section.sphere", "section.warp",
-		"section.blur"], "the instruments beside it, in their order, the effects last")
+		"section.bezier", "section.blur"], "the instruments beside it, in their order, the effects last")
 
 
 func test_automatic_breaks_into_more_columns_on_a_short_screen_and_never_splits_a_section():

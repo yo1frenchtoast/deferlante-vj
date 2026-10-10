@@ -388,6 +388,61 @@ func test_the_phase_stays_small_however_long_the_show_runs():
 	param("fx/wave_speed").set_value(0.3)
 
 
+func test_the_curves_are_off_by_default_and_cost_nothing_until_asked():
+	same(show.get_meta("defaults")["bezier/count"], 0.0, "a show saved before it existed comes up unchanged")
+	same(show.get_meta("defaults")["bezier/length"], 1.0, "and its curves are whole until asked otherwise")
+	param("bezier/count").set_value(0.0)
+	check(not show.curves.is_processing(), "no curves, no per-frame work")
+	param("bezier/count").set_value(3.0)
+	check(show.curves.is_processing(), "and it runs above 0")
+	same(show.curves._hues.size(), 3, "one colour per curve")
+	same(show.curves._pos.size(), 3 * show.curves.POINTS, "four points each")
+	param("bezier/count").set_value(0.0)
+	check(not show.curves.is_processing(), "and stops again")
+
+
+func test_the_curve_settings_reach_the_node():
+	param("bezier/speed").set_value(2.5)
+	param("bezier/width").set_value(6.0)
+	param("bezier/length").set_value(0.4)
+	param("bezier/drift").set_value(0.0)
+	same(show.curves.pace, 2.5, "speed")
+	same(show.curves.line_width, 6.0, "width")
+	same(show.curves.length, 0.4, "length")
+	same(show.curves.hue_drift, 0.0, "drift")
+	param("bezier/speed").set_value(1.0)
+	param("bezier/width").set_value(2.0)
+	param("bezier/length").set_value(1.0)
+	param("bezier/drift").set_value(0.3)
+
+
+func test_the_curves_follow_the_global_speed_and_stay_on_screen():
+	var curves = show.curves
+	param("bezier/count").set_value(4.0)
+	param("global/speed").set_value(0.0)
+	var before: PackedVector2Array = curves._pos.duplicate()
+	curves._process(0.5)
+	same(curves._pos, before, "global speed 0 holds the points still")
+	param("global/speed").set_value(-1.0)
+	for i in 600:
+		curves._process(0.05)
+	var inside := true
+	for p in curves._pos:
+		inside = inside and p.x >= 0.0 and p.x <= 1.0 and p.y >= 0.0 and p.y <= 1.0
+	check(inside, "bouncing keeps every point in the picture, run backwards as well")
+	param("global/speed").set_value(1.0)
+	param("bezier/count").set_value(0.0)
+
+
+func test_a_curve_count_that_moves_keeps_the_curves_already_on_screen():
+	var curves = show.curves
+	param("bezier/count").set_value(2.0)
+	var first: Vector2 = curves._pos[0]
+	param("bezier/count").set_value(5.0)
+	same(curves._pos[0], first, "growing does not respawn what is there")
+	param("bezier/count").set_value(0.0)
+
+
 func test_the_slices_are_off_by_default_and_costs_nothing_until_asked():
 	same(show.get_meta("defaults")["fx/slice"], 0.0, "a show saved before it existed comes up unchanged")
 	same(show.get_meta("defaults")["audio/slice"], 0.0, "and the kick does not tear it")

@@ -285,6 +285,26 @@ function warpSpread(value) {
 	local.send("/deferlante/warp/spread", value);
 }
 
+function bezierCount(value) {
+	local.send("/deferlante/bezier/count", value);
+}
+
+function bezierSpeed(value) {
+	local.send("/deferlante/bezier/speed", value);
+}
+
+function bezierLength(value) {
+	local.send("/deferlante/bezier/length", value);
+}
+
+function bezierWidth(value) {
+	local.send("/deferlante/bezier/width", value);
+}
+
+function bezierDrift(value) {
+	local.send("/deferlante/bezier/drift", value);
+}
+
 function recallPreset(slot) {
 	local.send("/deferlante/preset/recall", slot);
 }
@@ -336,6 +356,10 @@ function shuffleSphere(value) {
 
 function shuffleWarp(value) {
 	local.send("/deferlante/shuffle/warp");
+}
+
+function shuffleBezier(value) {
+	local.send("/deferlante/shuffle/bezier");
 }
 
 function triggerGlitch(value) {

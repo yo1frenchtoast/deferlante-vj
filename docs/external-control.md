@@ -282,7 +282,7 @@ TouchOSC. They have no business with the knowledge that `spot/radius` runs from 
 | `/deferlante/glitch_now` | fires one glitch (no argument needed) |
 | `/deferlante/randomize` | redraws colors and trajectories, and returns color to random mode |
 | `/deferlante/shuffle` | one move of the auto-pilot, now, whatever pace it is set to |
-| `/deferlante/shuffle/<section>` | the same, confined to one section: `global`, `color`, `mirror`, `lasers`, `spot`, `audio`, `sphere`, `warp` |
+| `/deferlante/shuffle/<section>` | the same, confined to one section: `global`, `color`, `mirror`, `lasers`, `spot`, `audio`, `sphere`, `warp`, `bezier` |
 | `/deferlante/color/rgb` | three floats 0 → 1: the whole color in one message, and a switch to manual |
 | `/deferlante/preset/recall` | one int: recall that slot, as a crossfade over `RECALL FADE` |
 | `/deferlante/preset/save` | one int: save every setting into that slot |
@@ -367,6 +367,11 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/warp/streak` | 0 – 0.4 | 0.12 | HYPERSPACE › STREAK |
 | `/deferlante/warp/width` | 0.5 – 12 | 2 | HYPERSPACE › WIDTH |
 | `/deferlante/warp/spread` | 0.1 – 2 | 0.7 | HYPERSPACE › SPREAD |
+| `/deferlante/bezier/count` | 0 – 12 | 0 | CURVES › CURVES |
+| `/deferlante/bezier/speed` | 0 – 4 | 1 | CURVES › SPEED |
+| `/deferlante/bezier/length` | 0.05 – 2 | 1 | CURVES › LENGTH |
+| `/deferlante/bezier/width` | 0.5 – 12 | 2 | CURVES › WIDTH |
+| `/deferlante/bezier/drift` | 0 – 1 | 0.3 | CURVES › COLOUR DRIFT |
 
 
 ### What it does not do

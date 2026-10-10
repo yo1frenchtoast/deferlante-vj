@@ -116,6 +116,11 @@ const LABELS := {
 	"warp/streak": ["STREAK", "TRAÎNÉE"],
 	"warp/width": ["WIDTH", "ÉPAISSEUR"],
 	"warp/spread": ["SPREAD", "ÉTALEMENT"],
+	"bezier/count": ["CURVES", "COURBES"],
+	"bezier/speed": ["SPEED", "VITESSE"],
+	"bezier/length": ["LENGTH", "LONGUEUR"],
+	"bezier/width": ["WIDTH", "ÉPAISSEUR"],
+	"bezier/drift": ["COLOUR DRIFT", "DÉRIVE DES COULEURS"],
 }
 
 const TEXTS := {
@@ -135,6 +140,7 @@ const TEXTS := {
 	# distinction belongs.
 	"section.sphere": ["SPHERE", "SPHÈRE"],
 	"section.warp": ["HYPERSPACE", "HYPERESPACE"],
+	"section.bezier": ["CURVES", "COURBES"],
 
 	"mode.random": ["RANDOM", "ALÉATOIRE"],
 	"mode.manual": ["MANUAL", "MANUEL"],
@@ -382,6 +388,11 @@ const HINTS := {
 	"warp/streak": ["Length of the trail, in seconds of travel. It is a shutter speed: faster stars streak further on their own.", "Longueur de la traînée, en secondes de trajet. C'est un temps de pose : une étoile rapide file plus loin d'elle-même."],
 	"warp/width": ["Streak thickness at the far plane. Near stars are drawn thicker.", "Épaisseur des traînées au fond. Les étoiles proches sont tracées plus épaisses."],
 	"warp/spread": ["Width of the tube. Small comes straight at you, large throws the stars past the corners.", "Largeur du tube. Petit arrive droit sur vous, grand jette les étoiles hors des coins."],
+	"bezier/count": ["Number of bouncing curves. 0 switches the effect off. Raise TRAIL to leave the old ones behind.", "Nombre de courbes qui rebondissent. 0 éteint l'effet. Montez la RÉMANENCE pour laisser les anciennes derrière."],
+	"bezier/speed": ["How fast the control points travel. The global SPEED still catches it, and reverses it.", "Vitesse des points de contrôle. La VITESSE générale l'attrape aussi, et l'inverse."],
+	"bezier/length": ["How much of each curve is drawn, from the middle. 1 is the whole curve, above it the curve runs on past its ends.", "Part de chaque courbe qui est tracée, à partir du milieu. 1 est la courbe entière, au-delà elle se prolonge après ses extrémités."],
+	"bezier/width": ["Line thickness.", "Épaisseur du trait."],
+	"bezier/drift": ["How fast each curve slides through the palette. 0 keeps the colour it was born with.", "Vitesse à laquelle chaque courbe parcourt la palette. 0 garde la couleur d'origine."],
 }
 
 

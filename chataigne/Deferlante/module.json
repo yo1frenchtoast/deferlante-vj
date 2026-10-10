@@ -1005,6 +1005,76 @@
         }
       }
     },
+    "Curves Curves": {
+      "menu": "Curves",
+      "callback": "bezierCount",
+      "parameters": {
+        "Value": {
+          "type": "Integer",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 12.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Curves Speed": {
+      "menu": "Curves",
+      "callback": "bezierSpeed",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 4.0,
+          "default": 1.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Curves Length": {
+      "menu": "Curves",
+      "callback": "bezierLength",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.05,
+          "max": 2.0,
+          "default": 1.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Curves Width": {
+      "menu": "Curves",
+      "callback": "bezierWidth",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.5,
+          "max": 12.0,
+          "default": 2.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Curves Colour Drift": {
+      "menu": "Curves",
+      "callback": "bezierDrift",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.3,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Color Picker": {
       "menu": "Color",
       "callback": "colorRgb",
@@ -1149,6 +1219,17 @@
     "Shuffle Hyperspace": {
       "menu": "Shuffle",
       "callback": "shuffleWarp",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Shuffle Curves": {
+      "menu": "Shuffle",
+      "callback": "shuffleBezier",
       "parameters": {
         "Trigger": {
           "type": "Boolean",

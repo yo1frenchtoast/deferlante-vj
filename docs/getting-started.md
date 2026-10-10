@@ -127,11 +127,11 @@ scroll away long before you need them.
 
 ## Settings
 
-The panel has nine sections. It groups them by **when you touch a setting**, not by
+The panel has ten sections. It groups them by **when you touch a setting**, not by
 what the setting drives. The four that you settle before a set come first: GLOBAL,
-COLOR, MIRROR and AUDIO. What you play follows: the four instruments, SPOTLIGHT, LASERS,
-SPHERE and HYPERSPACE, and then EFFECTS, which you turn during a set like they are. `↑` and `↓` walk the panel in that order. The Chataigne module
-carries the same nine sections as menus, in the order that the code declares them. The labels that
+COLOR, MIRROR and AUDIO. What you play follows: the five instruments, SPOTLIGHT, LASERS,
+SPHERE, HYPERSPACE and CURVES, and then EFFECTS, which you turn during a set like they are. `↑` and `↓` walk the panel in that order. The Chataigne module
+carries the same ten sections as menus, in the order that the code declares them. The labels that
 follow are the English ones.
 
 ### Global
@@ -239,6 +239,15 @@ The last three rows only matter with a pad connected. See
 | `DEPTH` | 1.2 – 10 | Eye distance. A small value gives strong perspective. |
 | `WIDTH` | 1 – 24 | Shape stroke width. |
 | `GLASS` | 0 – 1 | 0 is an opaque sphere, 1 shows the far side through it. |
+
+### Curves
+| Setting | Range | Effect |
+| --- | --- | --- |
+| `CURVES` | 0 – 12 | Number of bouncing Bézier curves. **0 by default**, and 0 switches the effect off. Raise `TRAIL` to get the ghost. |
+| `SPEED` | 0 – 4 | How fast the control points travel. The global `SPEED` catches it too, and reverses it. |
+| `LENGTH` | 0.05 – 2 | How much of each curve is drawn, from the middle. 1 is the whole curve; above it, the curve runs on past its end points. |
+| `WIDTH` | 0.5 – 12 | Line thickness. |
+| `COLOUR DRIFT` | 0 – 1 | How fast each curve slides through the palette. 0 keeps the colour it was born with. |
 
 ### Hyperspace
 | Setting | Range | Effect |

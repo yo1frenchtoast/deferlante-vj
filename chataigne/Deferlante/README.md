@@ -39,7 +39,7 @@ machine that shows the visuals.
 ## Use
 
 Every setting is a command, filed by menu (Global, Color, Mirror, Lasers, Spotlight,
-Audio, Sphere, Hyperspace), with the **same bounds as the on-screen sliders**. Thus a
+Audio, Sphere, Hyperspace, Curves), with the **same bounds as the on-screen sliders**. Thus a
 Chataigne mapping sweeps exactly the same range, with no conversion. The module carries
 every setting that the show has, and the generator fails the build if one goes
 missing.
