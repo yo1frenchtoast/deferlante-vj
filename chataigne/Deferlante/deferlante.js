@@ -265,6 +265,10 @@ function sphereGlass(value) {
 	local.send("/deferlante/sphere/glass", value);
 }
 
+function sphereFlat(value) {
+	local.send("/deferlante/sphere/flat", value);
+}
+
 function warpCount(value) {
 	local.send("/deferlante/warp/count", value);
 }

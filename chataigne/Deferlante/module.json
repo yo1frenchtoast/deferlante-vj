@@ -935,6 +935,20 @@
         }
       }
     },
+    "Sphere Flat": {
+      "menu": "Sphere",
+      "callback": "sphereFlat",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Hyperspace Stars": {
       "menu": "Hyperspace",
       "callback": "warpCount",

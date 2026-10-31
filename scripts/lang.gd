@@ -110,6 +110,7 @@ const LABELS := {
 	"sphere/depth": ["DEPTH", "PROFONDEUR"],
 	"sphere/width": ["WIDTH", "ÉPAISSEUR"],
 	"sphere/glass": ["GLASS", "VERRE"],
+	"sphere/flat": ["FLAT", "APLAT"],
 
 	"warp/count": ["STARS", "ÉTOILES"],
 	"warp/speed": ["SPEED", "VITESSE"],
@@ -382,6 +383,7 @@ const HINTS := {
 	"sphere/depth": ["Eye distance. A small value gives strong perspective.", "Distance de l'œil. Petit donne une perspective forte."],
 	"sphere/width": ["Shape stroke width.", "Épaisseur des formes."],
 	"sphere/glass": ["0 is an opaque sphere, 1 shows the far side through it.", "0 sphère opaque, 1 laisse voir la face arrière au travers."],
+	"sphere/flat": ["0 is a sphere, 1 flattens it into a disc facing the eye.", "0 sphère, 1 l'aplatit en un disque face à l'œil."],
 
 	"warp/count": ["Number of stars. 0 switches the effect off.", "Nombre d'étoiles. 0 éteint l'effet."],
 	"warp/speed": ["How fast the field flies past. The global SPEED still catches it, and reverses it.", "Vitesse de défilement du champ. La VITESSE générale l'attrape aussi, et l'inverse."],

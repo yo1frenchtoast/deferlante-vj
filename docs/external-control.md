@@ -362,6 +362,7 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/sphere/depth` | 1.2 – 10 | 2 | SPHERE › DEPTH |
 | `/deferlante/sphere/width` | 1 – 24 | 3 | SPHERE › WIDTH |
 | `/deferlante/sphere/glass` | 0 – 1 | 0 | SPHERE › GLASS |
+| `/deferlante/sphere/flat` | 0 – 1 | 0 | SPHERE › FLAT |
 | `/deferlante/warp/count` | 0 – 400 | 0 | HYPERSPACE › STARS |
 | `/deferlante/warp/speed` | 0 – 4 | 1 | HYPERSPACE › SPEED |
 | `/deferlante/warp/streak` | 0 – 0.4 | 0.12 | HYPERSPACE › STREAK |

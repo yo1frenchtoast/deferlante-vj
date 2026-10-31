@@ -239,6 +239,7 @@ The last three rows only matter with a pad connected. See
 | `DEPTH` | 1.2 – 10 | Eye distance. A small value gives strong perspective. |
 | `WIDTH` | 1 – 24 | Shape stroke width. |
 | `GLASS` | 0 – 1 | 0 is an opaque sphere, 1 shows the far side through it. |
+| `FLAT` | 0 – 1 | 0 is a sphere, 1 flattens it into a disc facing the eye. **0 by default.** See [The sphere effect](effects.md#the-sphere-effect). |
 
 ### Curves
 | Setting | Range | Effect |

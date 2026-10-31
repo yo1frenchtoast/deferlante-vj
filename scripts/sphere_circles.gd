@@ -46,6 +46,10 @@ extends Node2D
 ## 0 gives an opaque sphere, showing only the cap facing the eye (the most legible).
 ## Raising it gives a glass sphere where the far side shows through as well.
 @export var back_dim: float = 0.0
+## 0 lays the shapes on the sphere, 1 on a flat disc facing the eye, every shape
+## round and of one size: a wall of fixtures seen head-on. Between the two, each
+## shape slides from its place on the sphere to its place on the disc.
+@export var flatness: float = 0.0
 ## Mirrors the HALO setting. Held here rather than read from the controller, so a
 ## sphere rebuilt on a count change hands it straight to the new circles.
 var halo_amount: float = 0.0:
@@ -62,6 +66,9 @@ var chaos: float = 0.0
 
 var _time: float = 0.0
 var _dirs: PackedVector3Array = []
+## Where each shape sits once the sphere is flattened, in the sphere's own frame:
+## on the disc through its equator.
+var _discs: PackedVector3Array = []
 var _hues: PackedFloat32Array = []
 var _circles: Array[Line2D] = []
 var _halos: Array[Halo] = []
@@ -100,8 +107,10 @@ func _rebuild():
 	# the total, so the circles that stay do shift when a new one joins them. That
 	# is array arithmetic, not a node being born.
 	_dirs.resize(circle_count)
+	_discs.resize(circle_count)
 	for i in range(circle_count):
 		_dirs[i] = _fibonacci_point(i, circle_count)
+		_discs[i] = _disc_point(i, circle_count)
 
 
 ## Fibonacci distribution: evenly spaced points over the sphere, without the
@@ -111,6 +120,15 @@ func _fibonacci_point(index: int, total: int) -> Vector3:
 	var ring := sqrt(maxf(0.0, 1.0 - y * y))
 	var phi := index * PI * (3.0 - sqrt(5.0))
 	return Vector3(cos(phi) * ring, y, sin(phi) * ring)
+
+
+## The same spiral, opened out flat from the north pole (a Lambert projection): the
+## disc keeps the even spacing, and a turn of the sphere about its axis is a turn of
+## the disc about its centre, so the flat pattern spins without coming apart.
+func _disc_point(index: int, total: int) -> Vector3:
+	var r := sqrt((index + 0.5) / float(total))
+	var phi := index * PI * (3.0 - sqrt(5.0))
+	return Vector3(cos(phi) * r, 0.0, sin(phi) * r)
 
 
 func randomize_look():
@@ -126,27 +144,40 @@ func _process(delta: float):
 	_time += delta * speed_scale * spin
 
 	# Sphere rotation: continuous yaw on a slightly tilted axis, so the same band
-	# does not keep sweeping past.
-	var rot := Basis(Vector3(1, 0, 0), 0.4) * Basis(Vector3(0, 1, 0), _time)
+	# does not keep sweeping past. Flattening tips the north pole round to face the
+	# eye: the disc opens out from there, so it grows from the centre of the screen,
+	# and the yaw becomes a turn of the disc in the plane of the screen.
+	var tilt := lerpf(0.4, PI / 2.0, flatness)
+	var rot := Basis(Vector3(1, 0, 0), tilt) * Basis(Vector3(0, 1, 0), _time)
 	var center := get_viewport_rect().size / 2.0
 	var tangential := sphere_radius * sin(circle_size)
 
 	for i in range(_circles.size()):
 		var dir := _dirs[i]
+		# Where the shape stands, and which way its surface faces. On the sphere both
+		# are the same vector; on the disc it stands on the equator's plane and faces
+		# along the axis.
+		var normal := dir
+		if flatness > 0.0:
+			dir = dir.lerp(_discs[i], flatness)
+			normal = normal.lerp(Vector3(0, 1, 0), flatness).normalized()
 		if chaos > 0.0:
 			# Each circle slides along its longitude at its own pace: the sphere
 			# stays legible, but its surface is no longer of one piece.
-			var jitter := sin(_time * 5.0 + i * 2.399) * chaos * 0.3
-			dir = Basis(Vector3(0, 1, 0), jitter) * dir
-		_project(_circles[i], rot * dir, center, tangential, _hues[i])
+			var jitter := Basis(Vector3(0, 1, 0), sin(_time * 5.0 + i * 2.399) * chaos * 0.3)
+			dir = jitter * dir
+			normal = jitter * normal
+		_project(_circles[i], rot * dir, rot * normal, center, tangential, _hues[i])
 
 
-func _project(line: Line2D, v: Vector3, center: Vector2, tangential: float, hue: float):
+func _project(line: Line2D, v: Vector3, normal: Vector3, center: Vector2,
+		tangential: float, hue: float):
 	# Horizon: past it the surface tips behind the silhouette. With the eye at
 	# distance d the tangent falls at z = 1/d, not at z = 0 as in orthographic.
 	var horizon := 1.0 / eye_distance
-	var facing := clampf((v.z - horizon) / maxf(0.001, 1.0 - horizon), 0.0, 1.0)
-	var alpha := lerpf(back_dim, 1.0, facing)
+	var facing := clampf((normal.z - horizon) / maxf(0.001, 1.0 - horizon), 0.0, 1.0)
+	# A disc has no far side: what the sphere hid comes forward as it flattens.
+	var alpha := lerpf(lerpf(back_dim, 1.0, facing), 1.0, flatness)
 
 	# A circle on the hidden face costs nothing: no points, no draw.
 	line.visible = alpha > 0.004
@@ -164,10 +195,12 @@ func _project(line: Line2D, v: Vector3, center: Vector2, tangential: float, hue:
 		semi_major *= 1.0 + sin(_time * 9.0 + hue * TAU) * chaos * 0.35
 	# Semi-axis along the radius: squashed by the tilt of the surface. At v.z = 0
 	# (the sphere's edge) it drops to 0 and the circle becomes a line.
-	var semi_minor := semi_major * absf(v.z)
+	var semi_minor := semi_major * absf(normal.z)
 
-	# The minor axis points at the sphere's centre, the major one is perpendicular.
-	var radial := origin - center
+	# The minor axis points at the sphere's centre, the major one is perpendicular:
+	# that is the way the surface tips away. Facing the eye it tips no way at all,
+	# the shape is round, and any axis will do.
+	var radial := Vector2(normal.x, -normal.y)
 	radial = radial.normalized() if radial.length() > 0.001 else Vector2.RIGHT
 	var tangent := Vector2(-radial.y, radial.x)
 

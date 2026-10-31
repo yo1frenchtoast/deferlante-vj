@@ -95,6 +95,16 @@ shows. That is deliberate. When both faces are visible, the back circles project
 the center too and the eye can no longer tell front from back. A higher `GLASS` gives
 a glass sphere, which is busier but stranger.
 
+`FLAT` takes the shapes off the sphere and lays them on a disc that faces the eye,
+like a wall of fixtures with ring gobos seen head-on. At 1 every shape is round and
+of one size, and the far side comes forward, because a disc has none. The disc
+keeps the sphere's spacing: it is the same Fibonacci spiral, opened out from the
+north pole with an equal-area (Lambert) projection. As it flattens, the sphere tips
+that pole round to face the eye, so the disc opens out from the center of the
+screen, and `SPIN` becomes a turn of the disc in the plane of the screen. Between 0
+and 1 each shape slides from its place on the sphere to its place on the disc. `SIZE` on a flat disc reads as the zoom of a fixture, and the treble
+already drives it.
+
 Measured cost: **+0.32 ms** at 40 circles, **+0.77 ms** at 80. The show neither
 computes nor draws the circles past the horizon.
 

@@ -307,6 +307,7 @@ func _build_params():
 	_prop("sphere/depth", 1.2, 10, 0.1, 2.0, sphere, "eye_distance")
 	_prop("sphere/width", 1, 24, 0.5, 3.0, sphere, "line_width")
 	_prop("sphere/glass", 0, 1, 0.02, 0.0, sphere, "back_dim")
+	_prop("sphere/flat", 0, 1, 0.02, 0.0, sphere, "flatness")
 
 	_section("section.warp")
 	# Off by default, unlike the sphere. This effect arrived after nine preset slots
