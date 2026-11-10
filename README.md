@@ -42,9 +42,7 @@ console, the pad — and comes back on the first key press.*
 Every push to `main` is also exported for the web and published on GitHub Pages, at
 <https://yo1frenchtoast.github.io/deferlante-vj/>. It is the same show and the same panel,
 started on its defaults with no launcher. A browser cannot open ports, so OSC, the web
-surface and the REST API are not there, and neither are Spout or a second window. MIDI
-goes through the browser's own MIDI access, and the sound is read from the microphone
-once the browser has been allowed it.
+surface and the REST API are not there, and neither are Spout or a second window.
 
 ## Documentation
 
