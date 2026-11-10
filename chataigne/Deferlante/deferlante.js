@@ -309,6 +309,34 @@ function bezierDrift(value) {
 	local.send("/deferlante/bezier/drift", value);
 }
 
+function lettersCount(value) {
+	local.send("/deferlante/letters/count", value);
+}
+
+function lettersSize(value) {
+	local.send("/deferlante/letters/size", value);
+}
+
+function lettersSpin(value) {
+	local.send("/deferlante/letters/spin", value);
+}
+
+function lettersTravel(value) {
+	local.send("/deferlante/letters/travel", value);
+}
+
+function lettersFont(value) {
+	local.send("/deferlante/letters/font", value);
+}
+
+function lettersCase(value) {
+	local.send("/deferlante/letters/case", value);
+}
+
+function lettersDrift(value) {
+	local.send("/deferlante/letters/drift", value);
+}
+
 function recallPreset(slot) {
 	local.send("/deferlante/preset/recall", slot);
 }
@@ -364,6 +392,10 @@ function shuffleWarp(value) {
 
 function shuffleBezier(value) {
 	local.send("/deferlante/shuffle/bezier");
+}
+
+function shuffleLetters(value) {
+	local.send("/deferlante/shuffle/letters");
 }
 
 function triggerGlitch(value) {

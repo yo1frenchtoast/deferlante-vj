@@ -443,6 +443,72 @@ func test_a_curve_count_that_moves_keeps_the_curves_already_on_screen():
 	param("bezier/count").set_value(0.0)
 
 
+func test_the_letters_are_off_by_default_and_cost_nothing_until_asked():
+	same(show.get_meta("defaults")["letters/count"], 0.0, "a show saved before it existed comes up unchanged")
+	param("letters/count").set_value(0.0)
+	check(not show.letters.is_processing(), "no letters, no per-frame work")
+	param("letters/count").set_value(6.0)
+	check(show.letters.is_processing(), "and it runs above 0")
+	same(show.letters._chars.size(), 6, "one character each")
+	param("letters/count").set_value(0.0)
+
+
+func test_the_letter_settings_reach_the_node_and_the_case_holds():
+	var l = show.letters
+	param("letters/count").set_value(12.0)
+	param("letters/case").set_value(1.0)
+	var upper := true
+	for c in l._chars:
+		upper = upper and c == c.to_upper()
+	check(upper, "capitals only at CASE 1")
+	param("letters/case").set_value(0.0)
+	var lower := true
+	for c in l._chars:
+		lower = lower and c == c.to_lower()
+	check(lower, "lower case only at CASE 0")
+	param("letters/font").set_value(3.0)
+	same(l.font_index, 3, "font")
+	param("letters/font").set_value(0.0)
+	param("letters/case").set_value(1.0)
+	param("letters/count").set_value(0.0)
+
+
+func test_every_letter_turns_the_way_spin_says_and_global_speed_holds_them():
+	var l = show.letters
+	param("letters/count").set_value(5.0)
+	param("letters/spin").set_value(0.0)
+	var before: PackedFloat32Array = l._angle.duplicate()
+	l._process(0.05)
+	same(l._angle, before, "spin 0 holds them still")
+	param("letters/spin").set_value(-1.0)
+	l._process(0.05)
+	var back := true
+	for i in 5:
+		back = back and fposmod(before[i] - l._angle[i], TAU) < PI
+	check(back, "a negative spin turns every one of them backwards")
+	param("letters/spin").set_value(0.6)
+	param("letters/count").set_value(0.0)
+
+
+func test_the_letters_drift_and_stay_in_the_picture():
+	var l = show.letters
+	param("letters/count").set_value(8.0)
+	param("letters/travel").set_value(0.0)
+	var before: PackedVector2Array = l._pos.duplicate()
+	l._process(0.05)
+	same(l._pos, before, "MOVE 0 leaves them where they are")
+	param("letters/travel").set_value(3.0)
+	for i in 600:
+		l._process(0.05)
+	check(l._pos != before, "above 0 they travel")
+	var inside := true
+	for p in l._pos:
+		inside = inside and p.x >= 0.0 and p.x <= 1.0 and p.y >= 0.0 and p.y <= 1.0
+	check(inside, "and bounce off the edges")
+	param("letters/travel").set_value(0.5)
+	param("letters/count").set_value(0.0)
+
+
 func test_the_slices_are_off_by_default_and_costs_nothing_until_asked():
 	same(show.get_meta("defaults")["fx/slice"], 0.0, "a show saved before it existed comes up unchanged")
 	same(show.get_meta("defaults")["audio/slice"], 0.0, "and the kick does not tear it")

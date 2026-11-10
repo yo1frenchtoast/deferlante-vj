@@ -1089,6 +1089,104 @@
         }
       }
     },
+    "Letters Letters": {
+      "menu": "Letters",
+      "callback": "lettersCount",
+      "parameters": {
+        "Value": {
+          "type": "Integer",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 40.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Letters Size": {
+      "menu": "Letters",
+      "callback": "lettersSize",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.03,
+          "max": 0.8,
+          "default": 0.2,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Letters Spin": {
+      "menu": "Letters",
+      "callback": "lettersSpin",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": -1.0,
+          "max": 1.0,
+          "default": 0.6,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Letters Move": {
+      "menu": "Letters",
+      "callback": "lettersTravel",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 3.0,
+          "default": 0.5,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Letters Font": {
+      "menu": "Letters",
+      "callback": "lettersFont",
+      "parameters": {
+        "Value": {
+          "type": "Integer",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 4.0,
+          "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Letters Case": {
+      "menu": "Letters",
+      "callback": "lettersCase",
+      "parameters": {
+        "Value": {
+          "type": "Integer",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 2.0,
+          "default": 1.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Letters Colour Drift": {
+      "menu": "Letters",
+      "callback": "lettersDrift",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.2,
+          "mappingIndex": 0
+        }
+      }
+    },
     "Color Picker": {
       "menu": "Color",
       "callback": "colorRgb",
@@ -1244,6 +1342,17 @@
     "Shuffle Curves": {
       "menu": "Shuffle",
       "callback": "shuffleBezier",
+      "parameters": {
+        "Trigger": {
+          "type": "Boolean",
+          "default": true,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Shuffle Letters": {
+      "menu": "Shuffle",
+      "callback": "shuffleLetters",
       "parameters": {
         "Trigger": {
           "type": "Boolean",

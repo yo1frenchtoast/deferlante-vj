@@ -108,6 +108,22 @@ already drives it.
 Measured cost: **+0.32 ms** at 40 circles, **+0.77 ms** at 80. The show neither
 computes nor draws the circles past the horizon.
 
+## Letters
+
+`LETTERS` draws plain letters that turn as they drift across the picture. Each one has a character, a place,
+a colour and a share of the speed of its own. `FONT` picks the typeface from five that
+ship with the show, so the picture is the same on every machine. `CASE` is lower case,
+capitals, or either at random for each letter. `SIZE` is a letter's height as a share of
+the screen.
+
+`MOVE` is how fast the letters drift across the picture, bouncing off the edges like the points of the curves. At 0 they stay where they were put. The global `SPEED` catches it too.
+
+`SPIN` is shared like the lasers' is: one signed setting, whose sign turns every letter
+the same way and whose size sets how fast. A letter keeps its own share of that speed, so
+a field of them does not turn in lockstep. Like the curves, it is **0 letters by
+default**, it keeps no history (raise `TRAIL`), and `SHUFFLE` re-rolls characters, places
+and colours.
+
 ## Curves
 
 `CURVES` draws cubic Bézier curves that bounce around the screen, like the old Windows

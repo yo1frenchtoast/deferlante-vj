@@ -241,6 +241,17 @@ The last three rows only matter with a pad connected. See
 | `GLASS` | 0 – 1 | 0 is an opaque sphere, 1 shows the far side through it. |
 | `FLAT` | 0 – 1 | 0 is a sphere, 1 flattens it into a disc facing the eye. **0 by default.** See [The sphere effect](effects.md#the-sphere-effect). |
 
+### Letters
+| Setting | Range | Effect |
+| --- | --- | --- |
+| `LETTERS` | 0 – 40 | Number of letters turning on the spot. **0 by default**, and 0 switches the effect off. |
+| `SIZE` | 0.03 – 0.8 | Height of a letter, as a share of the screen. |
+| `SPIN` | −1 – 1 | Speed and direction of every letter, like the lasers'. Each letter keeps its own share of the speed. |
+| `MOVE` | 0 – 3 | How fast the letters drift across the picture, bouncing off the edges. 0 leaves them turning on the spot. |
+| `FONT` | 5 faces | BLACK, HAIRLINE, SERIF, ITALIC, MONO. |
+| `CASE` | 3 | lower case, capitals, or mixed. |
+| `COLOUR DRIFT` | 0 – 1 | How fast each letter slides through the palette. |
+
 ### Curves
 | Setting | Range | Effect |
 | --- | --- | --- |

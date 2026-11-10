@@ -122,6 +122,13 @@ const LABELS := {
 	"bezier/length": ["LENGTH", "LONGUEUR"],
 	"bezier/width": ["WIDTH", "ÉPAISSEUR"],
 	"bezier/drift": ["COLOUR DRIFT", "DÉRIVE DES COULEURS"],
+	"letters/count": ["LETTERS", "LETTRES"],
+	"letters/size": ["SIZE", "TAILLE"],
+	"letters/spin": ["SPIN", "ROTATION"],
+	"letters/travel": ["MOVE", "DÉPLACEMENT"],
+	"letters/font": ["FONT", "POLICE"],
+	"letters/case": ["CASE", "CASSE"],
+	"letters/drift": ["COLOUR DRIFT", "DÉRIVE DES COULEURS"],
 }
 
 const TEXTS := {
@@ -142,6 +149,10 @@ const TEXTS := {
 	"section.sphere": ["SPHERE", "SPHÈRE"],
 	"section.warp": ["HYPERSPACE", "HYPERESPACE"],
 	"section.bezier": ["CURVES", "COURBES"],
+	"section.letters": ["LETTERS", "LETTRES"],
+	"case.lower": ["lower", "minuscules"],
+	"case.upper": ["CAPITALS", "MAJUSCULES"],
+	"case.mixed": ["mixed", "mêlées"],
 
 	"mode.random": ["RANDOM", "ALÉATOIRE"],
 	"mode.manual": ["MANUAL", "MANUEL"],
@@ -395,6 +406,13 @@ const HINTS := {
 	"bezier/length": ["How much of each curve is drawn, from the middle. 1 is the whole curve, above it the curve runs on past its ends.", "Part de chaque courbe qui est tracée, à partir du milieu. 1 est la courbe entière, au-delà elle se prolonge après ses extrémités."],
 	"bezier/width": ["Line thickness.", "Épaisseur du trait."],
 	"bezier/drift": ["How fast each curve slides through the palette. 0 keeps the colour it was born with.", "Vitesse à laquelle chaque courbe parcourt la palette. 0 garde la couleur d'origine."],
+	"letters/count": ["Number of letters turning on the spot. 0 switches the effect off.", "Nombre de lettres qui tournent sur place. 0 éteint l'effet."],
+	"letters/size": ["Height of a letter, as a share of the screen.", "Hauteur d'une lettre, en part de l'écran."],
+	"letters/spin": ["Speed and direction of every letter, like the lasers'. Each letter keeps its own share of the speed.", "Vitesse et sens de toutes les lettres, comme pour les lasers. Chaque lettre garde sa part de la vitesse."],
+	"letters/travel": ["How fast the letters drift across the picture, bouncing off the edges. 0 leaves them turning on the spot. The global SPEED catches it too.", "Vitesse à laquelle les lettres traversent l'image, en rebondissant sur les bords. 0 les laisse tourner sur place. La VITESSE générale l'attrape aussi."],
+	"letters/font": ["The typeface of the letters.", "La police des lettres."],
+	"letters/case": ["Lower case, capitals, or either at random for each letter.", "Minuscules, majuscules, ou l'une ou l'autre au hasard pour chaque lettre."],
+	"letters/drift": ["How fast each letter slides through the palette. 0 keeps the colour it was born with.", "Vitesse à laquelle chaque lettre parcourt la palette. 0 garde la couleur d'origine."],
 }
 
 

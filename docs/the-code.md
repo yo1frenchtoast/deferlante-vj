@@ -53,6 +53,7 @@ scripts/
   sphere_circles.gd Circles projected onto a virtual sphere
   hyperspace.gd     A star field rushing past the eye, drawn as streaks
   bezier.gd         Cubic curves whose control points bounce off the edges
+  letters.gd        Letters turning on the spot, in bundled fonts
   presets.gd        Nine slots on disk, recalled as a crossfade
   audio_reactor.gd  Captures the output, reads bass / mid / treble
   audio_routing.gd  Points the machine's capture at the output being played

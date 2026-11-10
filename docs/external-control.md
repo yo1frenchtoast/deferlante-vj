@@ -282,7 +282,7 @@ TouchOSC. They have no business with the knowledge that `spot/radius` runs from 
 | `/deferlante/glitch_now` | fires one glitch (no argument needed) |
 | `/deferlante/randomize` | redraws colors and trajectories, and returns color to random mode |
 | `/deferlante/shuffle` | one move of the auto-pilot, now, whatever pace it is set to |
-| `/deferlante/shuffle/<section>` | the same, confined to one section: `global`, `color`, `mirror`, `lasers`, `spot`, `audio`, `sphere`, `warp`, `bezier` |
+| `/deferlante/shuffle/<section>` | the same, confined to one section: `global`, `color`, `mirror`, `lasers`, `spot`, `audio`, `sphere`, `warp`, `bezier`, `letters` |
 | `/deferlante/color/rgb` | three floats 0 → 1: the whole color in one message, and a switch to manual |
 | `/deferlante/preset/recall` | one int: recall that slot, as a crossfade over `RECALL FADE` |
 | `/deferlante/preset/save` | one int: save every setting into that slot |
@@ -373,6 +373,13 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/bezier/length` | 0.05 – 2 | 1 | CURVES › LENGTH |
 | `/deferlante/bezier/width` | 0.5 – 12 | 2 | CURVES › WIDTH |
 | `/deferlante/bezier/drift` | 0 – 1 | 0.3 | CURVES › COLOUR DRIFT |
+| `/deferlante/letters/count` | 0 – 40 | 0 | LETTERS › LETTERS |
+| `/deferlante/letters/size` | 0.03 – 0.8 | 0.2 | LETTERS › SIZE |
+| `/deferlante/letters/spin` | −1 – 1 | 0.6 | LETTERS › SPIN |
+| `/deferlante/letters/travel` | 0 – 3 | 0.5 | LETTERS › MOVE |
+| `/deferlante/letters/font` | 0 – 4 | 0 | LETTERS › FONT |
+| `/deferlante/letters/case` | 0 – 2 | 1 | LETTERS › CASE |
+| `/deferlante/letters/drift` | 0 – 1 | 0.2 | LETTERS › COLOUR DRIFT |
 
 
 ### What it does not do

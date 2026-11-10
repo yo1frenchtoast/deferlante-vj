@@ -23,6 +23,7 @@ extends Node2D
 @onready var sphere: Node2D = $ShowLayer/ShowViewportContainer/ShowViewport/SphereCircles
 @onready var warp: Node2D = $ShowLayer/ShowViewportContainer/ShowViewport/Hyperspace
 @onready var curves: Node2D = $ShowLayer/ShowViewportContainer/ShowViewport/Bezier
+@onready var letters: Node2D = $ShowLayer/ShowViewportContainer/ShowViewport/Letters
 @onready var kaleido: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Kaleidoscope
 @onready var blur: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/MotionBlur
 @onready var wave: CanvasLayer = $ShowLayer/ShowViewportContainer/ShowViewport/Wave
@@ -85,6 +86,7 @@ func _ready():
 	sphere.use_palette(palette)
 	warp.use_palette(palette)
 	curves.use_palette(palette)
+	letters.use_palette(palette)
 	rig.spawn(laser_count)
 	for p in registry.all():
 		p.apply_current()
@@ -330,6 +332,19 @@ func _build_params():
 	_prop("bezier/width", 0.5, 12, 0.5, 2.0, curves, "line_width")
 	_prop("bezier/drift", 0, 1, 0.02, 0.3, curves, "hue_drift")
 
+	_section("section.letters")
+	# Off by default, for the reason given under CURVES.
+	_prop("letters/count", 0, 40, 1, 0.0, letters, "count")
+	_prop("letters/size", 0.03, 0.8, 0.01, 0.2, letters, "letter_size")
+	_prop("letters/spin", -1, 1, 0.05, 0.6, letters, "spin", true)
+	_prop("letters/travel", 0, 3, 0.05, 0.5, letters, "travel")
+	var face := _prop("letters/font", 0, 4, 1, 0.0, letters, "font_index")
+	face.choices = PackedStringArray(letters.FONT_NAMES)
+	face.translate_choices = false
+	var casing := _prop("letters/case", 0, 2, 1, 1.0, letters, "letter_case")
+	casing.choices = PackedStringArray(["case.lower", "case.upper", "case.mixed"])
+	_prop("letters/drift", 0, 1, 0.02, 0.2, letters, "hue_drift")
+
 	# Out of the auto-pilot's reach: tempo, glow and colour are decisions — the
 	# room, the track — rather than variations to be subjected to.
 	#
@@ -422,6 +437,7 @@ func _set_speed(value: float):
 	sphere.speed_scale = value
 	warp.speed_scale = value
 	curves.speed_scale = value
+	letters.speed_scale = value
 	kaleido.speed_scale = value
 	wave.speed_scale = value
 	slices.speed_scale = value
@@ -433,6 +449,7 @@ func _set_chaos(value: float):
 	sphere.chaos = value
 	warp.chaos = value
 	curves.chaos = value
+	letters.chaos = value
 	kaleido.chaos = value
 	rig.set_chaos(value)
 
@@ -445,6 +462,7 @@ func _set_glow(value: float):
 	sphere.halo_amount = value
 	warp.halo_amount = value
 	curves.halo_amount = value
+	letters.halo_amount = value
 	rig.set_halo(value)
 
 
@@ -534,6 +552,7 @@ func _randomize_all():
 	sphere.randomize_look()
 	warp.randomize_look()
 	curves.randomize_look()
+	letters.randomize_look()
 	rig.randomize_look()
 
 
