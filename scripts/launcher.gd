@@ -108,13 +108,36 @@ func _build():
 	background.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
 
+	# The form scrolls and LANCER does not. The form used to be one centred column that
+	# fitted a 1080p screen to the last row; on the projector the extra notes and the
+	# longer French text pushed it past the bottom, and LANCER with it, out of reach of
+	# a remote. Now the button is pinned under the form and the form follows the focus.
+	var page := VBoxContainer.new()
+	page.set_anchors_preset(Control.PRESET_FULL_RECT)
+	page.add_theme_constant_override("separation", 10)
+	add_child(page)
+
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
+	page.add_child(scroll)
+
 	var centre := CenterContainer.new()
-	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(centre)
+	centre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	centre.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.add_child(centre)
 
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 10)
 	centre.add_child(column)
+
+	var footer := VBoxContainer.new()
+	footer.custom_minimum_size = Vector2(640, 0)
+	footer.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	footer.add_theme_constant_override("separation", 6)
+	page.add_child(footer)
+	page.add_child(_spacer(8))
 
 	# The subtitle sits beside the logo, on its baseline, not under it: the form
 	# already fills a 1080p screen to the last row, and a logo stacked on top of a
@@ -215,18 +238,16 @@ func _build():
 		_midi.disabled = true
 	_note(grid).text = lang.text("launch.midi.hint")
 
-	column.add_child(_spacer(6))
-
 	_restart_note = Label.new()
 	_restart_note.add_theme_color_override("font_color", DIM)
 	_restart_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(_restart_note)
+	footer.add_child(_restart_note)
 
 	_go_button = Button.new()
 	_go_button.text = lang.text("launch.go")
 	_go_button.custom_minimum_size = Vector2(0, 44)
 	_go_button.pressed.connect(_go)
-	column.add_child(_go_button)
+	footer.add_child(_go_button)
 	_go_button.grab_focus()
 
 
