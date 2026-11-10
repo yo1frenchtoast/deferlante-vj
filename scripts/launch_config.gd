@@ -194,7 +194,7 @@ func save():
 
 ## Whether starting over is something this platform can actually be asked to do.
 ##
-## Android cannot, and the way it fails is the worst of all of them: `OS.create_process`
+## Android and a browser cannot, and the way it fails is the worst of all of them: `OS.create_process`
 ## there is not a second process at all, it is this activity being told to restart
 ## itself. The engine tears the fragment down while the GL thread is still stepping
 ## it, and the SIGSEGV that follows kills the app before Android can bring it back.
@@ -207,7 +207,7 @@ func save():
 ## project, so this refuses rather than gambles, and the surfaces ask first so they
 ## can offer an honest instruction instead of a button that empties the room.
 func can_relaunch() -> bool:
-	return not OS.has_feature("android")
+	return not OS.has_feature("android") and not OS.has_feature("web")
 
 
 ## Start this show again on the settings as they now stand, and skip the screen

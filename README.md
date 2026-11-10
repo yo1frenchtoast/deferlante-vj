@@ -37,6 +37,15 @@ The settings that you set before a set are on the left, then the instruments, th
 effects. The panel dims itself the moment that something else takes over — a phone, a
 console, the pad — and comes back on the first key press.*
 
+## In the browser
+
+Every push to `main` is also exported for the web and published on GitHub Pages, at
+<https://yo1frenchtoast.github.io/deferlante-vj/>. It is the same show and the same panel,
+started on its defaults with no launcher. A browser cannot open ports, so OSC, the web
+surface and the REST API are not there, and neither are Spout or a second window. MIDI
+goes through the browser's own MIDI access, and the sound is read from the microphone
+once the browser has been allowed it.
+
 ## Documentation
 
 **[Getting started](docs/getting-started.md)** — [Run](docs/getting-started.md#run) · [Launcher](docs/getting-started.md#the-launcher) · [Drive it](docs/getting-started.md#drive-it) · [Settings](docs/getting-started.md#settings) · [Presets](docs/getting-started.md#presets)

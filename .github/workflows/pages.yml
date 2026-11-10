@@ -1,0 +1,80 @@
+name: Pages
+
+# Puts the show on GitHub Pages: the same project, exported for the browser, served
+# at https://<user>.github.io/<repo>/. Needs Settings > Pages > Source set to
+# "GitHub Actions".
+#
+# A separate workflow from the builds: this one has nothing to do with the tests or
+# the release, and it needs the Pages permissions that the build job should not hold.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deployment at a time; a newer push replaces one still waiting, but never
+# cancels one that is already publishing.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  # Kept equal to the version in build.yml: the templates must match the engine.
+  GODOT_VERSION: 4.7.2
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Godot and its export templates
+        run: |
+          set -euo pipefail
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -sSL -o godot.zip "${base}/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl -sSL -o templates.tpz "${base}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+
+          unzip -q godot.zip
+          sudo mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
+
+          unzip -q templates.tpz
+          mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          mv templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
+
+      # First run resolves .uid files and fills the class cache; without it the
+      # export can miss freshly added scripts.
+      - name: Import the project
+        run: godot --headless --import || true
+
+      # The "Web" preset is the single-threaded build. Pages cannot send the
+      # cross-origin isolation headers a threaded build needs, and the browser
+      # refuses to start one without them.
+      - name: Export for the web
+        run: |
+          mkdir -p build/web
+          godot --headless --export-release "Web" build/web/index.html
+          ls -la build/web
+          test -f build/web/index.wasm || { echo "no wasm exported"; exit 1; }
+
+      # Pages serves from a folder; `.nojekyll` stops it from ignoring files that
+      # start with an underscore.
+      - run: touch build/web/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

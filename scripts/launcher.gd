@@ -92,7 +92,10 @@ func _ready():
 ## to be seen, and a preference that hides it is a preference nobody remembers
 ## setting when the ports turn out to be wrong in the room.
 func _should_skip() -> bool:
+	# A browser has nothing to ask: no ports to open, no second window, no sound to
+	# route, and a renderer that is not a choice. The show starts on its defaults.
 	return (DisplayServer.get_name() == "headless"
+		or OS.has_feature("web")
 		or "--skip-launcher" in OS.get_cmdline_user_args())
 
 
