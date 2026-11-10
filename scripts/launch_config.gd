@@ -108,7 +108,10 @@ var midi_profile: String = ""
 ## show it is about to start. Written to disk as a code rather than as the enum
 ## value: the value is a position, and a position means nothing to a file that
 ## outlives the order it was written in.
-var language: int = Lang.FR
+##
+## English in a browser, French everywhere else: the web build is the one that anybody
+## can open, and there is no launcher there to pick the tongue from.
+var language: int = Lang.EN if OS.has_feature("web") else Lang.FR
 
 
 func _ready():
