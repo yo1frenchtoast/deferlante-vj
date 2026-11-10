@@ -1,4 +1,9 @@
-# Déferlante
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo-dark.svg">
+    <img src="docs/logo/logo.svg" alt="Déferlante" width="460">
+  </picture>
+</h1>
 
 [![Build](https://github.com/yo1frenchtoast/deferlante-vj/actions/workflows/build.yml/badge.svg)](https://github.com/yo1frenchtoast/deferlante-vj/actions/workflows/build.yml)
 
