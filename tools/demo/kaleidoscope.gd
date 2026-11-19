@@ -34,7 +34,7 @@ func _ready():
 	_put("color/green", 0.0)
 	_put("color/blue", 0.0)
 	_put("color/saturation", 1.0)
-	_put("color/mode", 1.0)
+	_put("color/mode", 2.0)
 	# MIRROR
 	_put("mirror/segments", 12)
 	_put("mirror/rotation", 0.22)

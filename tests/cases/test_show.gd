@@ -74,9 +74,68 @@ func test_osc_rgb_sets_the_three_channels():
 func test_touching_a_colour_leaves_random_mode():
 	param("color/mode").set_value(0.0)
 	param("color/red").set_value(0.5)
-	same(param("color/mode").value, 1.0, "manual, so the slider is not a dead one")
+	same(param("color/mode").value, 2.0, "manual, so the slider is not a dead one")
 	fire("randomize")
 	same(param("color/mode").value, 0.0, "the randomise action is the way back")
+
+
+func test_the_cycle_mode_turns_every_element_round_the_wheel_together():
+	var pal: Palette = show.palette
+	param("color/saturation").set_value(1.0)
+	param("color/cycle").set_value(1.0)
+	param("color/mode").set_value(1.0)
+	same(pal.mode, Palette.CYCLE, "CYCLE is the middle choice")
+	same(pal.resolve(0.1), pal.resolve(0.7), "one colour for all, whatever hue each drew")
+	var before := pal.resolve(0.0)
+	var h0 := pal.cycle_hue
+	var fired := [0]
+	var count := func(): fired[0] += 1
+	pal.changed.connect(count)
+	pal.advance(0.5)
+	pal.changed.disconnect(count)
+	check(not pal.resolve(0.0).is_equal_approx(before), "the colour moves on")
+	check(fired[0] > 0, "and the lasers and spotlight are told")
+	same(snappedf(fposmod(pal.cycle_hue - h0, 1.0), 0.001), snappedf(0.5 * Palette.CYCLE_TURNS, 0.001), "at the rate CYCLE SPEED sets")
+	param("color/cycle").set_value(0.0)
+	var held := pal.cycle_hue
+	pal.advance(1.0)
+	same(pal.cycle_hue, held, "CYCLE SPEED 0 holds it")
+	param("color/mode").set_value(0.0)
+	pal.advance(1.0)
+	same(pal.cycle_hue, held, "and outside cycle mode nothing moves")
+	param("color/red").set_value(0.5)
+	same(param("color/mode").value, 2.0, "a touch on a colour takes it out of cycle too")
+	fire("randomize")
+	same(param("color/mode").value, 0.0, "and R still leads back to random")
+	param("color/cycle").set_value(0.2)
+	param("color/saturation").set_value(0.7)
+
+
+func test_a_preset_saved_before_cycle_keeps_its_manual_colour():
+	var old := {"color/mode": 1.0}
+	Presets._upgrade(old)
+	same(old["color/mode"], 2.0, "its 1 was manual, which is now 2")
+	var random := {"color/mode": 0.0}
+	Presets._upgrade(random)
+	same(random["color/mode"], 0.0, "random stays random")
+	var cycle := {"color/mode": 1.0, "color/cycle": 0.2}
+	Presets._upgrade(cycle)
+	same(cycle["color/mode"], 1.0, "a slot that knows CYCLE is left alone")
+
+
+func test_a_recall_moves_a_choice_once_rather_than_through_the_ones_between():
+	var pr = show.presets
+	param("color/mode").set_value(0.0)
+	pr._from = {"color/mode": 0.0}
+	pr._to = {"color/mode": 2.0}
+	var seen := []
+	for t in [0.0, 0.2, 0.4, 0.49, 0.5, 0.7, 1.0]:
+		pr._apply(t)
+		seen.append(param("color/mode").value)
+	same(seen, [0.0, 0.0, 0.0, 0.0, 2.0, 2.0, 2.0], "random, then manual, never cycle")
+	pr._from = {}
+	pr._to = {}
+	param("color/mode").set_value(0.0)
 
 
 func test_actions():
@@ -460,6 +519,7 @@ func test_the_letter_settings_reach_the_node_and_the_case_holds():
 	var upper := true
 	for c in l._chars:
 		upper = upper and c == c.to_upper()
+		check(c.is_valid_int() or c != c.to_lower(), "a capital or a digit at CASE 1: " + c)
 	check(upper, "capitals only at CASE 1")
 	param("letters/case").set_value(0.0)
 	var lower := true
@@ -471,6 +531,26 @@ func test_the_letter_settings_reach_the_node_and_the_case_holds():
 	param("letters/font").set_value(0.0)
 	param("letters/case").set_value(1.0)
 	param("letters/count").set_value(0.0)
+
+
+func test_the_characters_come_from_letters_and_digits_one_to_nine():
+	var l = show.letters
+	param("letters/case").set_value(2.0)
+	param("letters/count").set_value(40.0)
+	for i in range(5):
+		l.randomize_look()
+		for c in l._chars:
+			check(c in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789", "in [a-zA-Z1-9]: " + c)
+	var seen := {}
+	for i in range(200):
+		l._pick[0] = randf()
+		seen[l._char_for(0)] = true
+	var digit := false
+	for c in seen:
+		digit = digit or (c as String).is_valid_int()
+	check(digit, "digits do come up")
+	param("letters/count").set_value(0.0)
+	param("letters/case").set_value(1.0)
 
 
 func test_every_letter_turns_the_way_spin_says_and_global_speed_holds_them():
@@ -486,6 +566,24 @@ func test_every_letter_turns_the_way_spin_says_and_global_speed_holds_them():
 	for i in 5:
 		back = back and fposmod(before[i] - l._angle[i], TAU) < PI
 	check(back, "a negative spin turns every one of them backwards")
+	param("letters/spin").set_value(0.6)
+	param("letters/count").set_value(0.0)
+
+
+func test_full_chaos_never_freezes_a_letter():
+	var l = show.letters
+	param("letters/count").set_value(1.0)
+	param("letters/spin").set_value(1.0)
+	param("global/chaos").set_value(1.0)
+	# The slowest angle, sin(3 * angle) = -1, where the pace used to reach zero.
+	var turned := 0.0
+	l._angle[0] = PI / 2.0
+	for i in 20:
+		var a: float = l._angle[0]
+		l._process(0.05)
+		turned += absf(angle_difference(a, l._angle[0]))
+	check(turned > 0.05, "and it keeps turning there: " + str(turned))
+	param("global/chaos").set_value(0.0)
 	param("letters/spin").set_value(0.6)
 	param("letters/count").set_value(0.0)
 

@@ -37,6 +37,10 @@ function colorMode(value) {
 	local.send("/deferlante/color/mode", value);
 }
 
+function colorCycle(value) {
+	local.send("/deferlante/color/cycle", value);
+}
+
 function colorSaturation(value) {
 	local.send("/deferlante/color/saturation", value);
 }

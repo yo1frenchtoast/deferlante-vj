@@ -108,19 +108,19 @@ already drives it.
 Measured cost: **+0.32 ms** at 40 circles, **+0.77 ms** at 80. The show neither
 computes nor draws the circles past the horizon.
 
-## Letters
+## Characters
 
-`LETTERS` draws plain letters that turn as they drift across the picture. Each one has a character, a place,
-a colour and a share of the speed of its own. `FONT` picks the typeface from five that
-ship with the show, so the picture is the same on every machine. `CASE` is lower case,
-capitals, or either at random for each letter. `SIZE` is a letter's height as a share of
-the screen.
+`CHARACTERS` draws plain characters, drawn from `[a-zA-Z1-9]`, that turn as they drift across the
+picture. Each one has a character, a place, a colour and a share of the speed of its own.
+`FONT` picks the typeface from five that ship with the show, so the picture is the same on
+every machine. `CASE` is lower case, capitals, or either at random for each letter; the
+digits 1 to 9 come up in every case. `SIZE` is a character's height as a share of the screen.
 
-`MOVE` is how fast the letters drift across the picture, bouncing off the edges like the points of the curves. At 0 they stay where they were put. The global `SPEED` catches it too.
+`MOVE` is how fast the characters drift across the picture, bouncing off the edges like the points of the curves. At 0 they stay where they were put. The global `SPEED` catches it too.
 
-`SPIN` is shared like the lasers' is: one signed setting, whose sign turns every letter
-the same way and whose size sets how fast. A letter keeps its own share of that speed, so
-a field of them does not turn in lockstep. Like the curves, it is **0 letters by
+`SPIN` is shared like the lasers' is: one signed setting, whose sign turns every character
+the same way and whose size sets how fast. A character keeps its own share of that speed, so
+a field of them does not turn in lockstep. Like the curves, it is **0 characters by
 default**, it keeps no history (raise `TRAIL`), and `SHUFFLE` re-rolls characters, places
 and colours.
 
@@ -519,10 +519,14 @@ reversal of global time reverses rotation too. The `SPEED` of the spotlight stay
 positive rate: a followspot does not "un-search", and it keeps sweeping forwards even
 when everything else runs backwards.
 
-## The two color modes
+## The three color modes
 
 **RANDOM** (the default) — every laser, every sphere circle, every star and the
 spotlight draw their own hue. `R` redraws them.
+
+**CYCLE** — every element takes one color, which goes round the hue wheel.
+`CYCLE SPEED` sets how fast: at 1, one turn every four seconds; at 0 the color holds.
+A return to `CYCLE` picks up where the cycle stopped.
 
 **MANUAL** — every element takes the color set by `RED` / `GREEN` / `BLUE`.
 
@@ -535,7 +539,7 @@ Three things make the move back and forth painless:
 - **`R` returns to random** *and* draws fresh hues. It is the escape hatch that you
   find without thought in the middle of a set.
 
-`SATURATION` stays useful in both modes, because it pulls the color towards white.
+`SATURATION` stays useful in all three modes, because it pulls the color towards white.
 When you project into haze, a near-white beam cuts through better than a saturated
 one. If the picture lacks bite, decrease it to 0.4–0.5.
 

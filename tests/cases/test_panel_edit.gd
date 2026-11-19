@@ -590,7 +590,7 @@ func test_resetting_the_colour_section_leaves_the_colour_mode_random():
 	await _settle()
 	# Written channels flip the mode to manual; the reset has to end on the mode.
 	show.registry.find("color/red").set_value(0.9)
-	same(show.registry.find("color/mode").value, 1.0, "touching a channel made it manual")
+	same(show.registry.find("color/mode").value, 2.0, "touching a channel made it manual")
 	_header_double_click("section.color")
 	same(show.registry.find("color/mode").value, show.registry.find("color/mode").default_value,
 		"reset to random, not knocked back to manual by the channels")

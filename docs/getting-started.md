@@ -148,8 +148,9 @@ follow are the English ones.
 ### Color
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `MODE` | RANDOM / MANUAL | Each element takes its own hue, or all elements take the chosen color. |
-| `SATURATION` | 0 – 1 | 0 is pure white, 1 is a full color. It works in both modes. |
+| `MODE` | RANDOM / CYCLE / MANUAL | Each element takes its own hue, or all take one color that goes round the hue wheel, or all take the chosen color. |
+| `CYCLE SPEED` | 0 – 1 | How fast CYCLE goes round the wheel. At 1, one turn every four seconds; 0 holds the color. |
+| `SATURATION` | 0 – 1 | 0 is pure white, 1 is a full color. It works in all modes. |
 | `RED` `GREEN` `BLUE` | 0 – 1 | The manual color. If you move one, the mode changes to manual. |
 
 ### Mirror
@@ -241,16 +242,16 @@ The last three rows only matter with a pad connected. See
 | `GLASS` | 0 – 1 | 0 is an opaque sphere, 1 shows the far side through it. |
 | `FLAT` | 0 – 1 | 0 is a sphere, 1 flattens it into a disc facing the eye. **0 by default.** See [The sphere effect](effects.md#the-sphere-effect). |
 
-### Letters
+### Characters
 | Setting | Range | Effect |
 | --- | --- | --- |
-| `LETTERS` | 0 – 40 | Number of letters turning on the spot. **0 by default**, and 0 switches the effect off. |
-| `SIZE` | 0.03 – 0.8 | Height of a letter, as a share of the screen. |
-| `SPIN` | −1 – 1 | Speed and direction of every letter, like the lasers'. Each letter keeps its own share of the speed. |
-| `MOVE` | 0 – 3 | How fast the letters drift across the picture, bouncing off the edges. 0 leaves them turning on the spot. |
+| `CHARACTERS` | 0 – 40 | Number of characters — letters and digits — turning on the spot. **0 by default**, and 0 switches the effect off. |
+| `SIZE` | 0.03 – 0.8 | Height of a character, as a share of the screen. |
+| `SPIN` | −1 – 1 | Speed and direction of every character, like the lasers'. Each one keeps its own share of the speed. |
+| `MOVE` | 0 – 3 | How fast the characters drift across the picture, bouncing off the edges. 0 leaves them turning on the spot. |
 | `FONT` | 5 faces | BLACK, HAIRLINE, SERIF, ITALIC, MONO. |
-| `CASE` | 3 | lower case, capitals, or mixed. |
-| `COLOUR DRIFT` | 0 – 1 | How fast each letter slides through the palette. |
+| `CASE` | 3 | lower case, capitals, or mixed. Digits 1 – 9 come up in every case. |
+| `COLOUR DRIFT` | 0 – 1 | How fast each character slides through the palette. |
 
 ### Curves
 | Setting | Range | Effect |

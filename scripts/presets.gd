@@ -150,7 +150,14 @@ func _apply(t: float):
 		return
 	applying = true
 	for p in registry.all():
-		if _to.has(p.slug):
+		if not _to.has(p.slug):
+			continue
+		# A setting made of choices changes once, half-way, rather than stepping
+		# through every choice in between: RANDOM to MANUAL must not show a stretch
+		# of CYCLE on the way, nor a change of font run through the other three.
+		if not p.choices.is_empty():
+			p.set_value(_to[p.slug] if t >= 0.5 else _from[p.slug])
+		else:
 			p.set_value(lerpf(_from[p.slug], _to[p.slug], t))
 	applying = false
 
@@ -158,6 +165,19 @@ func _apply(t: float):
 # --------------------------------------------------------------------------
 # Disk
 # --------------------------------------------------------------------------
+
+## Brings a slot saved by an older show up to date, in memory; the file follows on
+## the next save.
+##
+## The colour MODE used to be RANDOM 0, MANUAL 1. CYCLE then came in between, which
+## moved MANUAL to 2. A slot saved before CYCLE has no `color/cycle` — a save writes
+## every setting the show has — so its 1 means manual, not cycle.
+static func _upgrade(slot):
+	if typeof(slot) != TYPE_DICTIONARY:
+		return
+	if not slot.has("color/cycle") and slot.has("color/mode") and float(slot["color/mode"]) >= 0.5:
+		slot["color/mode"] = 2.0
+
 
 func _write():
 	var file := FileAccess.open(PATH, FileAccess.WRITE)
@@ -176,4 +196,6 @@ func _load():
 	var parsed = JSON.parse_string(file.get_as_text())
 	if typeof(parsed) == TYPE_DICTIONARY:
 		_slots = parsed
+		for slot in _slots.values():
+			_upgrade(slot)
 		print("Presets: %d loaded from %s" % [_slots.size(), PATH])

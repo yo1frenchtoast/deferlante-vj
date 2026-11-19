@@ -23,6 +23,8 @@ const FONTS := [
 const FONT_NAMES := ["BLACK", "HAIRLINE", "SERIF", "ITALIC", "MONO"]
 const LOWER := "abcdefghijklmnopqrstuvwxyz"
 const UPPER := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+## Drawn alongside the letters, whatever the case. No 0: it reads as an O.
+const DIGITS := "123456789"
 ## A letter's share of the shared speed, at the slowest and the fastest.
 const RATE_MIN := 0.35
 const RATE_MAX := 1.0
@@ -32,6 +34,10 @@ const DRIFT_MAX := 0.12
 ## Turns per second at SPIN = 1 and a share of 1.
 const TURNS := 0.25
 const MAX_STEP := 0.1
+## How far CHAOS swings a letter's pace about its own, at CHAOS 1. Under 1 so the
+## pace never reaches zero: at 1 a letter coming up on the slow angle slowed down
+## the closer it got and never passed it, and stayed frozen there.
+const CHAOS_SWAY := 0.8
 
 ## Number of letters. 0 switches the effect off outright — no work, no draw.
 @export var count: int = 0:
@@ -120,7 +126,9 @@ func _char_for(index: int) -> String:
 		letters = UPPER
 	elif letter_case == 2 and fmod(_pick[index] * 7.0, 1.0) < 0.5:
 		letters = UPPER
-	return letters[int(_pick[index] * 26.0) % 26]
+	# Digits take their share of the draw: 9 out of 35 in either case.
+	var pool := letters + DIGITS
+	return pool[int(_pick[index] * pool.length()) % pool.length()]
 
 
 func _reroll_chars():
@@ -140,7 +148,7 @@ func randomize_look():
 func _process(delta: float):
 	var step := minf(delta, MAX_STEP) * speed_scale * spin * TAU * TURNS
 	for i in range(count):
-		_angle[i] = fposmod(_angle[i] + step * _rate[i] * (1.0 + chaos * sin(_angle[i] * 3.0)),
+		_angle[i] = fposmod(_angle[i] + step * _rate[i] * (1.0 + chaos * CHAOS_SWAY * sin(_angle[i] * 3.0)),
 			TAU)
 	var run := minf(delta, MAX_STEP) * speed_scale * travel
 	if run != 0.0:

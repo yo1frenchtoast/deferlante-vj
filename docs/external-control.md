@@ -304,7 +304,8 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/global/recall` | 0 – 10 | 0 | GLOBAL › RECALL FADE |
 | `/deferlante/global/panel` | 0.05 – 1 | 1 | GLOBAL › PANEL |
 | `/deferlante/global/autodim` | 0 – 1 | 1 | GLOBAL › AUTO DIM |
-| `/deferlante/color/mode` | 0 – 1 | 0 | COLOR › MODE |
+| `/deferlante/color/mode` | 0 – 2 | 0 | COLOR › MODE |
+| `/deferlante/color/cycle` | 0 – 1 | 0.2 | COLOR › CYCLE SPEED |
 | `/deferlante/color/saturation` | 0 – 1 | 0.7 | COLOR › SATURATION |
 | `/deferlante/color/red` | 0 – 1 | 1 | COLOR › RED |
 | `/deferlante/color/green` | 0 – 1 | 0.25 | COLOR › GREEN |
@@ -373,13 +374,13 @@ python3 tools/build_chataigne_module.py --addresses
 | `/deferlante/bezier/length` | 0.05 – 2 | 1 | CURVES › LENGTH |
 | `/deferlante/bezier/width` | 0.5 – 12 | 2 | CURVES › WIDTH |
 | `/deferlante/bezier/drift` | 0 – 1 | 0.3 | CURVES › COLOUR DRIFT |
-| `/deferlante/letters/count` | 0 – 40 | 0 | LETTERS › LETTERS |
-| `/deferlante/letters/size` | 0.03 – 0.8 | 0.2 | LETTERS › SIZE |
-| `/deferlante/letters/spin` | −1 – 1 | 0.6 | LETTERS › SPIN |
-| `/deferlante/letters/travel` | 0 – 3 | 0.5 | LETTERS › MOVE |
-| `/deferlante/letters/font` | 0 – 4 | 0 | LETTERS › FONT |
-| `/deferlante/letters/case` | 0 – 2 | 1 | LETTERS › CASE |
-| `/deferlante/letters/drift` | 0 – 1 | 0.2 | LETTERS › COLOUR DRIFT |
+| `/deferlante/letters/count` | 0 – 40 | 0 | CHARACTERS › CHARACTERS |
+| `/deferlante/letters/size` | 0.03 – 0.8 | 0.2 | CHARACTERS › SIZE |
+| `/deferlante/letters/spin` | −1 – 1 | 0.6 | CHARACTERS › SPIN |
+| `/deferlante/letters/travel` | 0 – 3 | 0.5 | CHARACTERS › MOVE |
+| `/deferlante/letters/font` | 0 – 4 | 0 | CHARACTERS › FONT |
+| `/deferlante/letters/case` | 0 – 2 | 1 | CHARACTERS › CASE |
+| `/deferlante/letters/drift` | 0 – 1 | 0.2 | CHARACTERS › COLOUR DRIFT |
 
 
 ### What it does not do

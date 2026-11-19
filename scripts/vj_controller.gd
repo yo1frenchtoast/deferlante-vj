@@ -191,8 +191,9 @@ func _build_params():
 	autodim.randomizable = false
 
 	_section("section.color")
-	_mode_param = _fn("color/mode", 0, 1, 1, 0.0, _set_color_mode)
-	_mode_param.choices = PackedStringArray(["mode.random", "mode.manual"])
+	_mode_param = _fn("color/mode", 0, 2, 1, 0.0, _set_color_mode)
+	_mode_param.choices = PackedStringArray(["mode.random", "mode.cycle", "mode.manual"])
+	_prop("color/cycle", 0, 1, 0.02, 0.2, palette, "cycle_speed")
 	_fn("color/saturation", 0, 1, 0.02, 0.7, _set_saturation)
 	_fn("color/red", 0, 1, 0.02, 1.0, _set_channel.bind(0)).tint = Color(1, 0.45, 0.4)
 	_fn("color/green", 0, 1, 0.02, 0.25, _set_channel.bind(1)).tint = Color(0.45, 1, 0.5)
@@ -356,7 +357,7 @@ func _build_params():
 	for slug in ["global/speed", "global/glow", "global/recall", "global/panel",
 			"global/autodim", "audio/reactivity", "audio/randomizer",
 			"color/saturation",
-			"color/mode", "color/red", "color/green", "color/blue",
+			"color/mode", "color/cycle", "color/red", "color/green", "color/blue",
 			"spot/track", "spot/handback"]:
 		registry.find(slug).randomizable = false
 
@@ -537,6 +538,7 @@ func _process(delta: float):
 
 	web_bridge.process(delta)
 	rig.process(delta)
+	palette.advance(delta)
 
 
 # --------------------------------------------------------------------------

@@ -131,8 +131,22 @@
           "type": "Integer",
           "ui": "slider",
           "min": 0.0,
-          "max": 1.0,
+          "max": 2.0,
           "default": 0.0,
+          "mappingIndex": 0
+        }
+      }
+    },
+    "Color Cycle Speed": {
+      "menu": "Color",
+      "callback": "colorCycle",
+      "parameters": {
+        "Value": {
+          "type": "Float",
+          "ui": "slider",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.2,
           "mappingIndex": 0
         }
       }
@@ -1089,8 +1103,8 @@
         }
       }
     },
-    "Letters Letters": {
-      "menu": "Letters",
+    "Characters Characters": {
+      "menu": "Characters",
       "callback": "lettersCount",
       "parameters": {
         "Value": {
@@ -1103,8 +1117,8 @@
         }
       }
     },
-    "Letters Size": {
-      "menu": "Letters",
+    "Characters Size": {
+      "menu": "Characters",
       "callback": "lettersSize",
       "parameters": {
         "Value": {
@@ -1117,8 +1131,8 @@
         }
       }
     },
-    "Letters Spin": {
-      "menu": "Letters",
+    "Characters Spin": {
+      "menu": "Characters",
       "callback": "lettersSpin",
       "parameters": {
         "Value": {
@@ -1131,8 +1145,8 @@
         }
       }
     },
-    "Letters Move": {
-      "menu": "Letters",
+    "Characters Move": {
+      "menu": "Characters",
       "callback": "lettersTravel",
       "parameters": {
         "Value": {
@@ -1145,8 +1159,8 @@
         }
       }
     },
-    "Letters Font": {
-      "menu": "Letters",
+    "Characters Font": {
+      "menu": "Characters",
       "callback": "lettersFont",
       "parameters": {
         "Value": {
@@ -1159,8 +1173,8 @@
         }
       }
     },
-    "Letters Case": {
-      "menu": "Letters",
+    "Characters Case": {
+      "menu": "Characters",
       "callback": "lettersCase",
       "parameters": {
         "Value": {
@@ -1173,8 +1187,8 @@
         }
       }
     },
-    "Letters Colour Drift": {
-      "menu": "Letters",
+    "Characters Colour Drift": {
+      "menu": "Characters",
       "callback": "lettersDrift",
       "parameters": {
         "Value": {
@@ -1350,7 +1364,7 @@
         }
       }
     },
-    "Shuffle Letters": {
+    "Shuffle Characters": {
       "menu": "Shuffle",
       "callback": "shuffleLetters",
       "parameters": {
