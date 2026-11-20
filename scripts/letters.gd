@@ -13,14 +13,14 @@ extends Node2D
 ## The faces, in the order of the FONT setting. Bundled with the show: a system font
 ## would make the same set look different on every machine it plays on.
 const FONTS := [
-	"res://fonts/Lato-Black.ttf",
 	"res://fonts/Lato-Hairline.ttf",
+	"res://fonts/Lato-Black.ttf",
+	"res://fonts/LiberationMono-Bold.ttf",
 	"res://fonts/LiberationSerif-Bold.ttf",
 	"res://fonts/LiberationSerif-Italic.ttf",
-	"res://fonts/LiberationMono-Bold.ttf",
 ]
 ## Names shown for the faces. The same in every language, so not translated.
-const FONT_NAMES := ["BLACK", "HAIRLINE", "SERIF", "ITALIC", "MONO"]
+const FONT_NAMES := ["HAIRLINE", "BLACK", "MONO", "SERIF", "ITALIC"]
 const LOWER := "abcdefghijklmnopqrstuvwxyz"
 const UPPER := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 ## Drawn alongside the letters, whatever the case. No 0: it reads as an O.

@@ -249,7 +249,7 @@ The last three rows only matter with a pad connected. See
 | `SIZE` | 0.03 – 0.8 | Height of a character, as a share of the screen. |
 | `SPIN` | −1 – 1 | Speed and direction of every character, like the lasers'. Each one keeps its own share of the speed. |
 | `MOVE` | 0 – 3 | How fast the characters drift across the picture, bouncing off the edges. 0 leaves them turning on the spot. |
-| `FONT` | 5 faces | BLACK, HAIRLINE, SERIF, ITALIC, MONO. |
+| `FONT` | 5 faces | HAIRLINE, BLACK, MONO, SERIF, ITALIC. |
 | `CASE` | 3 | lower case, capitals, or mixed. Digits 1 – 9 come up in every case. |
 | `COLOUR DRIFT` | 0 – 1 | How fast each character slides through the palette. |
 
